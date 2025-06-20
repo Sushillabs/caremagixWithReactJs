@@ -1,50 +1,91 @@
-import React, { use } from 'react'
+import React, { use, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { CIcon } from '@coreui/icons-react';
 import { cilHospital } from '@coreui/icons';
-// import PhoneInput from 'react-phone-input-2';
-// import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { getHospitals, registerHospital } from '../api/hospitalApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { addHospitalNames } from '../redux/hospitalSlice';
 
 const SignUp = () => {
 
   const [signUpRole, setSignUpRole] = useState({});
-  const [addNewHospital, setNewAddHospital] = useState(false);
+  const [isAddingNewHospital, setIsAddingNewHospital] = useState(false);
   const [newHospitalInfo, setNewHospitalInfo] = useState({
     hospital_address: '',
     hospital_email: '',
     hospital_name: '',
     hospital_mobile: ''
   });
-  const [finalNewHospitalInfo, setFinalNewHospitalInfo] = useState({});
+  // const [finalNewHospitalInfo, setFinalNewHospitalInfo] = useState({});
   const [phone, setPhone] = useState('');
+  const hospitalNames=useSelector((state)=>state.hospitalnames.value);
+  const dispatch=useDispatch();
 
   const handleSignUpRoles = (e) => {
-    setNewAddHospital(false);
+    setIsAddingNewHospital(false);
     const { name, value } = e.target;
     setSignUpRole({ [name]: value });
     console.log('signup roles: ', signUpRole);
   }
   const handleAddNewHospital = () => {
-    setNewAddHospital(true);
+    setIsAddingNewHospital(true);
   }
   const handleHospitalInfo = (e) => {
     const { name, value } = e.target;
     setNewHospitalInfo({ ...newHospitalInfo, [name]: value });
     //  console.log('newHospitalInfo:', newHospitalInfo);
   }
-  const submitHospitalInfo = (e) => {
-    console.log('finalhospialinfo befor submit:', finalNewHospitalInfo);
+  const submitHospitalInfo = async (e) => {
     e.preventDefault();
-    setFinalNewHospitalInfo({ ...newHospitalInfo, hospital_mobile: phone });
-    // console.log('finalhospialinfo:', finalNewHospitalInfo);
-    setNewHospitalInfo(null);
-    setPhone(0);
-  }
-  console.log('finalhospialinfo:', finalNewHospitalInfo);
-  // console.log(typeof mob, mob);
+
+    // Compose payload directly from current state
+    const create_hospital_data = {
+      hospital_name: newHospitalInfo.hospital_name,
+      address: newHospitalInfo.hospital_address,
+      email: newHospitalInfo.hospital_email,
+      phone: phone,
+      signup_role: signUpRole.signup_roles,
+    };
+
+    console.log('Sending to backend:', create_hospital_data);
+
+    try {
+      const res = await registerHospital(create_hospital_data);
+      console.log('Register Hospital Success:', res);
+
+      // Optional: set final state after success
+      // setFinalNewHospitalInfo(create_hospital_data);
+
+      // Reset form after success
+      setNewHospitalInfo({
+        hospital_address: '',
+        hospital_email: '',
+        hospital_name: '',
+        hospital_mobile: '',
+      });
+      setPhone('');
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      try {
+        const res = await getHospitals();
+        console.log('hospital lis',res);
+        dispatch(addHospitalNames(res.data));
+      } catch(error) {
+        alert('error.message')
+      }
+    }
+    fetchHospitals();
+  }, [])
+  console.log('hospial names:', hospitalNames);
+  
   return (
     <div className='grid grid-cols-12  ml-48 mr-48 mt-10 gap-1 rounded shadow-2xl border border-gray-300'>
       <div className='col-span-6 ' style={{ height: '530px' }}>
@@ -97,6 +138,11 @@ const SignUp = () => {
               className='border border-gray-300 w-full p-2 rounded text-sm'
             >
               <option value=''>Select Hospital</option>
+              {hospitalNames.map((hospital) => (
+                <option key={hospital.id} value={hospital.name}>
+                  {hospital.name}{!hospital.email_confirmed && '(not verified)'}
+                </option>
+              ))}
             </select>
           </div>
           <div className='text-sm text-addhosblue hover:cursor-pointer hover:underline' onClick={handleAddNewHospital}>
@@ -106,7 +152,7 @@ const SignUp = () => {
             <span>  Add New Hospital</span>
           </div>
         </div>}
-        {addNewHospital && <div>
+        {isAddingNewHospital && <div>
           <form onSubmit={submitHospitalInfo} className='text-sm flex flex-col gap-5 mt-2 font-bold'>
             <div className='relative '>
               <label htmlFor='hospital_name'> Hospital Name </label>
@@ -171,7 +217,7 @@ const SignUp = () => {
                   placeholder="Enter phone number"
                   defaultCountry="IN"
                   value={phone}
-                  onChange={(mob)=>setPhone(mob)}
+                  onChange={(mob) => setPhone(mob)}
                   className='border border-gray-300 py-2 w-full rounded '
                 />
                 <CIcon

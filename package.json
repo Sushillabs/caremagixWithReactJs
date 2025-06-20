@@ -12,11 +12,14 @@
   "dependencies": {
     "@coreui/icons": "^3.0.1",
     "@coreui/icons-react": "^2.3.0",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.10",
+    "axios": "^1.10.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-phone-input-2": "^2.15.1",
     "react-phone-number-input": "^3.4.12",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
     "tailwindcss": "^4.1.10"
   },
