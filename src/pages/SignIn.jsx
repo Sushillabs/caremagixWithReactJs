@@ -31,8 +31,8 @@ function SignIn() {
         reset();
     }
     return (
-        <div className='grid grid-cols-12  ml-48 mr-48 mt-10 gap-1 rounded shadow-2xl border border-gray-300'>
-            {!isForgot ? (<div className='col-span-6 p-6 flex  flex-col gap-3'>
+        <div className='grid grid-cols-12  md:ml-48 md:mr-48 mt-10 gap-1 p-2 rounded shadow-2xl border border-gray-300'>
+            {!isForgot ? (<div className='col-span-12 md:col-span-6 md:p-6 flex  flex-col gap-3'>
                 <h1 className='text-careGray text-2xl'>Start your journey</h1>
                 <h1 className='text-signinFree font-semibold text-3xl'>Sign In</h1>
                 <p className='font-bold text-sm'>
@@ -66,11 +66,11 @@ function SignIn() {
                         <span>  Forgot password?</span>
                     </div>
                     <div className='relative'>
-                        <button type='submit' className='absolute top-6 bg-resblue w-full p-2 rounded text-white  hover:cursor-pointer hover:bg-blue-800'>Sign In</button>
+                        <button type='submit' className='absolute top-6  bg-resblue w-full p-2 rounded text-white  hover:cursor-pointer hover:bg-blue-800'>Sign In</button>
                     </div>
                 </form>
             </div>) : (
-                <div className='col-span-6 p-6 flex  flex-col gap-3'>
+                <div className='col-span-12 md:col-span-6 md:p-6 flex  flex-col gap-3'>
                     {/* <h1 className='text-careGray text-2xl'>Start your journey</h1> */}
                     <h1 className='text-signinFree font-semibold text-3xl'>Forgot Password?</h1>
                     <p className="text-blue-600 w-fit font-semibold hover:cursor-pointer hover:underline"
@@ -97,7 +97,7 @@ function SignIn() {
                         </div>
                     </form>
                 </div>)}
-            <div className='col-span-6 ' style={{ height: '530px' }}>
+            <div className='col-span-12 md:col-span-6 mt-16 md:mt-0' style={{ height: '530px' }}>
                 <img src="images\signin1.jpg" alt="care-magix pic" className='w-full h-full object-cover' />
             </div>
         </div>

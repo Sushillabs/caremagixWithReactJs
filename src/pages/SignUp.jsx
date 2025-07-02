@@ -135,11 +135,11 @@ const SignUp = () => {
   console.log('hospial names:', hospitalNames);
 
   return (
-    <div className='grid grid-cols-12  ml-48 mr-48 mt-10 gap-1 rounded shadow-2xl border border-gray-300'>
-      <div className='col-span-6 ' style={{ height: '530px' }}>
+    <div className='grid grid-cols-12  md:ml-48 md:mr-48 mt-10 gap-1 rounded shadow-2xl border border-gray-300'>
+      <div className='hidden md:block col-span-12 md:col-span-6' style={{ height: '530px' }}>
         <img src="images\signin2.jpg" alt="" className='w-full h-full object-cover' />
       </div>
-      <div className='col-span-6 p-6 flex  flex-col gap-4'>
+      <div className='col-span-12 md:col-span-6 p-6 flex  flex-col gap-4'>
         <h1 className='text-signinFree font-semibold text-3xl'>Sign up for free</h1>
         <p className='font-bold text-sm'>
           Already have an account
@@ -239,7 +239,7 @@ const SignUp = () => {
               />
             </div>
             <div className='grid grid-cols-2 gap-2'>
-              <div className='col-span-1 relative'>
+              <div className='col-span-2 md:col-span-1 relative'>
                 <label htmlFor='hospital_email'>Email</label>
                 <br />
                 <input
@@ -258,7 +258,7 @@ const SignUp = () => {
                 />
               </div>
 
-              <div className='col-span-1 relative'>
+              <div className='col-span-2 md:col-span-1 relative'>
                 <label htmlFor='hospital_mobile' className="block mb-1 text-sm font-medium">Mobile</label>
 
                 <Controller
@@ -271,7 +271,7 @@ const SignUp = () => {
                       id="hospital_mobile"
                       placeholder="Enter phone number"
                       defaultCountry="IN"
-                      className="border border-gray-300 py-2 w-full rounded pl-10"
+                      className="border border-gray-300 py-2 w-full rounded  md:pl-10"
                     />
                   )}
                 />
@@ -314,7 +314,7 @@ const SignUp = () => {
 
         {selectedHospital?.email_confirmed === true && <form onSubmit={handleSubmit(onSignUp)} >
           <div className='grid grid-cols-2 gap-2'>
-            <div className='col-span-1 relative'>
+            <div className='col-span-2 md:col-span-1 relative'>
               <label htmlFor='first_name'> First Name </label>
               <br />
               <input
@@ -325,7 +325,7 @@ const SignUp = () => {
               />
               {errors.first_name && <p>First Name is required</p>}
             </div>
-            <div className='col-span-1 relative'>
+            <div className='col-span-2 md:col-span-1 relative'>
               <label htmlFor='last_name'> Last Name </label>
               <br />
               <input
@@ -338,7 +338,7 @@ const SignUp = () => {
             </div>
           </div>
           <div className='grid grid-cols-2 gap-2'>
-            <div className='col-span-1 relative'>
+            <div className='col-span-2 md:col-span-1 relative'>
               <label htmlFor='email'> Email </label>
               <br />
               <input
@@ -349,7 +349,7 @@ const SignUp = () => {
               />
               {errors.email && <p>Emaile is required</p>}
             </div>
-            <div className='col-span-1 relative'>
+            <div className='col-span-2 md:col-span-1 relative'>
               <label htmlFor='hospital_mobile'>Mobile</label>
 
               <Controller
