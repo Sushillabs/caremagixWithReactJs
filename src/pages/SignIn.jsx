@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form';
 import { forgotPasswordAPI, signInAPI } from '../api/hospitalApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAuth } from '../redux/authSlice';
 
 function SignIn() {
     const [isForgot, setIsForgot] = useState(false);
     const { control, register, handleSubmit, formState: { errors }, reset } = useForm();
+    const navigate=useNavigate();
+    const dispatch=useDispatch();
+    const user=useSelector((state)=>state.auth.value);
+    console.log('user',user);
 
     const onSignIn = async (signInData) => {
         console.log('sign-in data', signInData);
         try {
             const res = await signInAPI(signInData);
             console.log('sign-in res', res);
+
+            const redirectByRole = (role) => {
+              switch (role) {
+                case "caregiver":
+                  return "/care-giver";
+                case "physician":
+                  return "/physician";
+                case "patient":
+                  return "/patient";
+                default:
+                  return "/unauthorized";
+              }
+            };
+            navigate(redirectByRole(res.role));
+
+            dispatch(setAuth(res));
             reset();
         } catch (error) {
             alert(error.message)
@@ -85,7 +107,7 @@ function SignIn() {
                             <label htmlFor='email'> Email </label>
                             <br />
                             <input
-                                id='eamil'
+                                id='email'
                                 type='email'
                                 className='border border-gray-300 w-full p-2 rounded '
                                 {...register('email', { required: true })}

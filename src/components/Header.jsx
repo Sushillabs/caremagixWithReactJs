@@ -7,7 +7,7 @@ function Header() {
 
   return (
     <header>
-      <nav className="shadow-md">
+      <nav className="shadow-md fixed top-0 w-full z-10 bg-white">
         <div className="grid grid-cols-12 md:ml-14 md:mr-14 mt-4 p-2 items-center">
           <div className="col-span-6 md:col-span-4 w-40 hover:cursor-pointer">
             <img src="/images/caremagix-logo.jpg" alt="Logo" />
@@ -45,55 +45,95 @@ function Header() {
             } md:block`}
           >
             <ul className="flex flex-col md:flex-row justify-between items-start md:items-center text-gray-500 text-sm gap-4 md:gap-0">
-              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold">
+              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Our Platform
               </li>
-              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold">
+              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Solutions
               </li>
-              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold">
+              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Other Benefits
               </li>
-              <li
-                className="relative  flex items-center hover:cursor-pointer hover:text-green-500 hover:font-bold"
-                onMouseEnter={() => setIsTooltip(true)}
-                onMouseLeave={() => setIsTooltip(false)}
-              >
-                Patients
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="ml-1 w-4 h-4"
+              <li className="relative h-full">
+                <div
+                  className="flex items-center h-full px-3 py-2 hover:text-green-500 hover:font-bold cursor-pointer"
+                  onMouseEnter={() => setIsTooltip(true)}
+                  onMouseLeave={(e) => {
+                  
+                    if (!e.relatedTarget || !e.relatedTarget.closest(".dropdown-container")) {
+                      setIsTooltip(false);
+                    }
+                  }}
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 1 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {/* Tooltip */}
+                  Patients
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className={`ml-1 w-4 h-4 transition-transform ${
+                      isTooltip ? "rotate-180" : ""
+                    }`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 1 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+
+                {/* Dropdown Menu */}
                 {isTooltip && (
-                  <div className="absolute top-5 -left-2 z-10 font-normal mt-1 w-56 bg-white text-gray-800 text-sm border border-gray-300 rounded p-2 shadow-md">
-                    <div className="hover:bg-gray-300 p-1">Care Advocate</div>
-                    <div className="hover:bg-gray-300 p-1">
+                  <div
+                    className="dropdown-container absolute left-0 top-full w-56 bg-white shadow-xl border border-gray-200 rounded-b-lg z-50"
+                    onMouseEnter={() => setIsTooltip(true)}
+                    onMouseLeave={() => setIsTooltip(false)}
+                    style={{
+                      // Ensure dropdown appears right at navbar bottom
+                      marginTop: "0",
+                      // Optional: Add animation
+                      animation: "fadeIn 0.2s ease-out",
+                    }}
+                  >
+                    <a
+                      href="#"
+                      className="block px-4 py-3 hover:bg-gray-300 border-b border-gray-100"
+                    >
+                      Care Advocate
+                    </a>
+                    <a href="#" className="block px-4 py-3 hover:bg-gray-300">
                       Personal Care Advocates
-                    </div>
+                    </a>
                   </div>
                 )}
               </li>
 
               <li>
-                <Link to={'/'}  className="bg-yellow-300 rounded-2xl py-2 px-4 hover:cursor-pointer hover:text-black">
-                Sign in
-                </Link> 
+                <Link
+                  to={"/"}
+                  className="bg-yellow-300 rounded-2xl py-2 px-4 hover:cursor-pointer hover:text-black hover:bg-yellow-400 transition-colors"
+                >
+                  Sign in
+                </Link>
               </li>
             </ul>
+
+            {/* Add this to your global CSS */}
+            {/* <style jsx>{`
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(-5px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+            `}</style> */}
           </div>
 
-          <div
-            className={`hidden md:flex justify-end col-span-3 text-end `}
-          >
+          <div className={`hidden md:flex justify-end col-span-3 text-end `}>
             <div className="flex flex-col md:flex-row items-center gap-0 py-4 px-6 bg-green-600 text-white rounded hover:cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
