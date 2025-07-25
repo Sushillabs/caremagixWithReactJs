@@ -7,6 +7,11 @@ export const verifyEmail = (data) => http.put('/org_register/hospital_edit', dat
 export const signUpAPI= (data) => http.post('/register_category',data);
 export const signInAPI= (data) => http.post('/login',data);
 export const forgotPasswordAPI= (data) => http.post('/forgot_password',data);
+export const getPatients = () => http.get('/retrieve-patient-name?patient-type=Discharged');
+export const getPatientChat = (data) => http.post('/generate_questions',data);
+export const askAPI = (data) => http.post('/ask',data);
+
+
 
 
 

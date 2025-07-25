@@ -18,7 +18,7 @@ function SignIn() {
         try {
             const res = await signInAPI(signInData);
             console.log('sign-in res', res);
-
+            localStorage.setItem('token',res.token);
             const redirectByRole = (role) => {
               switch (role) {
                 case "caregiver":
