@@ -10,9 +10,16 @@ const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = token;
+  if (token) {
+    config.headers.Authorization =
+      config.rawToken ? token : `Bearer ${token}`;
+  }
+  console.log("withAuth:", config.withAuth, "Authorization:", config.headers.Authorization);
+
   return config;
 });
+
+
 
 http.interceptors.response.use(
   (res) => res.data,

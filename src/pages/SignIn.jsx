@@ -8,29 +8,32 @@ import { setAuth } from '../redux/authSlice';
 function SignIn() {
     const [isForgot, setIsForgot] = useState(false);
     const { control, register, handleSubmit, formState: { errors }, reset } = useForm();
-    const navigate=useNavigate();
-    const dispatch=useDispatch();
-    const user=useSelector((state)=>state.auth.value);
-    console.log('user',user);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const user = useSelector((state) => state.auth.value);
+    console.log('user', user);
+
+
+    const redirectByRole = (role) => {
+        switch (role) {
+            case "caregiver":
+                return "/care-giver";
+            case "physician":
+                return "/physician";
+            case "patient":
+                return "/patient";
+            default:
+                return "/unauthorized";
+        }
+    };
 
     const onSignIn = async (signInData) => {
         console.log('sign-in data', signInData);
         try {
             const res = await signInAPI(signInData);
             console.log('sign-in res', res);
-            localStorage.setItem('token',res.token);
-            const redirectByRole = (role) => {
-              switch (role) {
-                case "caregiver":
-                  return "/care-giver";
-                case "physician":
-                  return "/physician";
-                case "patient":
-                  return "/patient";
-                default:
-                  return "/unauthorized";
-              }
-            };
+            localStorage.setItem('token', res.token);
+
             navigate(redirectByRole(res.role));
 
             dispatch(setAuth(res));
@@ -39,6 +42,10 @@ function SignIn() {
             alert(error.message)
         }
 
+    }
+
+    if (user?.token && user?.role) {
+        navigate(redirectByRole(user?.role));
     }
 
     const onSignInReset = async (resetEmail) => {

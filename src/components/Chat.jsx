@@ -1,95 +1,76 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getPatientChat, askAPI } from "../api/hospitalApi";
+import { getPatientChat, askAPI, getDocRef } from "../api/hospitalApi";
 import { marked } from "marked";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { addQconversation } from "../redux/chatSlice";
+// import { addQconversation } from "../redux/chatSlice";
+// import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
 import { FaPlus } from "react-icons/fa6";
 import { Spinner } from "./Spiner";
+// import { useMutation } from '@tanstack/react-query';
+import useAskQuestion from "../hooks/useAskQuestion";
+import useDocRef from "../hooks/useDocRef";
+
+
 const Chat = () => {
-  const [loading, setLoading] = useState(false);
-  const [chatData, setChatData] = useState([]);
+  const { fetchDocRef } = useDocRef();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector((state) => state?.askQ?.value);
+  const { data: chatData, loading , isAskPending} = useSelector((state) => state.askQ);
+  console.log('chatData', chatData)
   console.log("getConversation", get_conversation);
   const dispatch = useDispatch();
   console.log("singleDate 111→", singleDate);
-  useEffect(() => {
-    const fetchChat = async () => {
-      console.log("singleDate →", singleDate);
-      if (!singleDate || Object.keys(singleDate).length === 0) return;
+  const { askQuestion, isPending, error } = useAskQuestion();
+  console.log('isPending in chat', isPending);
+  // useEffect(() => {
+  //   const fetchChat = async () => {
+  //     // setLoading(true);
+  //     console.log("singleDate →", singleDate);
+  //     if (!singleDate || Object.keys(singleDate).length === 0) return;
 
-      try {
-        const res = await getPatientChat(singleDate);
-        console.log("chat response →", res);
-        setChatData(res);
-      } catch (error) {
-        console.error("Error fetching chat data:", error.message);
-      }
-    };
-    fetchChat();
-  }, [singleDate]);
-
-  // const get_conversation=[];
-  // const get_conversation=[
-  //     {
-  //         "role": "user",
-  //         "content": "1. What is the primary diagnosis for Geraldine T. Copp as indicated in the prescription forms?"
-  //     },
-  //     {
-  //         "role": "assistant",
-  //         "content": "The primary diagnosis for Geraldine T. Copp as indicated in the prescription forms is acute and subacute endocarditis, coded as 133.9."
-  //     },
-  //     {
-  //         "role": "user",
-  //         "content": "1. What is the primary diagnosis for Geraldine T. Copp as indicated in the prescription forms?"
-  //     },
-  //     {
-  //         "role": "assistant",
-  //         "content": "The primary diagnosis for Geraldine T. Copp as indicated in the prescription forms is acute and subacute endocarditis, coded as 133.9."
+  //     if (singleDate) {
+  //       dispatch(fetchPatientChat(singleDate));
   //     }
-  // ]
-  const handleQuestionClick = async (ind) => {
-    setLoading(true);
-    const latestConversation = [];
-    const currentQuestion = chatData[ind];
-    const parts = [{ content: currentQuestion, role: 'user' }];
-    // console.log('Question',currentQuestion);
-    const newId = crypto.randomUUID();
-    const askQPayload = {
-      ...singleDate,
-      meta: {
-        id: newId,
-        content: {
-          conversation: await get_conversation,
-          content_type: "text",
-          parts: parts
-        },
-      },
-    }
+  //   };
+  //   fetchChat();
+  // }, []);
 
-    try {
-      const res = await askAPI(askQPayload);
-      const assisRes = { content: res, role: 'assistant' }
-      latestConversation.push(...parts);
-      latestConversation.push(assisRes);
-      console.log('dispatch last conversation', latestConversation)
-      dispatch(addQconversation(latestConversation))
-      console.log('dispatch last conversation2', latestConversation)
-      setLoading(false);
-    } catch (error) {
-      console.error('Error', error);
-    }
-    console.log('askPayload', askQPayload);
+
+  const handleQuestionClick = (ind) => {
+    const currentQuestion = chatData[ind];
+    askQuestion(currentQuestion);
   }
 
-  const format = (text) => text.replace(/(?:\r\n|\r|\n)/g, "<br>");
-  // if(get_conversation.length ===0) return <Spinner/>
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatData, get_conversation]);
+
+  const handleDocRef = async(answerId) => {
+    const ansID={ question_id: answerId}
+    try {
+      const docResponse = await getDocRef(ansID);
+      if (docResponse) {
+        console.log("Doc Ref Response:", docResponse);
+        await fetchDocRef(docResponse);
+      }
+    } catch (error) {
+      console.error("Error fetching doc ref:", error);
+    }
+    // 
+  }
+
+  if (loading || isAskPending) return <Spinner />;
+  if (error) return <p className="text-red-600">Error: {error}</p>;
 
   return (
-    <div className="bg-white h-[58vh] ml-4 rounded mt-12 overflow-auto p-4">
-      {chatData.length > 0 && get_conversation.length === 0 && loading ? <Spinner /> : (
+    <div >
+      {chatData.length > 0 && (
         <>
           {chatData.length > 0 && get_conversation.length === 0 && (
             <div className=" flex items-center gap-2">
@@ -151,9 +132,9 @@ const Chat = () => {
                 return (
                   <div
                     key={index}
-                    className="overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100"
+                    className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100"
                   >
-                    {content}
+                    {content}-----
                   </div>
                 );
               }
@@ -173,8 +154,11 @@ const Chat = () => {
           </div>)}
 
           {get_conversation.length > 0 && (
-            get_conversation.map((conversation, ind) => {
-              let normalized = conversation.content.replace(/\\n/g, "\n");
+            get_conversation.map((conversation,ind) => {
+              let normalized =
+                typeof conversation?.content === "string"
+                  ? conversation.content.replace(/\\n/g, "\n")
+                  : "";
               const content = (
                 <ReactMarkdown
                   children={normalized}
@@ -209,12 +193,19 @@ const Chat = () => {
               if (conversation.role === 'assistant') {
                 return (
                   <div
-                    key={ind}
+                    key={conversation.id}
                     className="overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2"
                   >
-                    {content}
+                    {content} 
+                    <button
+                      className="bg-blue-500 text-white rounded px-2 py-1 mt-2 cursor-pointer hover:bg-blue-600"
+                      onClick={() => handleDocRef(conversation.id)}
+                    >
+                      Doc Ref
+                    </button>
                   </div>
                 );
+                
               }
               return <div className=" flex items-center space-y-2" key={ind}>
                 <img
@@ -229,10 +220,11 @@ const Chat = () => {
             })
 
           )}
+          <div ref={chatEndRef} />
         </>
       )}
     </div>
   );
 };
 
-export default Chat;
+export default React.memo(Chat);

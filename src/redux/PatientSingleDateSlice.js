@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 export const PatientSingleDateSlice= createSlice({
     name:'patientsingledata',
     initialState:{
-        value:{},
+        value:null,
     },
     reducers:{
         addDischargePatientDate:(state, action)=>{

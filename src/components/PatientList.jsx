@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 import { getPatients } from "../api/hospitalApi";
 import { useDispatch, useSelector } from "react-redux";
 import { addPatientNames } from "../redux/patientListSlice";
-import { deleteQconversation } from "../redux/chatSlice";
+// import { clearChat} from "../redux/chatSlice";
 import { addDischargePatientDate } from "../redux/PatientSingleDateSlice";
 import { FaUser, FaRegStickyNote } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
+import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
 
-const PatientList = ({filterPatient}) => {
+const PatientList = ({ filterPatient }) => {
   const auth = useSelector((state) => state.auth.value);
   const { user_id } = auth || {};
   const patientsList = useSelector((state) => state.patientnames.value);
+  const { loading } = useSelector((state) => state.askQ);
 
   console.log("patients list from store", patientsList);
   const dispatch = useDispatch();
-  const [openIndex, setOpenIndex]=useState(null);
+  const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -31,16 +33,14 @@ const PatientList = ({filterPatient}) => {
     //  console.log("patients list from store", patientsList);
   }, []);
 
-  useEffect(() => {
-    console.log("patients list updated", patientsList);
-  }, [patientsList]);
-
-  const handlePatientClick=(date)=>{
-    dispatch(deleteQconversation())
-    const payload={...date,  patient_type:"Discharged", user_id:user_id}
+  const handlePatientClick = (date) => {
+    dispatch(clearChat())
+    const payload = { ...date, patient_type: "Discharged", user_id: user_id }
     dispatch(addDischargePatientDate(payload))
+    dispatch(fetchPatientChat(payload));
+    console.log("handlePatient called")
   }
-  const handlePatientDelete=()=>{
+  const handlePatientDelete = () => {
 
   }
   return (
@@ -62,14 +62,15 @@ const PatientList = ({filterPatient}) => {
                 <ul className="transition-all duration-700">
                   {patient.data.map((date, ind) => (
                     <li
-                      onClick={()=>handlePatientClick(date)}
+                      onClick={() => handlePatientClick(date)}
                       key={ind}
-                      className={`flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200 cursor-pointer hover:bg-gray-300`}
+
+                      className={`${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-300'} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200 `}
                     >
                       {date.dates}
-                      <span 
-                      className="bg-red-500 text-gray-900 p-1 rounded-full hover:bg-white hover:text-red-600"
-                      onClick={handlePatientDelete}
+                      <span
+                        className={`${loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-white hover:text-red-600'} bg-red-500 text-gray-900 p-1 rounded-full `}
+                        onClick={handlePatientDelete}
                       >
                         <MdDelete />
                       </span>
@@ -80,11 +81,11 @@ const PatientList = ({filterPatient}) => {
             </div>
           ))}
       </ul>
-      {/* < div className="h-[36vh]"> */}
-          <BottonConfigButtons className="h-[38vh]"/>
-      {/* </div> */}
+
+      <BottonConfigButtons className="h-[38vh]" />
+
     </div>
   );
 };
 
-export default PatientList;
+export default React.memo(PatientList);

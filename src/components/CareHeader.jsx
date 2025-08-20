@@ -122,4 +122,4 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
   );
 }
 
-export default CareHeader;
+export default React.memo(CareHeader);

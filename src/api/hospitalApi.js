@@ -10,11 +10,7 @@ export const forgotPasswordAPI= (data) => http.post('/forgot_password',data);
 export const getPatients = () => http.get('/retrieve-patient-name?patient-type=Discharged');
 export const getPatientChat = (data) => http.post('/generate_questions',data);
 export const askAPI = (data) => http.post('/ask',data);
+export const getDocRef = (data) => http.post('/doc-ref', data, { withAuth: true, headers: {} });
 
 
 
-
-
-// src/api/userApi.js
-// export const loginUser = (credentials) => http.post('/login', credentials);
-// export const fetchProfile = () => http.get('/user/profile');

@@ -4,6 +4,7 @@ import authReducer from './authSlice'
 import patientListReducer from './patientListSlice'
 import PatientSingleDateSliceReducer from './PatientSingleDateSlice'
 import chatSliceReducer from './chatSlice'
+import bottomButtonsReducer from './bottomButtonsSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     patientnames:patientListReducer,
     patientsingledata:PatientSingleDateSliceReducer,
     askQ:chatSliceReducer,
+    buttonNames:bottomButtonsReducer,
   },
 })

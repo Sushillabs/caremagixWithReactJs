@@ -12,4 +12,4 @@ const SearchInput = ({placeholder, value, onChange}) => {
   )
 }
 
-export default SearchInput
+export default React.memo(SearchInput)
