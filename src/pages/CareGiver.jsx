@@ -5,17 +5,27 @@ import SearchInput from "../components/SearchInput";
 import PatientList from "../components/PatientList";
 import Chat from "../components/Chat";
 import AskQuestion from "../components/AskQuestion";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch} from "react-redux";
 import debounce from "lodash.debounce";
+import EFaxConfigForm from "../components/EFaxConfigForm";
+import { addButtonNames } from "../redux/bottomButtonsSlice";
+import UploadPatientPlan from "../components/UploadPatientPlan";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const { loading, isAskPending } = useSelector((state) => state.askQ);
   const bottom_button = useSelector((state) => state.buttonNames.value);
+  const dispatch = useDispatch();
 
   const [filterName, setFilterName] = useState("");
   const [inputValue, setInputValue] = useState("");
+  // const [openModal, setOpenModal] = useState(false);
+
+  const onClose = useCallback( () => {
+    dispatch(addButtonNames(''));
+    // setOpenModal(false);
+  },[]);
 
   const debouncedSetFilterName = useCallback(
     debounce((value) => setFilterName(value), 1000),
@@ -42,8 +52,8 @@ function CareGiver() {
   const modalContent = {
     "create-progress-notes": <div>Progress Notes Component</div>,
     "ai-agent": <div>AI Agent Component</div>,
-    "efax-configuration": <div>eFax Configuration Component</div>,
-    "upload-plan": <div>Upload Patients Plan Component</div>,
+    "efax-configuration": <EFaxConfigForm onClose={onClose}/>,
+    "upload-plan": <UploadPatientPlan onClose={onClose}/>,
     "clear-conversations": <div>Clear Conversations Component</div>,
   };
 
@@ -77,10 +87,8 @@ function CareGiver() {
       </div>
 
       {bottom_button && modalContent[bottom_button] && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">       
             {modalContent[bottom_button]}
-          </div>
         </div>
       )}
     </div>
