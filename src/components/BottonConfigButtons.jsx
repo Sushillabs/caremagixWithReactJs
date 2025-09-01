@@ -14,15 +14,15 @@ const BottonConfigButtons = () => {
     { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
     { id: "clear-conversations", name: "Clear Conversations", icon: <MdDelete /> },
   ];
-const handleLeftButtonClick = (id) => {
+  const handleLeftButtonClick = (id) => {
     console.log("Button clicked:", id);
-    dispatch(addButtonNames(id));  
-}
+    dispatch(addButtonNames(id));
+  }
   return (
     <ul className='flex flex-col gap-3 p-2'>
       {bottom_buttons && bottom_buttons.map((button) => {
         return <li key={button.id}
-        onClick={()=>handleLeftButtonClick(button.id)} 
+          onClick={() => handleLeftButtonClick(button.id)}
           className=" flex gap-2 items-center border border-black p-1 rounded-2xl bg-white text-md cursor-pointer hover:bg-gray-400">
           {button.icon} <span>{button.name}</span>
         </li>

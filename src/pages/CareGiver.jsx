@@ -67,7 +67,7 @@ function CareGiver() {
             value={inputValue}
             onChange={handleInputChange}
           />
-          <PatientList filterPatient={filterPatient} />
+          <PatientList filterPatient={filterPatient} bottom_button={bottom_button}/>
         </div>
         <div className="col-span-10">
           <div className="bg-white h-[58vh] ml-4 rounded mt-12 overflow-auto p-4">

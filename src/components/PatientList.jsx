@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { getPatients } from "../api/hospitalApi";
 import { useDispatch, useSelector } from "react-redux";
-import { addPatientNames } from "../redux/patientListSlice";
+import { addPatientNames, deletePatientThunk } from "../redux/patientListSlice";
 // import { clearChat} from "../redux/chatSlice";
 import { addDischargePatientDate } from "../redux/PatientSingleDateSlice";
 import { FaUser, FaRegStickyNote } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
+import { Spinner } from "./Spiner";
 
-const PatientList = ({ filterPatient }) => {
+
+const PatientList = ({ filterPatient ,bottom_button}) => {
   const auth = useSelector((state) => state.auth.value);
   const { user_id } = auth || {};
-  const patientsList = useSelector((state) => state.patientnames.value);
+  const { value: patientsList, loading: deleteLoader, error } = useSelector((state) => state.patientnames);
   const { loading } = useSelector((state) => state.askQ);
 
   console.log("patients list from store", patientsList);
@@ -31,7 +33,7 @@ const PatientList = ({ filterPatient }) => {
     };
     fetchPatient();
     //  console.log("patients list from store", patientsList);
-  }, []);
+  }, [bottom_button]);
 
   const handlePatientClick = (date) => {
     dispatch(clearChat())
@@ -40,15 +42,24 @@ const PatientList = ({ filterPatient }) => {
     dispatch(fetchPatientChat(payload));
     console.log("handlePatient called")
   }
-  const handlePatientDelete = () => {
 
+  const handlePatientDelete = (e, name, dateId) => {
+    e.stopPropagation();
+    console.log("Deleting patient:", name, dateId);
+    if (name && dateId) {
+      dispatch(deletePatientThunk({ patient_type: "Discharged", patient_name: name, dateId }));
+    }
   }
+
+  // if (loading || deleteLoader) return <Spinner />;
+  if (error) return <p className="text-red-600">Error: {error}</p>;
+
   return (
     <div className="h-[76vh] bg-white rounded mt-2">
       <ul className="h-[38vh] overflow-auto">
         {filterPatient &&
           filterPatient.map((patient, ind) => (
-            <div>
+            patient.data && patient.data.length !== 0 && (<div>
               <li
                 onClick={() => setOpenIndex(openIndex === ind ? null : ind)}
                 key={ind}
@@ -60,17 +71,17 @@ const PatientList = ({ filterPatient }) => {
 
               {openIndex === ind && patient.data && (
                 <ul className="transition-all duration-700">
-                  {patient.data.map((date, ind) => (
+                  {patient.data.map((date) => (
                     <li
                       onClick={() => handlePatientClick(date)}
-                      key={ind}
+                      key={date.dates}
 
-                      className={`${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-300'} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200 `}
+                      className={`${loading || deleteLoader ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-300'} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200 `}
                     >
                       {date.dates}
                       <span
-                        className={`${loading ? 'cursor-not-allowed opacity-50' : 'hover:bg-white hover:text-red-600'} bg-red-500 text-gray-900 p-1 rounded-full `}
-                        onClick={handlePatientDelete}
+                        className={`${loading || deleteLoader? 'cursor-not-allowed opacity-50' : 'hover:bg-white hover:text-red-600'} bg-red-500 text-gray-900 p-1 rounded-full `}
+                        onClick={(e) => handlePatientDelete(e, patient.name, date.dates)}
                       >
                         <MdDelete />
                       </span>
@@ -78,7 +89,7 @@ const PatientList = ({ filterPatient }) => {
                   ))}
                 </ul>
               )}
-            </div>
+            </div>)
           ))}
       </ul>
 
@@ -89,3 +100,4 @@ const PatientList = ({ filterPatient }) => {
 };
 
 export default React.memo(PatientList);
+// export default PatientList;
