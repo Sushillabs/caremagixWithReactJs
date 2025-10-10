@@ -1,7 +1,7 @@
+import { createSlice, createAction } from "@reduxjs/toolkit";
 
 
-import { createSlice } from "@reduxjs/toolkit";
-
+export const logout = createAction("auth/logout");
 export const authSlice = createSlice({
   name: "auth", 
   initialState: {

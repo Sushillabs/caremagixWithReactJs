@@ -107,7 +107,7 @@ const Footer = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-2 gap-4">
             {/* Full Name */}
-            <div className="col-span-1">
+            <div className="col-span-2 sm:col-span-1">
               <label htmlFor="firstname">Full Name</label>
               <input
                 id="firstname"
@@ -121,7 +121,7 @@ const Footer = () => {
             </div>
 
             {/* Email */}
-            <div className="col-span-1">
+            <div className="col-span-2 sm:col-span-1">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
@@ -137,7 +137,7 @@ const Footer = () => {
 
           <div className="grid grid-cols-2 gap-4 mt-4">
             {/* Address */}
-            <div className="col-span-1">
+            <div className="col-span-2 sm:col-span-1">
               <label htmlFor="mobile">Mobile</label>
 
               <Controller
@@ -163,7 +163,7 @@ const Footer = () => {
             </div>
 
             {/* Subject */}
-            <div className="col-span-1">
+            <div className="col-span-2 sm:col-span-1">
               <label htmlFor="subject">Subject</label>
               <input
                 id="subject"
@@ -199,8 +199,8 @@ const Footer = () => {
           </button>
         </form>
       </div>
-      <div className="border-t border-b border-white mt-6 col-span-12 grid grid-cols-12 pt-8 pb-8 text-white">
-        <div className="col-span-3">
+      <div className="border-t border-b border-white mt-6 mr-4 ml-4 col-span-12 grid grid-cols-12 pt-8 pb-8 text-white">
+        <div className="col-span-6 sm:col-span-3">
           <span className="font-bold">PATIENTS</span>
           <ul className="footer-list mt-2">
             <li className=" hover:underline">
@@ -211,7 +211,7 @@ const Footer = () => {
             </li>
           </ul>
         </div>
-        <div className="col-span-3">
+        <div className="col-span-6 sm:col-span-3">
           <span className="font-bold">PARTNERS</span>
           <ul className="footer-list mt-2">
             <li className=" hover:underline">
@@ -222,7 +222,7 @@ const Footer = () => {
             </li>
           </ul>
         </div>
-        <div className="col-span-3">
+        <div className="col-span-6 sm:col-span-3">
           <span className="font-bold">COMPANY</span>
           <ul className="footer-list mt-2">
             <li className=" hover:underline">
@@ -230,7 +230,7 @@ const Footer = () => {
             </li>
           </ul>
         </div>
-        <div className="col-span-3">
+        <div className="col-span-6 sm:col-span-3">
           <span className="font-bold">LEGAL</span>
           <ul className="footer-list mt-2">
             <li className=" hover:underline">

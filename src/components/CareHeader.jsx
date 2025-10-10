@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { TbUserExclamation } from "react-icons/tb";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/authSlice";
+import { useNavigate } from "react-router-dom"; 
 
 function CareHeader() {
   let plans = [
@@ -9,13 +11,24 @@ function CareHeader() {
     "Nursing plan",
     "Transition-CarePlan",
     "ICD Codes",
+    "CPT Codes",
     "Medical Adherence",
   ];
 const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
   const user = useSelector((state) => state.auth.value);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    dispatch(logout());
+    navigate('/');
+    
+    console.log("Logged out");
+  }
   return (
-    <div className="bg-caregiverbg grid grid-cols-12 p-2">
-      <div className="col-span-3 flex  items-center">
+    <div className="bg-caregiverbg grid grid-cols-12 pl-4 pr-4">
+      <div className="col-span-12 md:col-span-2 flex  items-center">
         <svg
           width="160"
           height="66"
@@ -56,12 +69,12 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
           </g>
         </svg>
       </div>
-      <div className="col-span-6 flex justify-around items-center ">
+      <div className="col-span-12 mb-2 md:mb-0 md:col-span-7 flex flex-wrap justify-between items-center lg:ml-4 lg:pr-4">
         {plans &&
           plans.map((plan, ind) =>
             ind === 0 ? (
               <div
-                className="flex flex-col relative"
+                className="flex flex-col relative w-1/2 sm:w-1/3 md:w-auto  " 
                 onMouseEnter={() => setIsDishchargeToggle(false)}
                 onMouseLeave={() => setIsDishchargeToggle(true)}
               >
@@ -87,15 +100,14 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
             ) : (
               <div
                 key={ind}
-                className="border border-black p-2 rounded-2xl bg-white text-xs font-semibold cursor-pointer"
+                className="w-1/2 sm:w-1/3 md:w-auto border border-black p-2 rounded-2xl bg-white text-xs font-semibold cursor-pointer"
               >
                 {plan}
               </div>
             )
           )}
       </div>
-
-      <div className="col-span-3 flex items-center justify-end ">
+      <div className="col-span-12 mb-2 md:mb-0 md:col-span-3 flex items-center md:justify-end">
         <div className="text-xs flex font-semibold mr-4 text-gray-600 ">
           <div className="border-r pr-1">
             <p>Facility Name: {user.facility_name}</p>
@@ -106,13 +118,13 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
               <FaUser />
               {user.first_name} {user.last_name}
             </p>
-            <p>{user.role}</p>
+            <p className="ml-4">{user.role}</p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={""}
+          onClick={handleLogout}
           className="px-4 py-2 text-sm font-medium text-white bg-red-600 cursor-pointer hover:bg-red-700 rounded-lg transition duration-200"
         >
           Logout

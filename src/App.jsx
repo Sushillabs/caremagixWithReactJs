@@ -21,8 +21,7 @@ function App() {
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
           </Route>
-          <Route
-            element={
+          <Route element={
               <RequireAuth roles={roles}>
                 <CareGiverLayout />
               </RequireAuth>
