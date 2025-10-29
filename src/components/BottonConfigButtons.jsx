@@ -9,9 +9,17 @@ const BottonConfigButtons = () => {
   const dispatch = useDispatch();
   let bottom_buttons = [
     { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
-    { id: "ai-agent", name: "AI Agent", icon: <FaUser /> },
+    { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
+    { id: "pull-pcc", name: "Pull PCC Data", icon: <FaUser /> },
     { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure /> },
     { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
+    { id: "upload-image", name: "Upload Image", icon: <FaUpload /> },
+    { id: "upload-icd", name: "Upload ICD Codes", icon: <FaUpload /> },
+    { id: "upload-cpt", name: "Upload CPT Codes", icon: <FaUpload /> },
+    { id: "medication-alert", name: "Medication Alerts", icon: <FaUpload /> },
+    { id: "call-report", name: "Call Reports", icon: <FaUpload /> },
+    { id: "set-caller-id", name: "Set Caller Id", icon: <FaUpload /> },
+    { id: "ai-agent", name: "AI Agent", icon: <FaUser /> },
     { id: "clear-conversations", name: "Clear Conversations", icon: <MdDelete /> },
   ];
   const handleLeftButtonClick = (id) => {
@@ -19,16 +27,17 @@ const BottonConfigButtons = () => {
     dispatch(addButtonNames(id));
   }
   return (
-    <ul className='flex flex-col gap-3 p-2'>
+    <ul className='flex flex-col gap-1 overflow-auto h-[38vh]'>
       {bottom_buttons && bottom_buttons.map((button) => {
         return <li key={button.id}
           onClick={() => handleLeftButtonClick(button.id)}
-          className=" flex gap-2 items-center border border-black p-1 rounded-2xl bg-white text-md cursor-pointer hover:bg-gray-400">
+          className={`flex items-center gap-1 py-2 px-1 bg-green-600 cursor-pointer hover:bg-green-700 text-white rounded-md`}>
           {button.icon} <span>{button.name}</span>
         </li>
       })}
     </ul>
   )
+  // className=" flex gap-2 items-center border border-black p-1 rounded-2xl bg-white text-md cursor-pointer hover:bg-gray-400">
 }
 
 export default BottonConfigButtons

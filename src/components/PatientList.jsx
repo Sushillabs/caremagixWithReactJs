@@ -56,14 +56,14 @@ const PatientList = ({ filterPatient ,bottom_button}) => {
 
   return (
     <div className="h-[76vh] bg-white rounded mt-2">
-      <ul className="h-[38vh] overflow-auto">
+      <ul className="h-[38vh] overflow-auto bg-gray-100">
         {filterPatient &&
           filterPatient.map((patient, ind) => (
             patient.data && patient.data.length !== 0 && (<div>
               <li
                 onClick={() => setOpenIndex(openIndex === ind ? null : ind)}
                 key={ind}
-                className={`flex items-center gap-2 py-2 px-2 mb-1 bg-blue-200 cursor-pointer hover:bg-blue-300`}
+                className={`flex items-center gap-2 py-2 px-2 mb-1 bg-white cursor-pointer hover:bg-blue-200`}
               >
                 <FaUser />
                 {patient.name}
@@ -92,9 +92,7 @@ const PatientList = ({ filterPatient ,bottom_button}) => {
             </div>)
           ))}
       </ul>
-
-      <BottonConfigButtons className="h-[38vh]" />
-
+      <BottonConfigButtons className="" />
     </div>
   );
 };

@@ -13,11 +13,11 @@ const AskQuestion = () => {
     setInputValue('');
   }
   return (
-    <div className="bg-white h-[15vh] ml-4 mt-4 p-2 grid grid-cols-12 items-center gap-6 ">
-      <div className="border border-gray-300 rounded col-span-10 flex items-center gap-2 p-2">
+    <div className="sm:bg-white h-auto sm:h-[15vh] sm:ml-4 mt-4 sm:p-2 grid grid-cols-12 items-center gap-6 ">
+      <div className=" bg-white border border-gray-300 rounded col-span-12 sm:col-span-10 flex items-center gap-2 p-2">
         <textarea
           placeholder="Ask a question ..."
-          className="p-2 h-full w-full"
+          className="p-2 h-auto w-full"
           aria-label="Ask a question"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -42,7 +42,7 @@ const AskQuestion = () => {
         </button>
       </div>
       <button
-        className="disabled:opacity-45 bg-green-600 text-white rounded-2xl h-min p-2 text-center col-span-2 w-30 cursor-pointer hover:bg-green-800"
+        className="bg-none disabled:opacity-45 bg-green-600 text-white rounded-2xl h-min p-2 text-center sm:col-span-2 w-30 cursor-pointer hover:bg-green-800"
         type="submit"
         onClick={handleAskSubmit}
         disabled={isPending}

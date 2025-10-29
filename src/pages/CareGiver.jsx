@@ -58,10 +58,10 @@ function CareGiver() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative  bg-caregiverbg h-auto sm:h-screen overflow-auto">
       <CareHeader />
-      <div className="grid grid-cols-12 bg-caregiverbg pl-4 pr-4 h-[87vh]">
-        <div className="col-span-2">
+      <div className="grid grid-cols-12 pl-4 pr-4 h-[87vh]">
+        <div className="hidden sm:block sm:col-span-2">
           <SearchInput
             placeholder="Search Patient Name ..."
             value={inputValue}
@@ -69,8 +69,8 @@ function CareGiver() {
           />
           <PatientList filterPatient={filterPatient} bottom_button={bottom_button}/>
         </div>
-        <div className="col-span-10">
-          <div className="bg-white h-[58vh] ml-4 rounded mt-12 overflow-auto p-4">
+        <div className="col-span-12 sm:col-span-10">
+          <div className="bg-white h-[58vh] sm:ml-4 rounded mt-12 overflow-auto p-4">
             <Chat />
           </div>
 
