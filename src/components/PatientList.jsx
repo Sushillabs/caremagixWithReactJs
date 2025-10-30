@@ -11,7 +11,7 @@ import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlic
 import { Spinner } from "./Spiner";
 
 
-const PatientList = ({ filterPatient ,bottom_button}) => {
+const PatientList = ({ filterPatient, bottom_button }) => {
   const auth = useSelector((state) => state.auth.value);
   const { user_id } = auth || {};
   const { value: patientsList, loading: deleteLoader, error } = useSelector((state) => state.patientnames);
@@ -20,13 +20,14 @@ const PatientList = ({ filterPatient ,bottom_button}) => {
   console.log("patients list from store", patientsList);
   const dispatch = useDispatch();
   const [openIndex, setOpenIndex] = useState(null);
+  const [openName, setOpenName] = useState(null);
 
   useEffect(() => {
     const fetchPatient = async () => {
       try {
         const res = await getPatients();
         console.log("patients list", res.data);
-        dispatch(addPatientNames(res.data));
+        dispatch(addPatientNames(res));
       } catch (error) {
         console.error("Error while fetching the patient list", error);
       }
@@ -56,41 +57,86 @@ const PatientList = ({ filterPatient ,bottom_button}) => {
 
   return (
     <div className="h-[76vh] bg-white rounded mt-2">
-      <ul className="h-[38vh] overflow-auto bg-gray-100">
-        {filterPatient &&
-          filterPatient.map((patient, ind) => (
-            patient.data && patient.data.length !== 0 && (<div>
-              <li
-                onClick={() => setOpenIndex(openIndex === ind ? null : ind)}
-                key={ind}
-                className={`flex items-center gap-2 py-2 px-2 mb-1 bg-white cursor-pointer hover:bg-blue-200`}
-              >
-                <FaUser />
-                {patient.name}
-              </li>
+      <ul className="h-[38vh] overflow-auto bg-white">
+        {filterPatient.length === 0 && (
+          <li className="p-3 text-gray-500">No patients found</li>
+        )}
 
-              {openIndex === ind && patient.data && (
-                <ul className="transition-all duration-700">
-                  {patient.data.map((date) => (
-                    <li
-                      onClick={() => handlePatientClick(date)}
-                      key={date.dates}
+        {filterPatient.map((item, idx) => {
+          const isOpen = openName === item.name;
+          // For uniqueness in DOM keys use name + type (names seem unique)
+          const key = `${item.type}-${item.name}-${idx}`;
 
-                      className={`${loading || deleteLoader ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-300'} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200 `}
-                    >
-                      {date.dates}
-                      <span
-                        className={`${loading || deleteLoader? 'cursor-not-allowed opacity-50' : 'hover:bg-white hover:text-red-600'} bg-red-500 text-gray-900 p-1 rounded-full `}
-                        onClick={(e) => handlePatientDelete(e, patient.name, date.dates)}
+          if (item.type === "data") {
+            // same rendering you already have for data items
+            const patient = item.raw;
+            return (
+              <div key={key}>
+                <li
+                  onClick={() => setOpenName(isOpen ? null : item.name)}
+                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100`}
+                >
+                  <FaUser />
+                  {item.name}
+                </li>
+
+                {isOpen && patient.data && (
+                  <ul className="transition-all duration-700">
+                    {patient.data.map((date) => (
+                      <li
+                        onClick={() => handlePatientClick(date)}
+                        key={`${date.dates}-${date.lancedb_table}`}
+                        className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-300"} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200`}
                       >
-                        <MdDelete />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>)
-          ))}
+                        <span>{date.dates}</span>
+                        <span
+                          className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "hover:bg-white hover:text-red-600"} bg-red-500 text-gray-900 p-1 rounded-full`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePatientDelete(e, item.name, date.dates);
+                          }}
+                        >
+                          <MdDelete />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          } else if (item.type === "pcc") {
+            // Render PCC rows differently (list of detail keys)
+            // item.details is an array of strings per your JSON example
+            return (
+              <div key={key}>
+                <li
+                  onClick={() => setOpenName(isOpen ? null : item.name)}
+                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100`}
+                >
+                  <FaUser />
+                  <span>{item.name}</span>
+                  <small className="ml-2 text-xs text-gray-500">({item.raw.patient_type})</small>
+                </li>
+
+                {isOpen && (
+                  <ul className="transition-all duration-500 p-2 bg-gray-50">
+                    {item.details && item.details.length > 0 ? (
+                      item.details.map((detail, i) => (
+                        <li key={`${item.name}-detail-${i}`} className="py-1 px-2 text-sm">
+                          • {detail}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="py-1 px-2 text-sm text-gray-500">No PCC details</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            );
+          }
+
+          return null;
+        })}
       </ul>
       <BottonConfigButtons className="" />
     </div>
