@@ -12,7 +12,7 @@ import { addButtonNames } from "../redux/bottomButtonsSlice";
 import UploadPatientPlan from "../components/UploadPatientPlan";
 
 function CareGiver() {
-  const { data: patientsList, pcc_data } = useSelector((state) => state?.patientnames?.value);
+  const patientsList = useSelector((state) => state?.patientnames?.value);
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const { loading, isAskPending } = useSelector((state) => state.askQ);
   const bottom_button = useSelector((state) => state.buttonNames.value);
@@ -43,39 +43,17 @@ function CareGiver() {
     debouncedSetFilterName(value);
   };
 
-  // const filterPatient = useMemo(() => {
-  //   return patientsList.filter((patient) =>
-  //     patient?.name.toLowerCase().includes(filterName.trim().toLowerCase())
-  //   );
-  // }, [patientsList, filterName]);
+  // const filteredPatients = (patientsList || []).filter((p) =>
+  //   p?.name?.toLowerCase().includes(filterName?.trim().toLowerCase() || "")
+  // );
 
-  const mergedFiltered = useMemo(() => {
+  const filteredPatients = useMemo(() => {
     const q = (filterName || "").trim().toLowerCase();
-
-    const filteredPatients = (patientsList || []).filter((p) =>
+    return (patientsList || []).filter((p) =>
       p?.name?.toLowerCase().includes(q)
-    ).map((p) => ({
-      type: "data",
-      name: p.name,
-      raw: p,
-    }));
-    console.log("Filtered Patients List from DATA:", filteredPatients);
-    const pccDetails = (pcc_data && pcc_data.details) || {};
-    const filteredPcc = Object.entries(pccDetails)
-      .filter(([name]) => name.toLowerCase().includes(q))
-      .map(([name, detailsArray]) => ({
-        type: "pcc",
-        name,
-        details: detailsArray,
-        raw: { patient_type: pcc_data.patient_type || "PCC" },
-      }));
+    );
+  }, [patientsList, filterName]);
 
-    const merged = [...filteredPatients, ...filteredPcc];
-    return merged;
-  }, [patientsList, pcc_data, filterName]);
-
-  const filterPatient = mergedFiltered;
-  console.log("Filtered Patients:", filterPatient);
   const modalContent = {
     "create-progress-notes": <div>Progress Notes Component</div>,
     "ai-agent": <div>AI Agent Component</div>,
@@ -87,16 +65,16 @@ function CareGiver() {
   return (
     <div className="relative  bg-caregiverbg h-auto sm:h-screen overflow-auto">
       <CareHeader />
-      <div className="grid grid-cols-12 pl-4 pr-4 h-[87vh]">
-        <div className="hidden sm:block sm:col-span-2">
+      <div className="grid grid-cols-15 pl-4 pr-4 h-[87vh]">
+        <div className="hidden sm:block sm:col-span-3">
           <SearchInput
             placeholder="Search Patient Name ..."
             value={inputValue}
             onChange={handleInputChange}
           />
-          <PatientList filterPatient={filterPatient} bottom_button={bottom_button} />
+          <PatientList filterPatient={filteredPatients} bottom_button={bottom_button} />
         </div>
-        <div className="col-span-12 sm:col-span-10">
+        <div className="col-span-15 sm:col-span-12">
           <div className="bg-white h-[58vh] sm:ml-4 rounded mt-12 overflow-auto p-4">
             <Chat />
           </div>

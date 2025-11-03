@@ -27,8 +27,8 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
     console.log("Logged out");
   }
   return (
-    <div className="bg-caregiverbg grid grid-cols-12 pl-4 pr-4">
-      <div className="col-span-12 md:col-span-2 flex  items-center">
+    <div className="bg-caregiverbg grid grid-cols-15 pl-4 pr-4">
+      <div className="col-span-15 md:col-span-3 flex  items-center">
         <svg
           width="160"
           height="66"
@@ -69,7 +69,7 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
           </g>
         </svg>
       </div>
-      <div className="col-span-12 mb-2 md:mb-0 md:col-span-7 flex flex-wrap justify-between items-center lg:ml-4 lg:pr-4">
+      <div className="col-span-15 mb-2 md:mb-0 md:col-span-8 flex flex-wrap justify-between items-center lg:ml-4 lg:pr-4">
         {plans &&
           plans.map((plan, ind) =>
             ind === 0 ? (
@@ -107,7 +107,7 @@ const [isDischargeToggle, setIsDishchargeToggle]=useState(true)
             )
           )}
       </div>
-      <div className="col-span-12 mb-2 md:mb-0 md:col-span-3 flex items-center md:justify-end">
+      <div className="col-span-15 mb-2 md:mb-0 md:col-span-4 flex items-center md:justify-end">
         <div className="text-xs flex font-semibold mr-4 text-gray-600 ">
           <div className="border-r pr-1">
             <p>Facility Name: {user.facility_name}</p>

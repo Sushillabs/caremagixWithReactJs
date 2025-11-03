@@ -9,6 +9,7 @@ import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
 import { Spinner } from "./Spiner";
+import { charAtIndex } from "pdf-lib";
 
 
 const PatientList = ({ filterPatient, bottom_button }) => {
@@ -27,7 +28,25 @@ const PatientList = ({ filterPatient, bottom_button }) => {
       try {
         const res = await getPatients();
         console.log("patients list", res.data);
-        dispatch(addPatientNames(res));
+        const { data: patientsList, pcc_data } = res;
+        const filteredPatients = (patientsList || []).map((p) => ({
+          type: "data",
+          name: p.name,
+          raw: p,
+        }));
+        console.log("Filtered Patients List from DATA:", filteredPatients);
+        const pccDetails = (pcc_data && pcc_data.details) || {};
+        const filteredPcc = Object.entries(pccDetails)
+          .map(([name, detailsArray]) => ({
+            type: "pcc",
+            name,
+            details: detailsArray,
+            raw: { patient_type: pcc_data.patient_type || "PCC" },
+          }));
+
+        const merged = [...filteredPatients, ...filteredPcc];
+
+        dispatch(addPatientNames(merged));
       } catch (error) {
         console.error("Error while fetching the patient list", error);
       }
@@ -44,11 +63,11 @@ const PatientList = ({ filterPatient, bottom_button }) => {
     console.log("handlePatient called")
   }
 
-  const handlePatientDelete = (e, name, dateId) => {
+  const handlePatientDelete = (e, patient_name, patient_type, dataType) => {
     e.stopPropagation();
-    console.log("Deleting patient:", name, dateId);
-    if (name && dateId) {
-      dispatch(deletePatientThunk({ patient_type: "Discharged", patient_name: name, dateId }));
+    console.log("Deleting patient:", patient_name, patient_type);
+    if (patient_name && patient_type) {
+      dispatch(deletePatientThunk({ patient_type, patient_name, dataType }));
     }
   }
 
@@ -64,17 +83,15 @@ const PatientList = ({ filterPatient, bottom_button }) => {
 
         {filterPatient.map((item, idx) => {
           const isOpen = openName === item.name;
-          // For uniqueness in DOM keys use name + type (names seem unique)
           const key = `${item.type}-${item.name}-${idx}`;
 
           if (item.type === "data") {
-            // same rendering you already have for data items
             const patient = item.raw;
             return (
               <div key={key}>
                 <li
                   onClick={() => setOpenName(isOpen ? null : item.name)}
-                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100`}
+                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-200`}
                 >
                   <FaUser />
                   {item.name}
@@ -93,7 +110,7 @@ const PatientList = ({ filterPatient, bottom_button }) => {
                           className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "hover:bg-white hover:text-red-600"} bg-red-500 text-gray-900 p-1 rounded-full`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handlePatientDelete(e, item.name, date.dates);
+                            handlePatientDelete(e, date.patient_name, date.patient_type, item.type);
                           }}
                         >
                           <MdDelete />
@@ -105,25 +122,23 @@ const PatientList = ({ filterPatient, bottom_button }) => {
               </div>
             );
           } else if (item.type === "pcc") {
-            // Render PCC rows differently (list of detail keys)
-            // item.details is an array of strings per your JSON example
             return (
               <div key={key}>
                 <li
                   onClick={() => setOpenName(isOpen ? null : item.name)}
-                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100`}
+                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-200`}
                 >
                   <FaUser />
                   <span>{item.name}</span>
-                  <small className="ml-2 text-xs text-gray-500">({item.raw.patient_type})</small>
+                  {/* <small className="ml-2 text-xs text-gray-500">({item.raw.patient_type})</small> */}
                 </li>
 
                 {isOpen && (
                   <ul className="transition-all duration-500 p-2 bg-gray-50">
                     {item.details && item.details.length > 0 ? (
                       item.details.map((detail, i) => (
-                        <li key={`${item.name}-detail-${i}`} className="py-1 px-2 text-sm">
-                          • {detail}
+                        <li key={`${item.name}-detail-${i}`} className="py-1 px-2 text-sm cursor-pointer hover:bg-gray-200">
+                          • {detail.charAt(0).toUpperCase() + detail.slice(1)}
                         </li>
                       ))
                     ) : (
