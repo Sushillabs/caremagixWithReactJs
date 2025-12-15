@@ -75,20 +75,21 @@ function CareGiver() {
   };
 
   return (
-    <div className="relative  bg-caregiverbg h-auto sm:h-screen overflow-auto">
+    <div className="relative  bg-caregiverbg h-screen grid grid-rows-[auto_1fr] overflow-hidden pb-2">
       <CareHeader setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />
       {handleSidebar && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
-      <div className="grid grid-cols-15 pl-4 pr-4 h-[87vh]">
-        <div className="hidden sm:block sm:col-span-3">
+      <div className="grid grid-cols-15 pl-4 pr-4 min-h-0">
+        <div className="hidden sm:grid sm:col-span-3 h-full grid-rows-[auto_1fr] min-h-0 gap-1">
           <SearchInput
             placeholder="Search Patient Name ..."
             value={inputValue}
             onChange={handleInputChange}
+            // className="mb-4"
           />
-          <PatientList filterPatient={filteredPatients} bottom_button={bottom_button} />
+          <PatientList filterPatient={filteredPatients} bottom_button={bottom_button} /> 
         </div>
-        <div className="col-span-15 sm:col-span-12">
-          <div className="bg-white h-[58vh] sm:ml-4 rounded mt-12 overflow-auto p-4">
+        <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[1fr_auto] min-h-0">
+          <div className="bg-white  sm:ml-4 rounded mt-11 overflow-y-auto min-h-0 p-4">
             <Chat />
           </div>
 

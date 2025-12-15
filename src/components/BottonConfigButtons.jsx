@@ -27,7 +27,7 @@ const BottonConfigButtons = () => {
     dispatch(addButtonNames(id));
   }
   return (
-    <ul className='flex flex-col gap-1 overflow-auto sm:h-[38vh] h-[45vh]'>
+    <ul className='flex flex-col gap-1 overflow-y-auto min-h-0'>
       {bottom_buttons && bottom_buttons.map((button) => {
         return <li key={button.id}
           onClick={() => handleLeftButtonClick(button.id)}
