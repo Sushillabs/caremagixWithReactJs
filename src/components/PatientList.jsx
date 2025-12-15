@@ -75,8 +75,8 @@ const PatientList = ({ filterPatient, bottom_button }) => {
   if (error) return <p className="text-red-600">Error: {error}</p>;
 
   return (
-    <div className="h-[76vh] bg-white rounded mt-2">
-      <ul className="h-[38vh] overflow-auto bg-white">
+    <div className="flex-1 overflow-y-auto bg-white rounded mt-2">
+      <ul className="h-[48vh] sm:h-[38vh] overflow-auto bg-white">
         {filterPatient.length === 0 && (
           <li className="p-3 text-gray-500">No patients found</li>
         )}
@@ -153,7 +153,7 @@ const PatientList = ({ filterPatient, bottom_button }) => {
           return null;
         })}
       </ul>
-      <BottonConfigButtons className="" />
+      <BottonConfigButtons className="overflow-auto" />
     </div>
   );
 };

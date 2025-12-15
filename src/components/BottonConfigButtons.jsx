@@ -27,11 +27,11 @@ const BottonConfigButtons = () => {
     dispatch(addButtonNames(id));
   }
   return (
-    <ul className='flex flex-col gap-1 overflow-auto h-[38vh]'>
+    <ul className='flex flex-col gap-1 overflow-auto sm:h-[38vh] h-[45vh]'>
       {bottom_buttons && bottom_buttons.map((button) => {
         return <li key={button.id}
           onClick={() => handleLeftButtonClick(button.id)}
-          className={`flex items-center gap-1 py-2 px-1 bg-green-600 cursor-pointer hover:bg-green-700 text-white rounded-md`}>
+          className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600': 'bg-green-600 hover:bg-green-700' } cursor-pointer  text-white rounded-md`}>
           {button.icon} <span>{button.name}</span>
         </li>
       })}

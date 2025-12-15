@@ -10,6 +10,7 @@ import debounce from "lodash.debounce";
 import EFaxConfigForm from "../components/EFaxConfigForm";
 import { addButtonNames } from "../redux/bottomButtonsSlice";
 import UploadPatientPlan from "../components/UploadPatientPlan";
+import MobileSideBar from "../components/MobileSideBar";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -17,6 +18,17 @@ function CareGiver() {
   const { loading, isAskPending } = useSelector((state) => state.askQ);
   const bottom_button = useSelector((state) => state.buttonNames.value);
   const dispatch = useDispatch();
+  const [handleSidebar, setHandleSidebar] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 640 && handleSidebar) {
+        setHandleSidebar(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleSidebar]);
 
   const [filterName, setFilterName] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -64,7 +76,8 @@ function CareGiver() {
 
   return (
     <div className="relative  bg-caregiverbg h-auto sm:h-screen overflow-auto">
-      <CareHeader />
+      <CareHeader setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />
+      {handleSidebar && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
       <div className="grid grid-cols-15 pl-4 pr-4 h-[87vh]">
         <div className="hidden sm:block sm:col-span-3">
           <SearchInput
