@@ -47,7 +47,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth"});
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [get_conversation]);
   const quickLinksRef = useRef(null);
@@ -56,7 +56,7 @@ const Chat = () => {
     if (quickLinksRef.current) {
       console.log("Scrolling to Quick Links", quickLinksRef);
       quickLinksRef.current.scrollIntoView({ behavior: "smooth" });
-    } 
+    }
   }
 
   const handleDocRef = async (answerId) => {
@@ -103,6 +103,12 @@ const Chat = () => {
           {/* index==0 */}
           {introQuestion && get_conversation.length === 0 && (
             <div className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100 ">
+              <button
+                className="bg-blue-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-blue-600"
+                onClick={handleQuickLinksRef}
+              >
+                Discharge Quick Links
+              </button>
               <ReactMarkdown
                 children={introQuestion.replace(/\\n/g, "\n")}
                 remarkPlugins={[remarkGfm]}
@@ -185,14 +191,14 @@ const Chat = () => {
                       className="bg-blue-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-blue-600"
                       onClick={handleQuickLinksRef}
                     >
-                     Discharge Quick Links
+                      Discharge Quick Links
                     </button>
                     {content}
                   </div>
                 );
 
               }
-              return <div className=" flex items-center space-y-2" key={ind} ref={ind === get_conversation.length -2 ? chatEndRef : null}>  
+              return <div className=" flex items-center space-y-2" key={ind} ref={ind === get_conversation.length - 2 ? chatEndRef : null}>
                 <img
                   src="images/favicon/android-chrome-192x192.png"
                   alt="App Icon"
