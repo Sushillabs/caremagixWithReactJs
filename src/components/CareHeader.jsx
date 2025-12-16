@@ -123,9 +123,9 @@ function CareHeader({setHandleSidebar, handleSidebar}) {
           <div className="pl-1 pr-1">
             <p className="flex items-center gap-1">
               <FaUser />
-              {user.first_name} {user.last_name}
+              {user.first_name}
             </p>
-            <p className="ml-4">{user.role}</p>
+            <p className="">{user.role}</p>
           </div>
         </div>
 

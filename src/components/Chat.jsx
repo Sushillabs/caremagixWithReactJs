@@ -17,7 +17,7 @@ const Chat = () => {
   const { fetchDocRef } = useDocRef();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector((state) => state?.askQ?.value);
-  const { data: chatData, loading , isAskPending} = useSelector((state) => state.askQ);
+  const { data: chatData, loading, isAskPending } = useSelector((state) => state.askQ);
   console.log('chatData', chatData)
   console.log("getConversation", get_conversation);
   const dispatch = useDispatch();
@@ -47,12 +47,20 @@ const Chat = () => {
 
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+      chatEndRef.current.scrollIntoView({ behavior: "smooth"});
     }
-  }, [chatData, get_conversation]);
+  }, [get_conversation]);
+  const quickLinksRef = useRef(null);
 
-  const handleDocRef = async(answerId) => {
-    const ansID={ question_id: answerId}
+  const handleQuickLinksRef = () => {
+    if (quickLinksRef.current) {
+      console.log("Scrolling to Quick Links", quickLinksRef);
+      quickLinksRef.current.scrollIntoView({ behavior: "smooth" });
+    } 
+  }
+
+  const handleDocRef = async (answerId) => {
+    const ansID = { question_id: answerId }
     try {
       const docResponse = await getDocRef(ansID);
       if (docResponse) {
@@ -64,6 +72,11 @@ const Chat = () => {
     }
     // 
   }
+  const introQuestion = chatData[0];
+  const questionList = chatData.slice(1, 9);
+  // console.log("Intro Question:", introQuestion);
+  console.log("Question List:", questionList);
+
 
   if (loading || isAskPending) return <Spinner />;
   if (error) return <p className="text-red-600">Error: {error}</p>;
@@ -72,8 +85,9 @@ const Chat = () => {
     <div >
       {chatData.length > 0 && (
         <>
+          {/* header question */}
           {chatData.length > 0 && get_conversation.length === 0 && (
-            <div className=" flex items-center gap-2">
+            <div className=" flex items-center gap-2 mb-2">
               <img
                 src="images/favicon/android-chrome-192x192.png"
                 alt="App Icon"
@@ -86,75 +100,40 @@ const Chat = () => {
             </div>
           )}
 
-          {chatData.length > 0 && get_conversation.length === 0 && (<div className="mt-6 ml-18 space-y-6">
-            {chatData.map((question, index) => {
-              let normalized = question.replace(/\\n/g, "\n");
-
-              // normalized = normalized
-              // .replace(/(\d+\.\s)/g, "<p>$1")
-              // .replace(/<\/p>\s*(?=\d+\.)/g, "<br>");
-
-              // html = parsedHtml;
-
-              const content = (
-                <ReactMarkdown
-                  children={normalized}
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    ...(index === 0 && {
-                      table: ({ children }) => (
-                        <table className="min-w-full table-auto border-collapse border border-gray-300">
-                          {children}
-                        </table>
-                      ),
-                      thead: ({ children }) => (
-                        <thead className="bg-blue-500 text-white text-left">
-                          {children}
-                        </thead>
-                      ),
-                      th: ({ children }) => (
-                        <th className="border border-white px-4 py-2 text-sm font-semibold">
-                          {children}
-                        </th>
-                      ),
-                      td: ({ children }) => (
-                        <td className=" border border-gray-300 px-4 py-2 align-top text-sm text-gray-800 whitespace-pre-line">
-                          {children}
-                        </td>
-                      ),
-                    }),
-                  }}
-                />
-              );
-
-              if (index === 0) {
-                // Not clickable
-                return (
-                  <div
-                    key={index}
-                    className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100"
-                  >
-                    {content}-----
-                  </div>
-                );
-              }
-
-              // Clickable for all others
-              return (
-                <button
-                  key={index}
-                  className=" flex justify-between items-center select-text border-l-4 border-l-addhosblue w-full text-left overflow-x-auto border border-gray-300 rounded p-2 hover:bg-gray-200 cursor-pointer"
-                  onClick={() => handleQuestionClick(index)}
-                >
-                  {content}<span>{<FaPlus />}</span>
-                </button>
-              );
-            })}
-
-          </div>)}
+          {/* index==0 */}
+          {introQuestion && get_conversation.length === 0 && (
+            <div className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100 ">
+              <ReactMarkdown
+                children={introQuestion.replace(/\\n/g, "\n")}
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  table: ({ children }) => (
+                    <table className="min-w-full table-auto border-collapse border border-gray-300">
+                      {children}
+                    </table>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-blue-500 text-white text-left">
+                      {children}
+                    </thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="border border-white px-4 py-2 text-sm font-semibold">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="border border-gray-300 px-4 py-2 text-sm align-top whitespace-pre-line">
+                      {children}
+                    </td>
+                  ),
+                }}
+              />
+            </div>
+          )}
 
           {get_conversation.length > 0 && (
-            get_conversation.map((conversation,ind) => {
+            get_conversation.map((conversation, ind) => {
               let normalized =
                 typeof conversation?.content === "string"
                   ? conversation.content.replace(/\\n/g, "\n")
@@ -196,18 +175,24 @@ const Chat = () => {
                     key={conversation.id}
                     className="overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2"
                   >
-                    {content} 
                     <button
-                      className="bg-blue-500 text-white rounded px-2 py-1 mt-2 cursor-pointer hover:bg-blue-600"
+                      className="bg-blue-500 text-white rounded px-2 py-1 mb-1 mr-2 cursor-pointer hover:bg-blue-600"
                       onClick={() => handleDocRef(conversation.id)}
                     >
                       Doc Ref
                     </button>
+                    <button
+                      className="bg-blue-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-blue-600"
+                      onClick={handleQuickLinksRef}
+                    >
+                     Discharge Quick Links
+                    </button>
+                    {content}
                   </div>
                 );
-                
+
               }
-              return <div className=" flex items-center space-y-2" key={ind}>
+              return <div className=" flex items-center space-y-2" key={ind} ref={ind === get_conversation.length -2 ? chatEndRef : null}>  
                 <img
                   src="images/favicon/android-chrome-192x192.png"
                   alt="App Icon"
@@ -220,7 +205,29 @@ const Chat = () => {
             })
 
           )}
-          <div ref={chatEndRef} />
+          {/* <div ref={chatEndRef} /> */}
+          {/* Clickable questions */}
+          {questionList.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" ref={quickLinksRef}>
+              {questionList.map((question, index) => {
+                const normalized = question.replace(/\\n/g, "\n");
+
+                return (
+                  <button
+                    key={index}
+                    className="select-text border-l-4 border-l-addhosblue text-left overflow-x-auto border border-gray-300 rounded p-2 hover:bg-gray-200"
+                    onClick={() => handleQuestionClick(index + 1)}
+
+                  >
+                    <ReactMarkdown
+                      children={normalized}
+                      remarkPlugins={[remarkGfm]}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>
