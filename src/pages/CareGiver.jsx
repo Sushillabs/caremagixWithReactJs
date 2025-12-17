@@ -30,6 +30,12 @@ function CareGiver() {
     return () => window.removeEventListener("resize", handleResize);
   }, [handleSidebar]);
 
+  useEffect(() => {
+    if (singleDate) {
+      setHandleSidebar(false);
+    }
+  }, [singleDate]);
+
   const [filterName, setFilterName] = useState("");
   const [inputValue, setInputValue] = useState("");
   // const [openModal, setOpenModal] = useState(false);
@@ -77,7 +83,7 @@ function CareGiver() {
   return (
     <div className="relative  bg-caregiverbg h-screen grid grid-rows-[auto_1fr] overflow-hidden pb-2">
       <CareHeader setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />
-      {handleSidebar && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
+      {(handleSidebar) && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
       <div className="grid grid-cols-15 pl-4 pr-4 min-h-0">
         <div className="hidden sm:grid sm:col-span-3 h-full grid-rows-[auto_1fr] min-h-0 gap-1">
           <SearchInput
