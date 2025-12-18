@@ -13,7 +13,7 @@ const AskQuestion = () => {
     setInputValue('');
   }
   return (
-    <div className="sm:bg-white sm:ml-4 mt-4 sm:p-2 grid grid-cols-12 items-center gap-6 ">
+    <div className="sm:bg-white mt-4 sm:p-2 grid grid-cols-12 items-center gap-6 border border-gray-300 rounded ">
       <div className=" bg-white border border-gray-300 rounded col-span-12 sm:col-span-10 flex items-center gap-2 p-2">
         <textarea
           placeholder="Ask a question ..."

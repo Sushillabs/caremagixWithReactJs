@@ -29,8 +29,8 @@ function CareHeader({setHandleSidebar, handleSidebar}) {
   }
   return (
     <div className="bg-caregiverbg grid grid-cols-15 pl-4 pr-4">
-      <div className="col-span-15 md:col-span-3 flex  items-center">
-        <div className="block sm:hidden" onClick={() => setHandleSidebar(!handleSidebar)}>
+      <div className="col-span-15 md:col-span-3 flex  items-center justify-between">
+        <div className="sm:hidden flex items-center" onClick={() => setHandleSidebar(!handleSidebar)}><span className="">Menu</span>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" data-rtl-flip="" class="text-token-text-secondary icon-lg mx-2"><path d="M11.6663 12.6686L11.801 12.6823C12.1038 12.7445 12.3313 13.0125 12.3313 13.3337C12.3311 13.6547 12.1038 13.9229 11.801 13.985L11.6663 13.9987H3.33325C2.96609 13.9987 2.66839 13.7008 2.66821 13.3337C2.66821 12.9664 2.96598 12.6686 3.33325 12.6686H11.6663ZM16.6663 6.00163L16.801 6.0153C17.1038 6.07747 17.3313 6.34546 17.3313 6.66667C17.3313 6.98788 17.1038 7.25586 16.801 7.31803L16.6663 7.33171H3.33325C2.96598 7.33171 2.66821 7.03394 2.66821 6.66667C2.66821 6.2994 2.96598 6.00163 3.33325 6.00163H16.6663Z"></path></svg>
         </div>
         <div>
@@ -76,7 +76,7 @@ function CareHeader({setHandleSidebar, handleSidebar}) {
         </div>
       </div>
 
-      <div className="col-span-15 mb-2 md:mb-0 md:col-span-8 flex flex-wrap justify-between items-center lg:ml-4 lg:pr-4">
+      <div className="hidden col-span-15 mb-2 md:mb-0 md:col-span-8 sm:flex flex-wrap justify-between items-center lg:ml-4 lg:pr-4">
         {plans &&
           plans.map((plan, ind) =>
             ind === 0 ? (
@@ -114,7 +114,7 @@ function CareHeader({setHandleSidebar, handleSidebar}) {
             )
           )}
       </div>
-      <div className="col-span-15 mb-2 md:mb-0 md:col-span-4 flex items-center md:justify-end">
+      <div className="col-span-15 mb-2 md:mb-0 md:col-span-4 flex items-center justify-between md:justify-end">
         <div className="text-xs flex font-semibold mr-4 text-gray-600 ">
           <div className="border-r pr-1">
             <p>Facility Name: {user.facility_name}</p>

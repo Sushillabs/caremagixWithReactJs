@@ -14,6 +14,7 @@ import useDocRef from "../hooks/useDocRef";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import DocRefModal from "./DocRefModal";
+import AskQuestion from "./AskQuestion";
 
 
 const Chat = () => {
@@ -28,19 +29,6 @@ const Chat = () => {
   console.log("singleDate 111→", singleDate);
   const { askQuestion, isPending, error } = useAskQuestion();
   console.log('isPending in chat', isPending);
-  // useEffect(() => {
-  //   const fetchChat = async () => {
-  //     // setLoading(true);
-  //     console.log("singleDate →", singleDate);
-  //     if (!singleDate || Object.keys(singleDate).length === 0) return;
-
-  //     if (singleDate) {
-  //       dispatch(fetchPatientChat(singleDate));
-  //     }
-  //   };
-  //   fetchChat();
-  // }, []);
-
 
   const handleQuestionClick = (ind) => {
     const currentQuestion = chatData[ind];
@@ -92,9 +80,9 @@ const Chat = () => {
   if (error) return <p className="text-red-600">Error: {error}</p>;
 
   return (
-    <div >
+    <div className="h-full grid grid-rows-[1fr_auto] min-h-0">
       {chatData.length > 0 && (
-        <>
+        <div className="overflow-y-auto ">
           {/* header question */}
           {chatData.length > 0 && get_conversation.length === 0 && (
             <div className=" flex items-center gap-2 mb-2">
@@ -104,8 +92,7 @@ const Chat = () => {
                 className="w-18 h-16 border border-gray-500 object-contain rounded-lg"
               />
               <span>
-                Welcome!! try asking me questions related to{" "}
-                {singleDate.patient_type} Plan. You can ask questions like:
+                Welcome!! {singleDate.patient_name.split(" ")[0]}'s discharge summary
               </span>
             </div>
           )}
@@ -221,7 +208,6 @@ const Chat = () => {
             })
 
           )}
-          {/* <div ref={chatEndRef} /> */}
           {/* Clickable questions */}
           {questionList.length > 0 && (
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" ref={quickLinksRef}>
@@ -244,7 +230,18 @@ const Chat = () => {
               })}
             </div>
           )}
-        </>
+        </div>
+      )}
+      {(chatData.length > 0 || singleDate) && (
+        <div
+          className={
+            singleDate === null || loading || isAskPending
+              ? "pointer-events-none opacity-50"
+              : ""
+          }
+        >
+          <AskQuestion />
+        </div>
       )}
     </div>
   );
