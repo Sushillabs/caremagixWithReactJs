@@ -11,9 +11,13 @@ import { Spinner } from "./Spiner";
 // import { useMutation } from '@tanstack/react-query';
 import useAskQuestion from "../hooks/useAskQuestion";
 import useDocRef from "../hooks/useDocRef";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import DocRefModal from "./DocRefModal";
 
 
 const Chat = () => {
+  const MySwal = withReactContent(Swal);
   const { fetchDocRef } = useDocRef();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector((state) => state?.askQ?.value);
@@ -65,7 +69,13 @@ const Chat = () => {
       const docResponse = await getDocRef(ansID);
       if (docResponse) {
         console.log("Doc Ref Response:", docResponse);
-        await fetchDocRef(docResponse);
+        // await fetchDocRef(docResponse);
+        const resultSawal = await MySwal.fire({
+          title: <strong>Document References</strong>,
+          html: <DocRefModal entries={docResponse.entries} />,
+          showCloseButton: true,
+          showCancelButton: false,
+        });
       }
     } catch (error) {
       console.error("Error fetching doc ref:", error);
@@ -104,7 +114,7 @@ const Chat = () => {
           {introQuestion && get_conversation.length === 0 && (
             <div className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100 ">
               <button
-                className="bg-blue-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-blue-600"
+                className="bg-green-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-green-600"
                 onClick={handleQuickLinksRef}
               >
                 Discharge Quick Links
@@ -119,7 +129,7 @@ const Chat = () => {
                     </table>
                   ),
                   thead: ({ children }) => (
-                    <thead className="bg-blue-500 text-white text-left">
+                    <thead className="bg-blue-400 text-white text-left">
                       {children}
                     </thead>
                   ),
@@ -182,13 +192,13 @@ const Chat = () => {
                     className="overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2"
                   >
                     <button
-                      className="bg-blue-500 text-white rounded px-2 py-1 mb-1 mr-2 cursor-pointer hover:bg-blue-600"
+                      className="bg-green-500 text-white rounded px-2 py-1 mb-1 mr-2 cursor-pointer hover:bg-green-600"
                       onClick={() => handleDocRef(conversation.id)}
                     >
                       Doc Ref
                     </button>
                     <button
-                      className="bg-blue-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-blue-600"
+                      className="bg-green-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-green-600"
                       onClick={handleQuickLinksRef}
                     >
                       Discharge Quick Links
