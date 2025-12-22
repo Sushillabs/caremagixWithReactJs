@@ -5,6 +5,28 @@ import React from "react";
 const AskQuestion = () => {
   const [inputValue, setInputValue] = useState('');
   const { askQuestion, isPending } = useAskQuestion();
+  // const [text, setText] = useState("");
+  const [isListening, setIsListening] = useState(false);
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+
+  recognition.lang = "en-IN";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  const startListening = () => {
+    setIsListening(true);
+    recognition.start();
+  };
+
+  recognition.onresult = (event) => {
+    setInputValue(event.results[0][0].transcript);
+  };
+
+  recognition.onend = () => setIsListening(false);
+
+  recognition.onerror = () => setIsListening(false);
   console.log('isPending', isPending);
 
   const handleAskSubmit = () => {
@@ -35,7 +57,8 @@ const AskQuestion = () => {
         <button
           type="button"
           className="disabled:opacity-45 rounded-full p-4 border cursor-pointer hover:text-blue-700"
-          disabled={true}
+          disabled={isListening || isPending}
+          onClick={startListening}
           aria-label="Start voice input"
         >
           <FaMicrophone />
