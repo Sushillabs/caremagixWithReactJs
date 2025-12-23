@@ -22,7 +22,7 @@ const Chat = () => {
   const { fetchDocRef } = useDocRef();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector((state) => state?.askQ?.value);
-  const { data: chatData, loading, isAskPending } = useSelector((state) => state.askQ);
+  const { data: chatData, loading, isAskPending, error: ERROR } = useSelector((state) => state.askQ);
   console.log('chatData', chatData)
   console.log("getConversation", get_conversation);
   const dispatch = useDispatch();
@@ -77,7 +77,7 @@ const Chat = () => {
 
 
   if (loading || isAskPending) return <Spinner />;
-  if (error) return <p className="text-red-600">Error: {error}</p>;
+  if (error || ERROR) return <p className="text-red-600">Error: {error || ERROR}</p>;
 
   return (
     <div className="h-full grid grid-rows-[1fr_auto] min-h-0">

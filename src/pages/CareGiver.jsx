@@ -11,6 +11,7 @@ import EFaxConfigForm from "../components/EFaxConfigForm";
 import { addButtonNames } from "../redux/bottomButtonsSlice";
 import UploadPatientPlan from "../components/UploadPatientPlan";
 import MobileSideBar from "../components/MobileSideBar";
+import CallRegister from "../components/CallResigter";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -111,18 +112,18 @@ function CareGiver() {
           <PatientList filterPatient={filteredPatients} bottom_button={bottom_button} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
-          <div className="sm:ml-4 mb-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="sm:ml-4 mb-1 grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
               {singleDate&& <button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
               {singleDate&& <button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call Register</button>}
               {singleDate&& <button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
               {singleDate&& <button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
             </div>
-            {singleDate && <p className="text-green-600 font-bold text-lg ">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
+            {singleDate && <p className="text-yellow-600 font-bold text-lg ">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
           </div>
           <div className="bg-white  sm:ml-4 rounded p-4 min-h-0">
             {activeTab === "chat" && <Chat />}
-            {activeTab === "callRegister" && <div>Call Register Content</div>}
+            {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <div>MMTA Content</div>}
             {activeTab === "uploadedPlans" && <div>Uploaded Plans Content</div>}
           </div>

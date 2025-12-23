@@ -16,7 +16,7 @@ const AskQuestion = () => {
   recognition.interimResults = false;
 
   const startListening = () => {
-    setIsListening(true);
+    setIsListening(!isListening);
     recognition.start();
   };
 
@@ -56,7 +56,7 @@ const AskQuestion = () => {
         </button>
         <button
           type="button"
-          className="disabled:opacity-45 rounded-full p-4 border cursor-pointer hover:text-blue-700"
+          className={`disabled:opacity-45 rounded-full p-4 border cursor-pointer hover:text-blue-700 ${isListening ? 'text-blue-700' : ''}`}
           disabled={isListening || isPending}
           onClick={startListening}
           aria-label="Start voice input"
