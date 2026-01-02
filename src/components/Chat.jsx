@@ -99,7 +99,7 @@ const Chat = () => {
 
           {/* index==0 */}
           {introQuestion && get_conversation.length === 0 && (
-            <div className="overflow-x-auto border border-blue-300 rounded p-2 bg-gray-100 ">
+            <div className="overflow-x-auto border border-blue-300 rounded sm:p-2 bg-gray-100 ">
               <button
                 className="bg-green-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-green-600"
                 onClick={handleQuickLinksRef}
