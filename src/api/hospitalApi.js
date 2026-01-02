@@ -14,6 +14,7 @@ export const getDocRef = (data) => http.post('/doc-ref', data, { withAuth: true}
 export const uploadEFaxConfig = (data) => http.post('/getfax',data);
 export const uploadPlan = (data) => http.post('/upload', data, { withAuth: true, isMultipart: true });
 export const deletePatient = (patient_type, patient_name) => http.delete(`/delete_patient?patient_type=${patient_type}&patient_name=${patient_name}`, {withAuth: true});
-
+export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth: true });
+export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });
 
 

@@ -7,6 +7,7 @@ import CareGiver from "./pages/CareGiver";
 import CareGiverLayout from "./layouts.jsx/CareGiverLayout";
 import AuthLayout from "./layouts.jsx/AuthLayout";
 import RequireAuth from "./components/RequireAuth";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -15,6 +16,7 @@ function App() {
 
   return (
     <>
+      <Toaster position="top-right" containerStyle={{top: 60}}/>
       <Router>
         <Routes>
           <Route element={<AuthLayout />}>
