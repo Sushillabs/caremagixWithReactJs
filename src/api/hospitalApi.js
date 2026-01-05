@@ -16,5 +16,6 @@ export const uploadPlan = (data) => http.post('/upload', data, { withAuth: true,
 export const deletePatient = (patient_type, patient_name) => http.delete(`/delete_patient?patient_type=${patient_type}&patient_name=${patient_name}`, {withAuth: true});
 export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth: true });
 export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });
+export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
 
 

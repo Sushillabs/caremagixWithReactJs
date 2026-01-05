@@ -12,6 +12,7 @@ import { addButtonNames } from "../redux/bottomButtonsSlice";
 import UploadPatientPlan from "../components/UploadPatientPlan";
 import MobileSideBar from "../components/MobileSideBar";
 import CallRegister from "../components/CallResigter";
+import Mmta from "../components/Mmta";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -124,7 +125,7 @@ function CareGiver() {
           <div className="bg-white  sm:ml-4 rounded sm:p-4 min-h-0">
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
-            {activeTab === "mmta" && <div>MMTA Content</div>}
+            {activeTab === "mmta" && <Mmta />}
             {activeTab === "uploadedPlans" && <div>Uploaded Plans Content</div>}
           </div>
         </div>
