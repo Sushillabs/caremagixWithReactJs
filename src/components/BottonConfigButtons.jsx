@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+
 import { MdCreate, MdDelete } from "react-icons/md";
 import { FaUser, FaRegStickyNote, FaUpload } from "react-icons/fa";
 import { GrConfigure } from "react-icons/gr";
@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
   const { data, error, isLoading, isFetching, refetch } = useMyQuery({ api: getPccData, id: 'pccData', enabled: false });
-  console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
+  // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
   let bottom_buttons = [
     { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
     { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
@@ -31,15 +31,16 @@ const BottonConfigButtons = () => {
     toast.loading('Fetching PCC Data...', { id: 'pcc-toast' });
 
     const result = await refetch();
-
+    console.log('PCC Data fetch result:', result);
     if (result.error) {
       toast.error('Error fetching PCC Data', { id: 'pcc-toast' });
     } else {
+      dispatch(addButtonNames('pcc-data-fetched')); // to trigger patient list
       toast.success('PCC Data fetched successfully', { id: 'pcc-toast' });
       console.log('PCC Data:', result.data);
     }
   };
-  const handleLeftButtonClick = (id) => {
+  const handleLeftButtonClick = () => {
     console.log("Button clicked:", id);
     dispatch(addButtonNames(id));
     if (id === 'pull-pcc') {
