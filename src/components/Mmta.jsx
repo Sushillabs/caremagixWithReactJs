@@ -25,12 +25,12 @@ const Mmta = () => {
   if (isPending) return <Spinner />;
   if (error) return <p className="text-red-600 text-center mt-4">{error.message}</p>;
   return (
-    <div className="llm-response h-full overflow-y-auto w-full">
+    <div className="llm-response h-full overflow-auto w-full">
       <div className="llm-question">
         <strong>Q:</strong> {data?.question}
       </div>
 
-      <div className="llm-answer overflow-x-auto min-h-0 overflow-wrap">
+      <div className="llm-answer">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeSanitize]}

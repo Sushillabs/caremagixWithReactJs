@@ -17,5 +17,7 @@ export const deletePatient = (patient_type, patient_name) => http.delete(`/delet
 export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth: true });
 export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });
 export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
+export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
+
 
 

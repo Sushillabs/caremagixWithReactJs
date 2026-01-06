@@ -8,8 +8,9 @@ import { FaUser, FaRegStickyNote } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
-import { Spinner } from "./Spiner";
-import { charAtIndex } from "pdf-lib";
+// import { Spinner } from "./Spiner";
+// import { charAtIndex } from "pdf-lib";
+// import { addButtonNames } from "../redux/bottomButtonsSlice";
 
 
 const PatientList = ({ filterPatient, bottom_button }) => {
