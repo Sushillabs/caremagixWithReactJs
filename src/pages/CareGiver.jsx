@@ -123,6 +123,7 @@ function CareGiver() {
             {singleDate && <p className="text-yellow-600 font-bold text-lg ">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
           </div>
           <div className="bg-white  sm:ml-4 rounded sm:p-4 min-h-0">
+          
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}

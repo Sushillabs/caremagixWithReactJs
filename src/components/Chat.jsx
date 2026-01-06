@@ -81,6 +81,11 @@ const Chat = () => {
 
   return (
     <div className="h-full grid grid-rows-[1fr_auto] min-h-0">
+      {chatData.length === 0 && (
+        <p className="text-gray-500 font-bold flex items-center justify-center h-full">
+          Please select a Patient or Upload.
+        </p>
+      )}
       {chatData.length > 0 && (
         <div className="overflow-y-auto ">
           {/* header question */}

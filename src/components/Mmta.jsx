@@ -23,6 +23,7 @@ const Mmta = () => {
   }, [generatedQ]);
 
   if (isPending) return <Spinner />;
+  if (error) return <p className="text-red-600 text-center mt-4">{error.message}</p>;
   return (
     <div className="llm-response h-full overflow-y-auto">
       <div className="llm-question">
