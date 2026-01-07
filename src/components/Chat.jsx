@@ -82,8 +82,8 @@ const Chat = () => {
   return (
     <div className="h-full grid grid-rows-[1fr_auto] min-h-0">
       {chatData.length === 0 && (
-        <p className="text-gray-500 text-xl font-bold flex items-center justify-center h-full">
-          Please select a Patient or Upload.
+        <p className="text-gray-500 text-xl text-center font-bold flex items-center justify-center h-full">
+          Please select a patient from the Menu above  or upload a new patient discharge plan
         </p>
       )}
       {chatData.length > 0 && (

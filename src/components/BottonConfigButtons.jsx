@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
-  const { data, error, isLoading, isFetching, refetch } = useMyQuery({ api: getPccData, id: 'pccData', enabled: false });
+  const { data, error, isError, isPending, isFetching, refetch } = useMyQuery({ api: getPccData, id: 'pccData', enabled: false });
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
   let bottom_buttons = [
     { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
@@ -40,7 +40,7 @@ const BottonConfigButtons = () => {
       console.log('PCC Data:', result.data);
     }
   };
-  const handleLeftButtonClick = () => {
+  const handleLeftButtonClick = (id) => {
     console.log("Button clicked:", id);
     dispatch(addButtonNames(id));
     if (id === 'pull-pcc') {
