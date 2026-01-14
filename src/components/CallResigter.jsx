@@ -127,11 +127,11 @@ const CallRegister = () => {
                         className={`w-full bg-blue-600 text-white py-2 mt-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50`}
                         disabled={isRegisterPending}
                     >
-                        Register Call
+                        {isRegisterPending ? 'Registering...' : 'Register Call'}
                     </button>
                     {registerError && (
                         <p className="text-red-600 text-sm mt-1">
-                            Error: {registerData?.error || registerError.message}
+                            {registerError.message || 'Error registering call.'}
                         </p>
                     )}
                 </form>

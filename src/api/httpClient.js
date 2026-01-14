@@ -18,9 +18,7 @@ http.interceptors.request.use((config) => {
 
   // Handle Content-Type
   if (!config.headers['Content-Type']) {
-    config.headers['Content-Type'] = config.isMultipart
-      ? 'multipart/form-data'
-      : 'application/json';
+    config.headers['Content-Type'] = config.isMultipart ? 'multipart/form-data' : 'application/json';
   }
 
   return config;

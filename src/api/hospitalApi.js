@@ -1,4 +1,3 @@
-// src/api/hospitalApi.js
 import http from './httpClient';
 
 export const registerHospital = (data) => http.post('/org_register/hospital_verify', data);
