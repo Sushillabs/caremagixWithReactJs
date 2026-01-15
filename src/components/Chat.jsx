@@ -95,13 +95,13 @@ const Chat = () => {
         <div className="overflow-y-auto ">
           {/* header question */}
           {chatData.length > 0 && get_conversation.length === 0 && (
-            <div className=" flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 sm:mb-2 mb-1">
               <img
                 src="images/favicon/android-chrome-192x192.png"
                 alt="App Icon"
-                className="w-18 h-16 border border-gray-500 object-contain rounded-lg"
+                className="w-8 h-6 sm:w-12 sm:h-12 border border-gray-500 object-contain rounded-lg"
               />
-              <span>
+              <span className="text-xs sm:text-lg">
                 Welcome!! {singleDate.patient_name.split(" ")[0]}'s discharge summary
               </span>
             </div>
@@ -109,7 +109,7 @@ const Chat = () => {
 
           {/* index==0 */}
           {introQuestion && get_conversation.length === 0 && (
-            <div className="overflow-x-auto border border-blue-300 rounded sm:p-2 bg-gray-100 ">
+            <div className="text-xs sm:text-sm overflow-x-auto border border-blue-300 rounded sm:p-2 bg-gray-100 ">
               <button
                 className="bg-green-500 text-white rounded px-2 py-1 mb-1 cursor-pointer hover:bg-green-600"
                 onClick={handleQuickLinksRef}
@@ -131,12 +131,12 @@ const Chat = () => {
                     </thead>
                   ),
                   th: ({ children }) => (
-                    <th className="border border-white px-4 py-2 text-sm font-semibold">
+                    <th className="border border-white px-4 sm:py-2 text-xs sm:text-sm font-semibold">
                       {children}
                     </th>
                   ),
                   td: ({ children }) => (
-                    <td className="border border-gray-300 px-4 py-2 text-sm align-top whitespace-pre-line">
+                    <td className=" text-xs sm:text-sm border border-gray-300 px-4 py-2 align-top whitespace-pre-line">
                       {children}
                     </td>
                   ),
@@ -227,7 +227,7 @@ const Chat = () => {
                 return (
                   <button
                     key={index}
-                    className="select-text border-l-4 border-l-addhosblue text-left overflow-x-auto border border-gray-300 rounded p-2 hover:bg-gray-200"
+                    className="select-text border-l-4 border-l-addhosblue text-left overflow-x-auto border border-gray-300 rounded p-1 text-xs sm:text-sm sm:p-2 hover:bg-gray-200"
                     onClick={() => handleQuestionClick(index + 1)}
 
                   >
