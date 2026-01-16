@@ -82,10 +82,6 @@ function CareGiver() {
     debouncedSetFilterName(value);
   };
 
-  // const filteredPatients = (patientsList || []).filter((p) =>
-  //   p?.name?.toLowerCase().includes(filterName?.trim().toLowerCase() || "")
-  // );
-
   const filteredPatients = useMemo(() => {
     const q = (filterName || "").trim().toLowerCase();
     return (patientsList || []).filter((p) =>

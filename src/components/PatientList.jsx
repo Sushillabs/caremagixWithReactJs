@@ -83,12 +83,19 @@ const PatientList = ({ filterPatient }) => {
   //   //  console.log("patients list from store", patientsList);
   // }, [bottom_button]);
 
-  const handlePatientClick = (date) => {
+  const handlePatientClick = (id, item) => {
     dispatch(clearChat())
-    const payload = { ...date, patient_type: "Discharged", user_id: user_id }
+    //make two paload based on type
+    let payload = {};
+    if (item.type === "data") {
+      payload = { ...id, user_id: user_id }
+    } else if (item.type === "pcc") {
+      payload = { patient_collection: id, user_id: user_id, patient_type: item.type.toUpperCase(), patient_name: item.name }
+    }
+    // const payload = { ...date, user_id: user_id }
     dispatch(addDischargePatientDate(payload))
     dispatch(fetchPatientChat(payload));
-    console.log("handlePatient called")
+    console.log("handlePatient called payload:", payload);
   }
 
   const handlePatientDelete = (e, patient_name, patient_type, dataType) => {
@@ -129,7 +136,7 @@ const PatientList = ({ filterPatient }) => {
                   <ul className="transition-all duration-700">
                     {patient.data.map((date) => (
                       <li
-                        onClick={() => handlePatientClick(date)}
+                        onClick={() => handlePatientClick(date, item)}
                         key={`${date.dates}-${date.lancedb_table}`}
                         className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-300"} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200`}
                       >
@@ -165,7 +172,11 @@ const PatientList = ({ filterPatient }) => {
                   <ul className="transition-all duration-500 p-2 bg-gray-50">
                     {item.details && item.details.length > 0 ? (
                       item.details.map((detail, i) => (
-                        <li key={`${item.name}-detail-${i}`} className="py-1 px-2 text-sm cursor-pointer hover:bg-gray-200">
+                        <li
+                          onClick={() => handlePatientClick(detail, item)}
+                          key={`${item.name}-detail-${i}`}
+                          className="py-1 px-2 text-sm cursor-pointer hover:bg-gray-200"
+                        >
                           • {detail.charAt(0).toUpperCase() + detail.slice(1)}
                         </li>
                       ))

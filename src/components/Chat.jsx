@@ -86,7 +86,7 @@ const Chat = () => {
           <span className="hidden sm:block">
             Please select a patient or upload a new patient discharge plan
           </span>
-          <span className="sm:hidden">
+          <span className="sm:hidden text-xs">
             Please select a patient from the Menu above or upload a new patient discharge plan
           </span>
         </p>
