@@ -39,17 +39,17 @@ function CareGiver() {
   };
 
 
-useEffect(() => {
-  const handleResize = () => {
-    if (window.innerWidth >= 640) {
-      if (handleSidebar) setHandleSidebar(false);
-      if (rightBar) setRightBar(false);
-    }
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 640) {
+        if (handleSidebar) setHandleSidebar(false);
+        if (rightBar) setRightBar(false);
+      }
+    };
 
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, [handleSidebar, rightBar]);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleSidebar, rightBar]);
 
   useEffect(() => {
     if (singleDate) {
@@ -102,7 +102,7 @@ useEffect(() => {
   };
 
   return (
-    <div className=" relative  bg-caregiverbg h-screen grid grid-rows-[auto_1fr] overflow-hidden pb-2">
+    <div className="relative bg-caregiverbg h-dvh grid grid-rows-[auto_1fr] pb-2">
       <CareHeader setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} setRightBar={setRightBar} rightBar={rightBar} />
       {(handleSidebar && !rightBar) && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
       {(rightBar && !handleSidebar) && <MobileRightBar setRightBar={setRightBar} />}
@@ -114,20 +114,20 @@ useEffect(() => {
             onChange={handleInputChange}
           // className="mb-4"
           />
-          <PatientList filterPatient={filteredPatients} bottom_button={bottom_button} />
+          <PatientList filterPatient={filteredPatients} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
           <div className="text-xs sm:ml-4 mb-1 grid grid-cols-1 md:grid-cols-3 sm:gap-2">
             <div>
-              {singleDate&& <button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
-              {singleDate&& <button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call Register</button>}
-              {singleDate&& <button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
-              {singleDate&& <button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
+              {singleDate && <button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
+              {singleDate && <button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call Register</button>}
+              {singleDate && <button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
+              {singleDate && <button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
             </div>
             {singleDate && <p className="text-yellow-600 sm:font-bold sm:text-lg text-xs">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
           </div>
           <div className="bg-white  sm:ml-4 rounded sm:p-4 min-h-0">
-          
+
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}

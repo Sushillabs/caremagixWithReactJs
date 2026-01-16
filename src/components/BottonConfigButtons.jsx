@@ -7,11 +7,19 @@ import { useDispatch } from 'react-redux';
 import { getPccData } from '../api/hospitalApi';
 import useMyQuery from '../hooks/useMyQuery';
 import toast from "react-hot-toast";
+import { useQueryClient} from "@tanstack/react-query";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
-  const { data, error, isError, isPending, isFetching, refetch } = useMyQuery({ api: getPccData, id: 'pccData', enabled: false });
+  const queryClient = useQueryClient();
+  
+  const { data, error, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({ 
+    api: getPccData,
+    id: 'pccData',
+    enabled: false
+  });
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
+
   let bottom_buttons = [
     { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
     { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
@@ -27,19 +35,23 @@ const BottonConfigButtons = () => {
     { id: "ai-agent", name: "AI Agent", icon: <FaUser /> },
     { id: "clear-conversations", name: "Clear Conversations", icon: <MdDelete /> },
   ];
+
   const pccData = async () => {
     toast.loading('Fetching PCC Data...', { id: 'pcc-toast' });
-
-    const result = await refetch();
-    console.log('PCC Data fetch result:', result);
-    if (result.error) {
-      toast.error('Error fetching PCC Data', { id: 'pcc-toast' });
-    } else {
-      dispatch(addButtonNames('pcc-data-fetched')); // to trigger patient list
+    try {
+      const result = await refetch();
+      console.log('PCC Data fetch result:', result);
+      queryClient.invalidateQueries({ queryKey: ['patientList'] });
+      // dispatch(addButtonNames('pcc-data-fetched')); // to trigger patient list
       toast.success('PCC Data fetched successfully', { id: 'pcc-toast' });
-      console.log('PCC Data:', result.data);
+      // console.log('PCC Data:', result.data);
+    } catch (error) {
+      toast.error('Error fetching PCC Data', { id: 'pcc-toast' });
+      console.error('Error fetching PCC Data:', error);
     }
   };
+
+
   const handleLeftButtonClick = (id) => {
     console.log("Button clicked:", id);
     dispatch(addButtonNames(id));

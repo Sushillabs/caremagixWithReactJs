@@ -2,18 +2,15 @@ import React, { useEffect, useState } from "react";
 import { getPatients } from "../api/hospitalApi";
 import { useDispatch, useSelector } from "react-redux";
 import { addPatientNames, deletePatientThunk } from "../redux/patientListSlice";
-// import { clearChat} from "../redux/chatSlice";
 import { addDischargePatientDate } from "../redux/PatientSingleDateSlice";
 import { FaUser, FaRegStickyNote } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
-// import { Spinner } from "./Spiner";
-// import { charAtIndex } from "pdf-lib";
-// import { addButtonNames } from "../redux/bottomButtonsSlice";
+import useMyQuery from "../hooks/useMyQuery";
 
 
-const PatientList = ({ filterPatient, bottom_button }) => {
+const PatientList = ({ filterPatient }) => {
   const auth = useSelector((state) => state.auth.value);
   const { user_id } = auth || {};
   const { value: patientsList, loading: deleteLoader, error } = useSelector((state) => state.patientnames);
@@ -21,40 +18,70 @@ const PatientList = ({ filterPatient, bottom_button }) => {
 
   console.log("patients list from store", patientsList);
   const dispatch = useDispatch();
-  const [openIndex, setOpenIndex] = useState(null);
   const [openName, setOpenName] = useState(null);
 
+  const { data, error: patientListError, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({
+    api: getPatients,
+    id: 'patientList',
+    enabled: true
+  });
+  // console.log("Patient List from useMyQuery hook:", data, patientListError, isError, isPending, isFetching, refetch);
+
   useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        const res = await getPatients();
-        console.log("patients list", res.data);
-        const { data: patientsList, pcc_data } = res;
-        const filteredPatients = (patientsList || []).map((p) => ({
-          type: "data",
-          name: p.name,
-          raw: p,
-        }));
-        console.log("Filtered Patients List from DATA:", filteredPatients);
-        const pccDetails = (pcc_data && pcc_data.details) || {};
-        const filteredPcc = Object.entries(pccDetails)
-          .map(([name, detailsArray]) => ({
-            type: "pcc",
-            name,
-            details: detailsArray,
-            raw: { patient_type: pcc_data.patient_type || "PCC" },
-          }));
+    if (!isSuccess || !data) return;
+    console.log("patients list", data);
+    const { data: patientsList, pcc_data } = data;
+    const filteredPatients = (patientsList || []).map((p) => ({
+      type: "data",
+      name: p.name,
+      raw: p,
+    }));
 
-        const merged = [...filteredPatients, ...filteredPcc];
+    const pccDetails = pcc_data?.details || {};
 
-        dispatch(addPatientNames(merged));
-      } catch (error) {
-        console.error("Error while fetching the patient list", error);
-      }
-    };
-    fetchPatient();
-    //  console.log("patients list from store", patientsList);
-  }, [bottom_button]);
+    const filteredPcc = Object.entries(pccDetails).map(
+      ([name, detailsArray]) => ({
+        type: "pcc",
+        name,
+        details: detailsArray,
+        raw: { patient_type: pcc_data?.patient_type || "PCC" },
+      })
+    );
+    const merged = [...filteredPatients, ...filteredPcc];
+    dispatch(addPatientNames(merged));
+  }, [isSuccess, data, dispatch]);// dispatch only Eslint fix
+
+  // useEffect(() => {
+  //   const fetchPatient = async () => {
+  //     try {
+  //       const res = await getPatients();
+  //       console.log("patients list", res.data);
+  //       const { data: patientsList, pcc_data } = res;
+  //       const filteredPatients = (patientsList || []).map((p) => ({
+  //         type: "data",
+  //         name: p.name,
+  //         raw: p,
+  //       }));
+  //       console.log("Filtered Patients List from DATA:", filteredPatients);
+  //       const pccDetails = (pcc_data && pcc_data.details) || {};
+  //       const filteredPcc = Object.entries(pccDetails)
+  //         .map(([name, detailsArray]) => ({
+  //           type: "pcc",
+  //           name,
+  //           details: detailsArray,
+  //           raw: { patient_type: pcc_data.patient_type || "PCC" },
+  //         }));
+
+  //       const merged = [...filteredPatients, ...filteredPcc];
+
+  //       dispatch(addPatientNames(merged));
+  //     } catch (error) {
+  //       console.error("Error while fetching the patient list", error);
+  //     }
+  //   };
+  //   fetchPatient();
+  //   //  console.log("patients list from store", patientsList);
+  // }, [bottom_button]);
 
   const handlePatientClick = (date) => {
     dispatch(clearChat())

@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { uploadPlan } from "../api/hospitalApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function UploadPatientPlan({ onClose }) {
   const {
@@ -12,6 +13,7 @@ export default function UploadPatientPlan({ onClose }) {
   } = useForm();
 
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -37,6 +39,7 @@ export default function UploadPatientPlan({ onClose }) {
       const res = await uploadPlan(formData);
       console.log("Upload Plan API response:", res);
       if (res.message === "File uploaded successfully.") {
+        queryClient.invalidateQueries({ queryKey: ['patientList'] });// refetch patient list
         onClose(); // close modal on success
       }
 
