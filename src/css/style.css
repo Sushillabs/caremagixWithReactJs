@@ -1,19 +1,15 @@
 .llm-response {
   background: #fff;
   border-radius: 8px;
-  /* padding: 16px; */
-}
-
-.llm-question {
-  font-size: 14px;
-  margin-bottom: 12px;
-  color: #333;
+  word-break: break-word; /* prevent long words breaking layout */
 }
 
 .llm-answer table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 12px;
+  display: block;
+  overflow-x: auto;
 }
 
 .llm-answer th,
@@ -25,4 +21,14 @@
 .llm-answer th {
   background: #f5f5f5;
   text-align: left;
+}
+
+
+@media (max-width: 639px) {
+  .llm-answer {
+    font-size: 12px;
+  }
+  .llm-question {
+    font-size: 13px;
+  }
 }

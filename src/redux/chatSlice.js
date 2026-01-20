@@ -1,7 +1,5 @@
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getPatientChat } from '../api/hospitalApi';
-import { set } from 'lodash';
 
 export const fetchPatientChat = createAsyncThunk(
   'chat/fetchPatientChat',

@@ -1,36 +1,40 @@
-import useMyMutation from "../hooks/useMyMutation"
-import { mmta } from "../api/hospitalApi"
+import React, { useMemo } from "react";
 import { Spinner } from "./Spiner";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import '../css/style.css'
-// import {}
+import useMyQuery from "../hooks/useMyQuery";
+import { mmta } from "../api/hospitalApi";
+import "../css/style.css";
+
 const Mmta = () => {
-  const generatedQ = useSelector(state => state.askQ.data);
-  console.log("generatedQ in mmta", generatedQ);
-  const { mutate, isPending, error, data } = useMyMutation({
-    api: mmta,
-    toastId: 'mmta',
+  const generatedQ = useSelector((state) => state.askQ.data);
+  const lastQuestion = useMemo(() => generatedQ?.at(-1), [generatedQ]);
+
+  const { data, isPending, isError, error } = useMyQuery({
+    api: () => mmta({ question: lastQuestion }),
+    id: ["mmta", lastQuestion],
+    enabled: !!lastQuestion,
+    staleTime: Infinity, // cache forever per question
   });
-  useEffect(() => {
-    const lastQuestion = generatedQ.at(-1);
-    if (lastQuestion) {
-      mutate({ question: lastQuestion });
-    }
-  }, [generatedQ]);
 
   if (isPending) return <Spinner />;
-  if (error) return <p className="text-red-600 text-center mt-4">{error.message}</p>;
+
+  if (isError)
+    return (
+      <p className="text-red-600 text-center mt-4">
+        {error.message}
+      </p>
+    );
+
   return (
-    <div className="llm-response h-full overflow-auto w-full">
-      <div className="llm-question">
+    <div className="llm-response h-full overflow-auto p-2 sm:p-4 rounded-lg bg-white">
+      <div className="llm-question text-sm sm:text-base font-medium text-gray-800 mb-3">
         <strong>Q:</strong> {data?.question}
       </div>
 
-      <div className="llm-answer">
+      <div className="llm-answer text-xs sm:text-sm mt-2">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeSanitize]}
@@ -39,7 +43,7 @@ const Mmta = () => {
         </ReactMarkdown>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Mmta
+export default React.memo(Mmta);

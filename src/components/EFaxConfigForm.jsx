@@ -19,6 +19,9 @@ export default function EFaxConfigForm({ onClose }) {
     await mutateAsync(data);
     if(isSuccess){
       reset();
+      setTimeout(() => {
+        onClose();
+      }, 4000);
     }
   };
 

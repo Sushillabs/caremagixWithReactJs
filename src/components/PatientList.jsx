@@ -30,6 +30,7 @@ const PatientList = ({ filterPatient }) => {
   useEffect(() => {
     if (!isSuccess || !data) return;
     console.log("patients list", data);
+    
     const { data: patientsList, pcc_data } = data;
     const filteredPatients = (patientsList || []).map((p) => ({
       type: "data",
@@ -49,7 +50,7 @@ const PatientList = ({ filterPatient }) => {
     );
     const merged = [...filteredPatients, ...filteredPcc];
     dispatch(addPatientNames(merged));
-  }, [isSuccess, data, dispatch]);// dispatch only Eslint fix
+  }, [isSuccess, data, dispatch]);// dispatch only for Eslint fix
 
   // useEffect(() => {
   //   const fetchPatient = async () => {

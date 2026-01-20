@@ -168,12 +168,12 @@ const Chat = () => {
                         </thead>
                       ),
                       th: ({ children }) => (
-                        <th className="border border-white px-4 py-2 text-sm font-semibold">
+                        <th className="border border-white px-4 sm:py-2 text-xs sm:text-sm font-semibold">
                           {children}
                         </th>
                       ),
                       td: ({ children }) => (
-                        <td className=" border border-gray-300 px-4 py-2 align-top text-sm text-gray-800 whitespace-pre-line">
+                        <td className=" border border-gray-300 px-4 py-2 align-top text-xs sm:text-sm text-gray-800 whitespace-pre-line">
                           {children}
                         </td>
                       ),
@@ -186,7 +186,7 @@ const Chat = () => {
                 return (
                   <div
                     key={conversation.id}
-                    className="overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2"
+                    className="text-xs sm:text-sm overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2"
                   >
                     <button
                       className="bg-green-500 text-white rounded px-2 py-1 mb-1 mr-2 cursor-pointer hover:bg-green-600"
@@ -209,9 +209,9 @@ const Chat = () => {
                 <img
                   src="images/favicon/android-chrome-192x192.png"
                   alt="App Icon"
-                  className="w-18 h-16 border border-gray-500 object-contain rounded-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 border border-gray-500 object-contain rounded-lg"
                 />
-                <span>
+                <span className="text-xs sm:text-sm overflow-x-auto">
                   {conversation.content}
                 </span>
               </div>

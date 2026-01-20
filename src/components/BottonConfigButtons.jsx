@@ -1,6 +1,7 @@
 
 import { MdCreate, MdDelete } from "react-icons/md";
 import { FaUser, FaRegStickyNote, FaUpload } from "react-icons/fa";
+import { SiReacthookform } from "react-icons/si";
 import { GrConfigure } from "react-icons/gr";
 import { addButtonNames } from '../redux/bottomButtonsSlice';
 import { useDispatch } from 'react-redux';
@@ -8,6 +9,7 @@ import { getPccData } from '../api/hospitalApi';
 import useMyQuery from '../hooks/useMyQuery';
 import toast from "react-hot-toast";
 import { useQueryClient} from "@tanstack/react-query";
+// import useMyMutation from "../hooks/useMyMutation";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
@@ -19,14 +21,17 @@ const BottonConfigButtons = () => {
     enabled: false
   });
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
+  
 
   let bottom_buttons = [
-    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
-    { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
     { id: "pull-pcc", name: "Pull PCC Data", icon: <FaUser /> },
     { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure /> },
     { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
     { id: "upload-image", name: "Upload Image", icon: <FaUpload /> },
+    { id: "fil-cms-485", name: "Fill CMS 485", icon: <SiReacthookform /> },
+    { id: "fil-oasis-e", name: "Fill OASIS-E", icon: <SiReacthookform /> },
+    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
+    { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
     { id: "upload-icd", name: "Upload ICD Codes", icon: <FaUpload /> },
     { id: "upload-cpt", name: "Upload CPT Codes", icon: <FaUpload /> },
     { id: "medication-alert", name: "Medication Alerts", icon: <FaUpload /> },
@@ -55,10 +60,25 @@ const BottonConfigButtons = () => {
   const handleLeftButtonClick = (id) => {
     console.log("Button clicked:", id);
     dispatch(addButtonNames(id));
-    if (id === 'pull-pcc') {
-      pccData();
+    // if (id === 'pull-pcc') {
+    //   pccData();
+    // }
+    switch (id) {
+      case 'pull-pcc':
+        pccData();
+       break;
+       case 'efax-configuration':
+        // eFaxConfig();
+       case 'upload-plan':
+       case 'create-progress-notes':
+       case 'ai-agent':
+       case 'clear-conversations':
+        // handled in CareGiver.jsx
+        break;
+      default:
+        break;
     }
-  }
+  };
 
 
   return (
