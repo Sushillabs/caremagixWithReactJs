@@ -13,7 +13,9 @@ const CallRegister = () => {
         handleSubmit,
         formState: { errors },
     } = useForm();
-    const { patient_name, patient_type } = useSelector(state => state.patientsingledata.value);
+    const value = useSelector(state => state.patientsingledata?.value);
+    const patient_name = value?.patient_name;
+    const patient_type = value?.patient_type;
 
     const { mutate, isPending, error, data: callData } = useMyMutation({
         api: getCallDetail,
@@ -28,7 +30,7 @@ const CallRegister = () => {
     if (!patient_name || !patient_type) {
         return (
             <p className="text-red-600 text-center mt-4">
-                Patient or type is missing
+                Select patient from List, name or type is missing.
             </p>
         );
     }

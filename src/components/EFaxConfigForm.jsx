@@ -3,25 +3,36 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { uploadEFaxConfig } from "../api/hospitalApi";
 import useMyMutation from "../hooks/useMyMutation";
+import { useDispatch } from "react-redux";
+import { setJobsId } from "../redux/jobsIdslice";
 
-export default function EFaxConfigForm({ onClose }) {
+export default function EFaxConfigForm({ onClose, setActiveTab }) {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
   } = useForm();
+  const dispatch = useDispatch();
 
   // const [loading, setLoading] = useState(false);
   const { data, error: efaxError, isError: isEfaxError, isPending, isSuccess, mutate, mutateAsync } = useMyMutation({ api: uploadEFaxConfig, toastId: 'uploadEFaxConfig' });
-  // console.log('efax config useMutation:', { data, efaxError, isEfaxError, isPending });
+  // console.log('efax config useMutation:', { data, isPending, isSuccess });
+
   const onSubmit = async (data) => {
-    await mutateAsync(data);
-    if(isSuccess){
-      reset();
-      setTimeout(() => {
-        onClose();
-      }, 4000);
+    try {
+      const result = await mutateAsync(data);
+      console.log("isSuccess:", result);
+      if (result) {
+        dispatch(setJobsId({ eFaxJobs: result.jobs, ocrJobs: null }));
+        reset();
+        setActiveTab("uploadedPlans");
+        setTimeout(() => {
+          onClose();
+        }, 4000);
+      }
+    } catch (error) {
+      console.error("Error uploading eFax Configuration:", error);
     }
   };
 

@@ -11,15 +11,22 @@ import "../css/style.css";
 const Mmta = () => {
   const generatedQ = useSelector((state) => state.askQ.data);
   const lastQuestion = useMemo(() => generatedQ?.at(-1), [generatedQ]);
-
-  const { data, isPending, isError, error } = useMyQuery({
+  console.log("MMTA last question:", lastQuestion);
+  const { data, isPending, isFetching, isError, error } = useMyQuery({
     api: () => mmta({ question: lastQuestion }),
     id: ["mmta", lastQuestion],
     enabled: !!lastQuestion,
     staleTime: Infinity, // cache forever per question
   });
-
-  if (isPending) return <Spinner />;
+  console.log("MMTA data:", data, isPending, isFetching, isError, error);
+  if(!lastQuestion){
+    return (
+      <p className="text-red-600 text-center mt-4">
+        No question found. Please select patient first.
+      </p>
+    );
+  }
+  if (isFetching) return <Spinner />;
 
   if (isError)
     return (
