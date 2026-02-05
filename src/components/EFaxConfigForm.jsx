@@ -17,7 +17,7 @@ export default function EFaxConfigForm({ onClose, setActiveTab }) {
 
   // const [loading, setLoading] = useState(false);
   const { data, error: efaxError, isError: isEfaxError, isPending, isSuccess, mutate, mutateAsync } = useMyMutation({ api: uploadEFaxConfig, toastId: 'uploadEFaxConfig' });
-  // console.log('efax config useMutation:', { data, isPending, isSuccess });
+  // console.log('efax config useMutation:', efaxError?.response?.data?.message);
 
   const onSubmit = async (data) => {
     try {
@@ -141,8 +141,8 @@ export default function EFaxConfigForm({ onClose, setActiveTab }) {
           </button>
         </div>
         {isPending && <div className="text-lg text-center text-gray-500">Data requesting ..., can close. You will be notified once done.</div>}
-        {isEfaxError && <div className="text-lg text-center text-red-500">{data?.message || 'Error uploading eFax Configuration.'}</div>}
-        {isSuccess && <div className="text-lg text-center text-green-500">{data?.message || 'eFax Configuration uploaded successfully.'}</div>}
+        {isEfaxError && <div className="text-lg text-center text-red-500">{efaxError?.response?.data?.message ?? 'Error uploading eFax Configuration.'}</div>}
+        {isSuccess && <div className="text-lg text-center text-green-500">{data?.response?.data?.message ?? 'eFax Configuration uploaded successfully.'}</div>}
       </form>
     </div>
   );

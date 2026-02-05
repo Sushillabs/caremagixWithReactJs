@@ -5,12 +5,17 @@ const jobsIdSlice = createSlice({
     name: 'jobsId',
     initialState: {
         eFaxJobs: null,
-        ocrJobs: null,    
+        ocrJobs: null,
     },
     reducers: {
         setJobsId: (state, action) => {
-            state.eFaxJobs = action.payload.eFaxJobs;
-            state.ocrJobs = action.payload.ocrJobs;
+            if (action.payload?.eFaxJobs !== undefined) {
+                state.eFaxJobs = action.payload.eFaxJobs;
+            }
+
+            if (action.payload?.ocrJobs !== undefined) {
+                state.ocrJobs = action.payload.ocrJobs;
+            }
         },
         clearJobsId: (state) => {
             state.eFaxJobs = null;

@@ -99,11 +99,11 @@ const PatientList = ({ filterPatient }) => {
     console.log("handlePatient called payload:", payload);
   }
 
-  const handlePatientDelete = (e, patient_name, patient_type, dataType) => {
+  const handlePatientDelete = (e, patient_name, patient_type, dataType, patient_date) => {
     e.stopPropagation();
     console.log("Deleting patient:", patient_name, patient_type);
     if (patient_name && patient_type) {
-      dispatch(deletePatientThunk({ patient_type, patient_name, dataType }));
+      dispatch(deletePatientThunk({ patient_type, patient_name, dataType, patient_date }));
     }
   }
 
@@ -146,7 +146,7 @@ const PatientList = ({ filterPatient }) => {
                           className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "hover:bg-white hover:text-red-600"} bg-red-500 text-gray-900 p-1 rounded-full`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handlePatientDelete(e, date.patient_name, date.patient_type, item.type);
+                            handlePatientDelete(e, date.patient_name, date.patient_type, item.type, date.dates);
                           }}
                         >
                           <MdDelete />

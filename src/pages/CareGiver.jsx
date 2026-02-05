@@ -14,6 +14,7 @@ import MobileSideBar from "../components/MobileSideBar";
 import CallRegister from "../components/CallResigter";
 import Mmta from "../components/Mmta";
 import MobileRightBar from "../components/MobileRightBar";
+import UploadPlan from "../components/UploadPlan";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -128,7 +129,7 @@ function CareGiver() {
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}
-            {activeTab === "uploadedPlans" && <div>Uploaded Plans Content</div>}
+            {activeTab === "uploadedPlans" && <UploadPlan />}
           </div>
         </div>
       </div>

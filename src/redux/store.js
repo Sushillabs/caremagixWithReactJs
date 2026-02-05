@@ -7,6 +7,7 @@ import chatSliceReducer from './chatSlice'
 import bottomButtonsReducer from './bottomButtonsSlice'
 import { logout } from './authSlice';
 import jobsIdReducer from './jobsIdslice';
+import finalJobsStatusReducer from './finalJobsStatusSlice';
 
 const appReducer = combineReducers({
   hospitalnames: hospitalReducer,
@@ -16,6 +17,7 @@ const appReducer = combineReducers({
   askQ: chatSliceReducer,
   buttonNames: bottomButtonsReducer,
   jobsId: jobsIdReducer,
+  finalJobStatus: finalJobsStatusReducer,
 });
 
 const rootReducer = (state, action) => {

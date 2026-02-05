@@ -5,13 +5,13 @@ import { deletePatient as deletePatientAPI } from "../api/hospitalApi";
 // Thunk for deleting a patient
 export const deletePatientThunk = createAsyncThunk(
     "patientnames/deletePatient",
-    async ({ patient_type, patient_name, dataType }, { rejectWithValue }) => {
+    async ({ patient_type, patient_name, dataType, patient_date }, { rejectWithValue }) => {
         try {
-            const response = await deletePatientAPI(patient_type, patient_name);
+            const response = await deletePatientAPI(patient_type, patient_name, patient_date);
             console.log("Delete response:", response);
             return { patient_type, nameWithKey: patient_name, dataType, data: response.data }; // return what you need
         } catch (error) {
-            return rejectWithValue(error.response?.data || "Failed to delete patient");
+            return rejectWithValue(error?.response?.data || "Failed to delete patient");
         }
     }
 );
@@ -42,7 +42,7 @@ export const patientListSlice = createSlice({
                     .map((patient) => {
                         if (dataType === "data" && patient.raw?.data) {
                             const updatedSubData = patient.raw.data.filter(
-                                (p) => p.patient_name !== nameWithKey
+                                (p) => p?.patient_name !== nameWithKey
                             );
                             return updatedSubData.length > 0
                                 ? { ...patient, raw: { ...patient.raw, data: updatedSubData } }
