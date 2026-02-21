@@ -87,9 +87,10 @@ const PatientList = ({ filterPatient }) => {
   const handlePatientClick = (id, item) => {
     dispatch(clearChat())
     //make two paload based on type
+    console.log('iitwm',item);
     let payload = {};
     if (item.type === "data") {
-      payload = { ...id, user_id: user_id }
+      payload = { ...id, user_id: user_id, patient:item }
     } else if (item.type === "pcc") {
       payload = { patient_collection: id, user_id: user_id, patient_type: item.type.toUpperCase(), patient_name: item.name }
     }

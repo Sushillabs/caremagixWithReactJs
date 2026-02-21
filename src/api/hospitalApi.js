@@ -15,6 +15,7 @@ export const uploadPlan = (data) => http.post('/upload', data, { withAuth: true,
 export const deletePatient = (patient_type, patient_name, patient_date) => http.delete(`/delete_patient?patient_type=${patient_type}&patient_name=${patient_name}&dates=${patient_date}`, {withAuth: true});
 export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth: true });
 export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });
+export const unregisterCall = (data) => http.post('/pause_call',data,{ withAuth: true });
 export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
 export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
 export const getProgress = (jobId) => http.get(`/ocr-progress/${jobId}`, { withAuth: true });

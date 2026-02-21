@@ -12,11 +12,11 @@ const Mmta = () => {
   const generatedQ = useSelector((state) => state.askQ.data);
   const lastQuestion = useMemo(() => generatedQ?.at(-1), [generatedQ]);
   console.log("MMTA last question:", lastQuestion);
-  const { data, isPending, isFetching, isError, error } = useMyQuery({
+  const { data, error, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({
     api: () => mmta({ question: lastQuestion }),
     id: ["mmta", lastQuestion],
     enabled: !!lastQuestion,
-    staleTime: Infinity, // cache forever per question
+    staleTime: Infinity, // fresh forever per question
   });
   console.log("MMTA data:", data, isPending, isFetching, isError, error);
   if(!lastQuestion){
