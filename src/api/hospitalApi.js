@@ -19,6 +19,8 @@ export const unregisterCall = (data) => http.post('/pause_call',data,{ withAuth:
 export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
 export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
 export const getProgress = (jobId) => http.get(`/ocr-progress/${jobId}`, { withAuth: true });
+export const sendOTP = (data)=> http.post('/send-otp',data,{withAuth: true});
+export const verifyOTP = (data)=> http.post('/verify-otp',data,{withAuth: true});
 
 
 
