@@ -1,5 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { uploadPlan } from "../api/hospitalApi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import PhoneInput from "react-phone-number-input";
 import { sendOTP, verifyOTP } from "../api/hospitalApi";
 import useMyMutation from "../hooks/useMyMutation";
 
-export default function UploadPatientPlan({ onClose }) {
+export default function UploadPatientDocument({ onClose, title, accept, uploadApi, type }) {
   const {
     register,
     handleSubmit,
@@ -17,7 +17,9 @@ export default function UploadPatientPlan({ onClose }) {
     reset,
     control,
     watch,
-    setValue
+    setValue,
+    setError,
+    clearErrors,
   } = useForm();
   const queryClient = useQueryClient();
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -26,7 +28,7 @@ export default function UploadPatientPlan({ onClose }) {
   const { data: verifyData, mutate: verifyMutate, mutateAsync: verifyMutateAsync, isSuccess: isVerifySuccess, isPending: isVerifyPending, isError: isVerifyError } = useMyMutation({ api: verifyOTP, toastId: 'verifyOTP' })
 
   const [showMobile, setShowMobile] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
+  const [showEmail, setShowEmail] = useState(true);
   const [inputValue, setInputValue] = useState("");
 
   const [otp, setOTP] = useState("");
@@ -34,9 +36,9 @@ export default function UploadPatientPlan({ onClose }) {
   const selectedPatientName = watch("patient_name");
   const isNewPatient = selectedPatientName?.__isNew__;
 
-const isExistingPatient = !isNewPatient;
-const shouldShowVerification = isNewPatient && !isOtpVerified;
-const shouldShowForm = isExistingPatient || isOtpVerified;
+  const isExistingPatient = !isNewPatient;
+  const shouldShowVerification = isNewPatient && !isOtpVerified;
+  const shouldShowForm = isExistingPatient || isOtpVerified;
 
   const patientList = useSelector(state => state.patientnames.value);
 
@@ -61,7 +63,7 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
     const payload = { identifier: inputValue }
     try {
       const res = await mutateAsync(payload);
-      if(res.success){
+      if (res.success) {
         setShouldShowOTPInput(true);
       }
       console.log("OTP sent response:", res);
@@ -95,14 +97,44 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
     setIsOtpVerified(false);
     setOTP("");
     setInputValue("");
+    setShouldShowOTPInput(false);
   }, [selectedPatientName]);
+
+  useEffect(() => {
+    if (!selectedPatientName) return;
+
+    // If NEW patient (OTP flow handles it)
+    if (selectedPatientName?.__isNew__) {
+      setValue("email", "");
+      setValue("mobile", "");
+      return;
+    }
+
+    // EXISTING PATIENT
+    const selectedName = selectedPatientName.value;
+
+    const fullPatient = patientList.find(
+      (p) => p.name === selectedName
+    );
+
+    if (fullPatient) {
+      setValue("email", fullPatient?.raw?.registered_email || "");
+      setValue("mobile", fullPatient?.raw?.registered_number || "");
+    }
+
+  }, [selectedPatientName, patientList, setValue]);
 
   const onSubmit = async (data) => {
     setLoading(true);
-
+    clearErrors('root');
     try {
       if (!data.file || data.file.length === 0) {
-        throw new Error("Please select a file to upload.");
+        setError("root", { type: "manual", message: "Please select a file to upload." });
+        return;
+      }
+      if (data.email === "" && data.mobile === "") {
+        setError("root", { type: 'manual', message: "Mobile or Email is required" })
+        return;
       }
 
       const file = data.file[0];
@@ -110,24 +142,42 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
 
       const formData = new FormData();
       formData.append("file_type", fileType);
-      formData.append("patient_name", data.patient_name);
+      formData.append("patient_name", data.patient_name.value);
       formData.append("patient_type", data.plan);
       formData.append("patient_doc", data.keep_doc);
       formData.append("file", file);
       formData.append("confirm", "false");
+      formData.append("email", data.email || "");
+      formData.append("mobile", data.mobile || "");
 
       console.log("Submitting FormData:", data);
 
-      const res = await uploadPlan(formData);
-      console.log("Upload Plan API response:", res);
-      if (res.message === "File uploaded successfully.") {
-        queryClient.invalidateQueries({ queryKey: ['patientList'] });// refetch patient list
-        onClose(); // close modal on success
-      }
 
-      reset(); // reset form after successful submission
+
+      const res = await uploadApi(formData);
+      // console.log("Upload Plan API response:", res);
+      if (res.message === "File uploaded successfully.") {
+        reset({
+          patient_name: null,
+          email: "",
+          mobile: "",
+          plan: "",
+          keep_doc: "",
+          file: null
+        });
+        queryClient.invalidateQueries({ queryKey: ['patientList'] });// refetch patient list
+        setError("root", {
+          type: "success",
+          message: "File uploaded successfully."
+        });
+
+      }
     } catch (err) {
-      console.error("Error uploading plan:", err.message);
+      setError("root", {
+        type: "manual",
+        message: err.message || "Something went wrong."
+      });
+      // console.error("Error uploading plan:", err.message);
 
     } finally {
       setLoading(false);
@@ -146,7 +196,7 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
       </button>
 
       <h3 className="text-xl font-semibold mb-2">
-        Upload Patient&apos;s Plan
+        {title}
       </h3>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -233,7 +283,7 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
             <label className="block text-sm font-medium mb-1">Upload File</label>
             <input
               type="file"
-              accept=".pdf,.xml,.docx"
+              accept={accept}
               {...register("file", { required: "File is required" })}
               className="w-full border rounded-lg px-3 py-1 bg-white"
             />
@@ -250,7 +300,15 @@ const shouldShowForm = isExistingPatient || isOtpVerified;
             >
               {loading ? "Uploading..." : "Submit"}
             </button>
+
           </div>
+          {errors.root && (
+            <p
+              className={`text-sm mt-2 text-center ${errors.root.type === "success" ? "text-green-600" : "text-red-500"}`}
+            >
+              {errors.root.message}
+            </p>
+          )}
         </div>}
 
       </form>

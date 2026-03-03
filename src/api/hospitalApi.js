@@ -12,6 +12,7 @@ export const askAPI = (data) => http.post('/ask',data,{ withAuth: true});
 export const getDocRef = (data) => http.post('/doc-ref', data, { withAuth: true});
 export const uploadEFaxConfig = (data) => http.post('/getfax',data,{ withAuth: true});
 export const uploadPlan = (data) => http.post('/upload', data, { withAuth: true, isMultipart: true });
+export const uploadPatientImage = (data) => http.post('/ocr-upload', data, { withAuth: true, isMultipart: true });
 export const deletePatient = (patient_type, patient_name, patient_date) => http.delete(`/delete_patient?patient_type=${patient_type}&patient_name=${patient_name}&dates=${patient_date}`, {withAuth: true});
 export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth: true });
 export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });

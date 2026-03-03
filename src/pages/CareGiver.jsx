@@ -9,12 +9,13 @@ import { useSelector, useDispatch } from "react-redux";
 import debounce from "lodash.debounce";
 import EFaxConfigForm from "../components/EFaxConfigForm";
 import { addButtonNames } from "../redux/bottomButtonsSlice";
-import UploadPatientPlan from "../components/UploadPatientPlan";
+import UploadPlan from "../components/UploadPlan";
 import MobileSideBar from "../components/MobileSideBar";
 import CallRegister from "../components/CallResigter";
 import Mmta from "../components/Mmta";
 import MobileRightBar from "../components/MobileRightBar";
-import UploadPlan from "../components/UploadPlan";
+import UploadPatientDocument from "../components/UploadPatientDocument";
+import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -94,7 +95,25 @@ function CareGiver() {
     "create-progress-notes": <div>Progress Notes Component</div>,
     "ai-agent": <div>AI Agent Component</div>,
     "efax-configuration": <EFaxConfigForm onClose={onClose} setActiveTab={setActiveTab} />,
-    "upload-plan": <UploadPatientPlan onClose={onClose} />,
+    "upload-plan": (
+      <UploadPatientDocument
+        onClose={onClose}
+        title="Upload Patient's Plan"
+        accept=".pdf,.xml,.docx"
+        uploadApi={uploadPlan}
+        type="pdf"
+      />
+    ),
+
+    "upload-image": (
+      <UploadPatientDocument
+        onClose={onClose}
+        title="Upload Image for OCR"
+        accept=".pdf,.xml,.docx,.jpg,.jpeg,.png"
+        uploadApi={uploadPatientImage}
+        type="image"
+      />
+    ),
     "clear-conversations": <div>Clear Conversations Component</div>,
   };
 
@@ -116,11 +135,11 @@ function CareGiver() {
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
           <div className="text-xs sm:ml-4 mb-1 grid grid-cols-1 md:grid-cols-3 sm:gap-2">
             <div>
-              { <button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
-              { <button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call</button>}
-              { <button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
-              { <button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
-            {/* singleDate && */}
+              {<button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
+              {<button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call</button>}
+              {<button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
+              {<button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
+              {/* singleDate && */}
             </div>
             {singleDate && <p className="text-yellow-600 sm:font-bold sm:text-lg text-xs">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
           </div>

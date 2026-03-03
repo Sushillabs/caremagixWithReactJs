@@ -9,7 +9,7 @@ import { useSelector, useDispatch } from "react-redux";
 import debounce from "lodash.debounce";
 import EFaxConfigForm from "../components/EFaxConfigForm";
 import { addButtonNames } from "../redux/bottomButtonsSlice";
-import UploadPatientPlan from "../components/UploadPatientPlan";
+import UploadPatientPlan from "./UploadPatientDocument";
 // import MobileSideBar from "../components/MobileSideBar";
 
 const MobileSideBar = ({ setHandleSidebar, handleSidebar }) => {
