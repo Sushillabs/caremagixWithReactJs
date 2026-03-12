@@ -127,7 +127,7 @@ const CallRegister = () => {
         <div className="flex flex-col p-4 items-center border border-gray-300 h-full">
             <div className="text-center mb-4">
                 <p
-                    className="text-green-600 text-lg mb-2"
+                    className="text-green-600 text-sm sm:text-lg mb-2"
                 >
                     {isCallRegistered ? 'Call is registered, click below to unregister' : 'Call is not registered, click below to register'}
                 </p>

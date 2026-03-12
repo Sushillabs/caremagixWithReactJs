@@ -113,7 +113,7 @@ const PatientList = ({ filterPatient }) => {
 
   return (
     <div className="bg-white rounded  h-full grid grid-rows-[1fr_1fr] min-h-0 ">
-      <ul className="overflow-y-auto min-h-0 bg-white">
+      <ul className="overflow-y-auto min-h-0 bg-white mb-2 border-b">
         {filterPatient.length === 0 && (
           <li className="p-3 text-gray-500">No patients found</li>
         )}

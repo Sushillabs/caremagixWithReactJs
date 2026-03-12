@@ -10,7 +10,7 @@ const UploadPlan = () => {
 
   const jobsId = [
     ...(Array.isArray(eFaxJobs) ? eFaxJobs.map((job) => ({ ...job, type: 'eFax-job' })) : []),
-    ...ocrJobs?.job_id ? [{ ...ocrJobs, type: 'ocr-job' }] : []
+    ...(ocrJobs?.job_id ? [{ ...ocrJobs, type: 'ocr-job' }] : [])
   ];
 const jobProgressQueries = useProgress(jobsId);
 
@@ -81,10 +81,10 @@ return (
             <span className="flex-1 truncate text-gray-900">
               {file_name ||job_id}
             </span>
-            <span className="hidden sm:block flex-1 truncate text-gray-600">
+            <span className={`hidden sm:block flex-1 truncate ${progress===100? 'text-green-500': 'text-gray-600'}`}>
               {message}
             </span>
-            <span className="w-12 shrink-0 text-right font-semibold text-blue-600">
+            <span className={`w-12 shrink-0 text-right font-semibold ${progress===100? 'text-green-500': 'text-blue-500'}`}>
               {progress}%
             </span>
           </div>

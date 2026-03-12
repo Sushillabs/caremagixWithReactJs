@@ -98,6 +98,7 @@ function CareGiver() {
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}
+        setActiveTab={setActiveTab}
         title="Upload Patient's Plan"
         accept=".pdf,.xml,.docx"
         uploadApi={uploadPlan}
@@ -107,6 +108,7 @@ function CareGiver() {
 
     "upload-image": (
       <UploadPatientDocument
+        setActiveTab={setActiveTab}
         onClose={onClose}
         title="Upload Image for OCR"
         accept=".pdf,.xml,.docx,.jpg,.jpeg,.png"
@@ -133,12 +135,12 @@ function CareGiver() {
           <PatientList filterPatient={filteredPatients} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
-          <div className="text-xs sm:ml-4 mb-1 grid grid-cols-1 md:grid-cols-3 sm:gap-2">
-            <div>
-              {<button onClick={handleChat} className={`bg-green-500 ${activeTab === "chat" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Chat</button>}
-              {<button onClick={handleCallRegister} className={`bg-green-500 ${activeTab === "callRegister" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Call</button>}
-              {<button onClick={handleMMTA} className={`bg-green-500 ${activeTab === "mmta" ? "text-white , bg-green-600" : "text-gray-500"} border-r border-gray-200 px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>MMTA</button>}
-              {<button onClick={handleUploadedPlans} className={`bg-green-500 ${activeTab === "uploadedPlans" ? "text-white , bg-green-600" : "text-gray-500"} px-2 py-2 hover:bg-green-600 hover:cursor-pointer`}>Uploaded Plans</button>}
+          <div className="text-xs sm:ml-4 grid grid-cols-1 md:grid-cols-3 sm:gap-2">
+            <div className="gap-4 flex pb-2 pt-3 ">
+              {<button onClick={handleChat} className={`${activeTab === "chat" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Chat</button>}
+              {<button onClick={handleCallRegister} className={`${activeTab === "callRegister" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Call</button>}
+              {<button onClick={handleMMTA} className={` ${activeTab === "mmta" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>MMTA</button>}
+              {<button onClick={handleUploadedPlans} className={` ${activeTab === "uploadedPlans" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Uploaded Plans</button>}
               {/* singleDate && */}
             </div>
             {singleDate && <p className="text-yellow-600 sm:font-bold sm:text-lg text-xs">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}

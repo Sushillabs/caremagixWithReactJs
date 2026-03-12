@@ -8,8 +8,11 @@ import CreateSelectable from "react-select/creatable";
 import PhoneInput from "react-phone-number-input";
 import { sendOTP, verifyOTP } from "../api/hospitalApi";
 import useMyMutation from "../hooks/useMyMutation";
+import {useDispatch} from "react-redux"
+// import { useDispatch } from "react-redux";
+import { setJobsId } from "../redux/jobsIdslice";
 
-export default function UploadPatientDocument({ onClose, title, accept, uploadApi, type }) {
+export default function UploadPatientDocument({ onClose, setActiveTab, title, accept, uploadApi, type }) {
   const {
     register,
     handleSubmit,
@@ -21,6 +24,7 @@ export default function UploadPatientDocument({ onClose, title, accept, uploadAp
     setError,
     clearErrors,
   } = useForm();
+  const dispatch=useDispatch();
   const queryClient = useQueryClient();
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [shouldShowOTPInput, setShouldShowOTPInput] = useState(false);
@@ -127,36 +131,52 @@ export default function UploadPatientDocument({ onClose, title, accept, uploadAp
   const onSubmit = async (data) => {
     setLoading(true);
     clearErrors('root');
-    try {
-      if (!data.file || data.file.length === 0) {
-        setError("root", { type: "manual", message: "Please select a file to upload." });
-        return;
-      }
-      if (data.email === "" && data.mobile === "") {
-        setError("root", { type: 'manual', message: "Mobile or Email is required" })
-        return;
-      }
 
-      const file = data.file[0];
-      const fileType = file.name.split('.').pop().toLowerCase();
+    if (!data.file || data.file.length === 0) {
+      setError("root", { type: "manual", message: "Please select a file to upload." });
+      return;
+    }
+    if (data.email === "" && data.mobile === "") {
+      setError("root", { type: 'manual', message: "Mobile or Email is required" })
+      return;
+    }
 
-      const formData = new FormData();
-      formData.append("file_type", fileType);
-      formData.append("patient_name", data.patient_name.value);
+    const file = data.file[0];
+    const fileType = file.name.split('.').pop().toLowerCase();
+
+    const formData = new FormData();
+
+    formData.append("patient_name", data.patient_name.value);
+    formData.append("confirm", "false");
+    formData.append("email", data.email || "");
+    formData.append("mobile", data.mobile || "");
+    formData.append("file_type", fileType);
+
+    if (type === 'image') {
+      formData.append("image_type", data.plan);
+      formData.append("image", file); 
+      formData.append("doc_title", data.keep_doc);    
+    } else {     
       formData.append("patient_type", data.plan);
-      formData.append("patient_doc", data.keep_doc);
       formData.append("file", file);
-      formData.append("confirm", "false");
-      formData.append("email", data.email || "");
-      formData.append("mobile", data.mobile || "");
+      formData.append("patient_doc", data.keep_doc);
+    }
 
-      console.log("Submitting FormData:", data);
+    console.log("Submitting FormData:", data);
 
-
-
+    try {
       const res = await uploadApi(formData);
-      // console.log("Upload Plan API response:", res);
-      if (res.message === "File uploaded successfully.") {
+      console.log("Upload Plan API response:", res);
+
+      if (res) {
+        if (type === 'image') {
+          dispatch(setJobsId({ eFaxJobs: null, ocrJobs: res }));
+          setActiveTab("uploadedPlans");
+          setTimeout(() => {
+            onClose();
+          }, 4000);
+        }
+
         reset({
           patient_name: null,
           email: "",
@@ -170,12 +190,14 @@ export default function UploadPatientDocument({ onClose, title, accept, uploadAp
           type: "success",
           message: "File uploaded successfully."
         });
-
       }
+
+
     } catch (err) {
+      console.log(err);
       setError("root", {
         type: "manual",
-        message: err.message || "Something went wrong."
+        message: err?.response?.data?.message||err?.message || "Something went wrong."
       });
       // console.error("Error uploading plan:", err.message);
 
