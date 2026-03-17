@@ -4,22 +4,22 @@ import { createSlice } from '@reduxjs/toolkit';
 const jobsIdSlice = createSlice({
     name: 'jobsId',
     initialState: {
-        eFaxJobs: null,
-        ocrJobs: null,
+        eFaxJobs: [],
+        ocrJobs: [],
     },
     reducers: {
         setJobsId: (state, action) => {
-            if (action.payload?.eFaxJobs !== undefined) {
-                state.eFaxJobs = action.payload.eFaxJobs;
+            if (Array.isArray(action.payload?.eFaxJobs)) {
+                state.eFaxJobs.push(...action.payload.eFaxJobs);
             }
 
-            if (action.payload?.ocrJobs !== undefined) {
-                state.ocrJobs = action.payload.ocrJobs;
+            if (action.payload?.ocrJobs && typeof action.payload.ocrJobs === "object") {
+                state.ocrJobs.push(action.payload.ocrJobs);
             }
         },
         clearJobsId: (state) => {
-            state.eFaxJobs = null;
-            state.ocrJobs = null;
+            state.eFaxJobs = [];
+            state.ocrJobs = [];
         }
     }
 });

@@ -86,7 +86,8 @@ const BottonConfigButtons = () => {
       {bottom_buttons && bottom_buttons.map((button) => {
         return <li key={button.id}
           onClick={() => handleLeftButtonClick(button.id)}
-          className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white hover:bg-green-500'} hover:text-white cursor-pointer border border-gray-400 text-gray-700 rounded-md`}>
+          // className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white hover:bg-green-500'} hover:text-white cursor-pointer border border-gray-400 text-gray-700 rounded-md`}>
+          className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white hover:bg-green-500'} hover:text-white cursor-pointer border border-green-500 text-gray-700 rounded-md`}>
           {button.icon} <span>{button.name}</span>
         </li>
       })}

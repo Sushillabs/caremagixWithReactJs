@@ -5,6 +5,7 @@ const RequireAuth = ({ roles, children }) => {
   const user = useSelector((state) => state.auth.value);
 
   if (!user?.token) {
+    localStorage.clear();
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 

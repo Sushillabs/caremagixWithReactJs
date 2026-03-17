@@ -4,10 +4,8 @@ import { useSelector, useDispatch } from "react-redux"
 // import { saveServerFailMap } from "../redux/finalJobsStatusSlice"
 
 const useProgress = (jobs = []) => {
-  // const dispatch=useDispatch();
-  // const serverFailMap = useSelector((state) => state.finalJobStatus.serverFailMap);
   const finalJobStatusMap = useSelector((state) => state.finalJobStatus.finalJobs);
-  console.log('finalJobStatusMap in useProgress:', finalJobStatusMap);
+  
   return useQueries({
     queries: jobs.map((job) => {
       const jobIdExists = !!job.job_id;

@@ -21,7 +21,8 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    // localStorage.removeItem("token");
+    localStorage.clear();
     dispatch(logout());
     navigate('/');
 

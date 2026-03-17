@@ -1,98 +1,127 @@
 import { useSelector, useDispatch } from "react-redux"
 import useProgress from "../hooks/useProgress.js";
-import { useEffect,useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { saveFinalJobStatus } from "../redux/finalJobsStatusSlice";
 
 const UploadPlan = () => {
+  console.log('inside upload plan');
+  const [completedJobs, setCompletedJobs] = useState([]);
   const { eFaxJobs, ocrJobs } = useSelector((state) => state.jobsId);
   const dispatch = useDispatch();
   const dispatchedJobsRef = useRef(new Set());
 
   const jobsId = [
     ...(Array.isArray(eFaxJobs) ? eFaxJobs.map((job) => ({ ...job, type: 'eFax-job' })) : []),
-    ...(ocrJobs?.job_id ? [{ ...ocrJobs, type: 'ocr-job' }] : [])
+    ...(Array.isArray(ocrJobs) ? ocrJobs.map((job) => ({ ...job, type: 'ocr-job' })) : []),
+    // ...(ocrJobs?.job_id ? [{ ...ocrJobs, type: 'ocr-job' }] : [])
   ];
-const jobProgressQueries = useProgress(jobsId);
+  const jobProgressQueries = useProgress(jobsId);
 
-useEffect(() => {
-  jobProgressQueries.forEach((q) => {
-    if (q.isLoading || q.isError || q.data?.status==='INPROGRESS') return;
-
-    const jobId = q.data?.job_id;
-    const status = q.data?.status;
-
-    if (!jobId) return;
-
-    // 🚫 ABSOLUTE LOOP BREAKER
-    if (dispatchedJobsRef.current.has(jobId)) return;
-
-    if (status === "COMPLETED" || status === "FAILED") {
-      dispatchedJobsRef.current.add(jobId);
-
-      dispatch(saveFinalJobStatus({
-        jobId,
-        status,
-        message: q.data?.message,
-      }));
+  const progressJobsUI = jobProgressQueries.map((query) => {
+    if (query.isLoading) {
+      return { job_id: "loading", message: "Loading...", progress: 0 };
     }
+
+    if (query.isError) {
+      return { job_id: "error", message: "Error loading job", progress: 0 };
+    }
+
+    return query.data;
   });
-}, [jobProgressQueries, dispatch]);
 
+const jobMap = new Map();
 
+progressJobsUI.forEach(job => jobMap.set(job.job_id, job));
 
-return (
-  <div className="h-full flex flex-col">
-    <h2 className="text-sm font-semibold mb-2">{jobProgressQueries.length>0? 'Uploaded Plan':'No Uploaded Plan'}</h2>
+completedJobs.forEach(job => {
+  if (!jobMap.has(job.jobId)) {
+    jobMap.set(job.jobId, {
+      job_id: job.jobId,
+      message: job.message,
+      progress: 100,
+      status: job.status
+    });
+  }
+});
 
-    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-      {jobProgressQueries.map((query, index) => {
-        if (query.isLoading) {
-          return (
-            <div
-              key={index}
-              className="text-xs text-gray-500 border rounded px-3 py-2"
-            >
-              Loading...
-            </div>
-          );
+const allJobs = Array.from(jobMap.values());
+
+   useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("completed_jobs") || "[]");
+    setCompletedJobs(saved)
+  }, [])
+
+  useEffect(() => {
+    jobProgressQueries.forEach((q) => {
+      if (q.isLoading || q.isError || q.data?.status === 'INPROGRESS') return;
+
+      const jobId = q.data?.job_id;
+      const status = q.data?.status;
+
+      if (!jobId) return;
+
+      // 🚫 ABSOLUTE LOOP BREAKER
+      if (dispatchedJobsRef.current.has(jobId)) return;
+
+      if (status === "COMPLETED" || status === "FAILED") {
+        dispatchedJobsRef.current.add(jobId);
+        let final = {
+          jobId,
+          status,
+          message: q.data?.message,
         }
 
-        if (query.isError) {
-          return (
-            <div
-              key={index}
-              className="text-xs text-red-500 border rounded px-3 py-2"
-            >
-              Error loading job
-            </div>
-          );
+        const existing = JSON.parse(localStorage.getItem("completed_jobs") || "[]");
+
+        const alreadySaved = existing.some((j) => j.jobId === jobId);
+
+        if (!alreadySaved) {
+          existing.push(final);
+          localStorage.setItem("completed_jobs", JSON.stringify(existing));
+          setCompletedJobs(existing);
+          dispatch(saveFinalJobStatus(final));
         }
 
-        const { type, file_name, message, progress,job_id } = query.data || {};
+       
+      }
+    });
+  }, [jobProgressQueries, dispatch]);
 
-        return (
+ 
+
+
+  return (
+    <div className="h-full flex flex-col">
+      <h2 className="text-sm font-semibold mb-2">{allJobs.length > 0 ? 'Uploaded Plan' : 'No Uploaded Plan'}</h2>
+
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        {allJobs.map((job, index) => (
           <div
-            key={query.data?.job_id || index}
+            key={job.job_id || index}
             className="border rounded px-3 py-2 flex items-center gap-2 text-xs sm:text-sm"
           >
-            {/* <span className="w-14 shrink-0 text-gray-600 font-medium truncate">
-              {file_name ||job_id}
-            </span> */}
             <span className="flex-1 truncate text-gray-900">
-              {file_name ||job_id}
+              {job.file_name || job.job_id}
             </span>
-            <span className={`hidden sm:block flex-1 truncate ${progress===100? 'text-green-500': 'text-gray-600'}`}>
-              {message}
+
+            <span
+              className={`hidden sm:block flex-1 truncate ${job.progress === 100 ? "text-green-500" : "text-gray-600"
+                }`}
+            >
+              {job.message}
             </span>
-            <span className={`w-12 shrink-0 text-right font-semibold ${progress===100? 'text-green-500': 'text-blue-500'}`}>
-              {progress}%
+
+            <span
+              className={`w-12 shrink-0 text-right font-semibold ${job.progress === 100 ? "text-green-500" : "text-blue-500"
+                }`}
+            >
+              {job.progress}%
             </span>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 
 }
 
