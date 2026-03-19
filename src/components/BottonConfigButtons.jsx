@@ -4,24 +4,28 @@ import { FaUser, FaRegStickyNote, FaUpload } from "react-icons/fa";
 import { SiReacthookform } from "react-icons/si";
 import { GrConfigure } from "react-icons/gr";
 import { addButtonNames } from '../redux/bottomButtonsSlice';
-import { useDispatch } from 'react-redux';
-import { getPccData } from '../api/hospitalApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { getPccData, fillCMS485 } from '../api/hospitalApi';
 import useMyQuery from '../hooks/useMyQuery';
 import toast from "react-hot-toast";
-import { useQueryClient} from "@tanstack/react-query";
-// import useMyMutation from "../hooks/useMyMutation";
+import { useQueryClient } from "@tanstack/react-query";
+import useMyMutation from "../hooks/useMyMutation";
+import { Spinner } from "./Spiner";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  
-  const { data, error, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({ 
+  const patientData = useSelector((state) => state.patientsingledata.value)
+  const {id:headerId} = useSelector((state) => state.auth.item);
+  console.log('headerId',headerId);
+
+  const { data, error, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({
     api: getPccData,
     id: 'pccData',
     enabled: false
   });
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
-  
+  const { data: CMS_data, error: CMS_error, isError: CMS_isError, isPending: CMS_isPending, isFetching: CMS_isFetching, mutate, mutateAsync } = useMyMutation({ api: fillCMS485, toastId: 'fillCMS485' })
 
   let bottom_buttons = [
     { id: "pull-pcc", name: "Pull PCC Data", icon: <FaUser /> },
@@ -57,39 +61,79 @@ const BottonConfigButtons = () => {
   };
 
 
-  const handleLeftButtonClick = (id) => {
+  const handleLeftButtonClick = async (id) => {
+    const isFill_form = (id === "fil-cms-485");
+    if (isFill_form) {
+      const { patient_name, patient_type, dates } = patientData
+      const payload = {
+        form_name: "CMS-485",
+        patient_name,
+        patient_type,
+        dates
+      };
+      const res = await mutateAsync(payload)
+      console.log(res);
+      if (res && res.form_link) {
+        window.open(res.form_link, "_blank");
+      } else {
+        alert("Form link not found in response.");
+        console.error("Invalid response:", response.data);
+      }
+
+    }
     console.log("Button clicked:", id);
     dispatch(addButtonNames(id));
-    // if (id === 'pull-pcc') {
-    //   pccData();
-    // }
+
     switch (id) {
       case 'pull-pcc':
         pccData();
-       break;
-       case 'efax-configuration':
-        // eFaxConfig();
-       case 'upload-plan':
-       case 'create-progress-notes':
-       case 'ai-agent':
-       case 'clear-conversations':
+        break;
+      case 'efax-configuration':
+      // eFaxConfig();
+      case 'upload-plan':
+      case 'create-progress-notes':
+      case 'ai-agent':
+      case 'clear-conversations':
         // handled in CareGiver.jsx
         break;
       default:
         break;
     }
+    // if(!patientData)
   };
 
 
   return (
     <ul className='flex flex-col gap-1 overflow-y-auto min-h-0'>
       {bottom_buttons && bottom_buttons.map((button) => {
+        if(button.id==='upload-icd' && headerId !=='icd_codes') return null;
+        if(button.id==='upload-cpt' && headerId !=='cpt_codes') return null;
+        const isCMS485 = button.id === "fil-cms-485";
+        const disabled =
+          ((isCMS485 || button.id === "fil-oasis-e") && !patientData) ||
+          (isCMS485 && CMS_isPending);
         return <li key={button.id}
-          onClick={() => handleLeftButtonClick(button.id)}
-          // className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white hover:bg-green-500'} hover:text-white cursor-pointer border border-gray-400 text-gray-700 rounded-md`}>
-          className={`flex items-center gap-1 py-2 px-1 ${button.name === 'Clear Conversations' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white hover:bg-green-500'} hover:text-white cursor-pointer border border-green-500 text-gray-700 rounded-md`}>
-          {button.icon} <span>{button.name}</span>
+          title={disabled ? "Please select patient" : ""}
+          onClick={() => {
+            if (disabled) return;
+            handleLeftButtonClick(button.id);
+          }}
+          className={`flex items-center gap-1 py-2 px-1
+          ${button.name === 'Clear Conversations'
+              ? 'bg-red-500 hover:bg-red-600 text-white'
+              : 'bg-white hover:bg-green-500'}
+          
+          ${disabled
+              ? 'opacity-50 cursor-not-allowed'
+              : 'cursor-pointer hover:text-white'}
+          
+          border border-green-500 text-gray-700 rounded-md`}
+        >
+          <span>
+            {isCMS485 && CMS_isPending ? "Filling CMS 485..." : button.name}
+          </span>
         </li>
+
       })}
     </ul>
   )

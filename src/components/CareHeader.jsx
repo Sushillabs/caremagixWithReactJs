@@ -2,23 +2,30 @@ import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { TbUserExclamation } from "react-icons/tb";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../redux/authSlice";
+import { logout, setHederKey } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
+import { getICDCodes, getCPTCodes } from "../api/hospitalApi";
+import useMyQuery from "../hooks/useMyQuery";
+import { addICD, addCPT } from "../redux/codesSlice";
 
 function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) {
 
   let plans = [
-    "Discharge Plan",
-    "Nursing plan",
-    "Transition-CarePlan",
-    "ICD Codes",
-    "CPT Codes",
-    "Medical Adherence",
+    { id: 'discharge_plan', name: "Discharge Plan" },
+    { id: 'nursing_plan', name: "Nursing plan" },
+    { id: 'transition_plan', name: "Transition-CarePlan" },
+    { id: 'icd_codes', name: "ICD-Codes" },
+    { id: 'cpt_codes', name: "CPT-Codes" },
+    { id: 'medical_adherence', name: "Medical Adherence" },
   ];
+
   const [isDischargeToggle, setIsDishchargeToggle] = useState(true)
   const user = useSelector((state) => state.auth.value);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { data: icd_data, error: icd_Error, isSuccess: icd_isSuccess, isError: icd_isError, isPending: icd_isPending, isFetching: icd_isFetching, refetch: icd_refetch } = useMyQuery({ api: getICDCodes, id: 'icd', enabled: false })
+  const { data: cpt_data, error: cpt_Error, isSuccess: cpt_isSuccess, isError: cpt_isError, isPending: cpt_isPending, isFetching: cpt_isFetching, refetch: cpt_refetch } = useMyQuery({ api: getCPTCodes, id: 'cpt', enabled: false })
 
   const handleLogout = () => {
     // localStorage.removeItem("token");
@@ -27,6 +34,34 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
     navigate('/');
 
     console.log("Logged out");
+  }
+
+  const handleHeader = async (id, name) => {
+    if (id === 'icd_codes') {
+      dispatch(setHederKey({ id, name }))
+      const res = await icd_refetch();
+      if (res.isSuccess) {
+        const formatedPatients = (res?.data?.data|| []).map((p) => ({
+          type: "data",
+          name: p.name,
+          raw: p,
+        }));
+        dispatch(addICD(formatedPatients))
+      }
+      console.log('icd res', res);
+    }
+    if (id === 'cpt_codes') {
+      dispatch(setHederKey({ id, name }))
+      const res = await cpt_refetch();
+      if (res.isSuccess) {
+        const formatedPatients = (res?.data?.data|| []).map((p) => ({
+          type: "data",
+          name: p.name,
+          raw: p,
+        }));
+        dispatch(addCPT(formatedPatients))
+      }
+    }
   }
   return (
     <div className=" bg-caregiverbg grid grid-cols-15 pl-4 pr-4">
@@ -94,7 +129,7 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
                   // onClick={() => setIsDishchargeToggle(!isDischargeToggle)}
                   className="border border-black p-2 rounded-2xl bg-white text-xs font-semibold cursor-pointer"
                 >
-                  {plan}
+                  {plan.name}
                 </p>
 
                 {!isDischargeToggle && ind === 0 && (
@@ -111,9 +146,10 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
             ) : (
               <div
                 key={ind}
+                onClick={() => handleHeader(plan.id, plan.name)}
                 className="w-1/2 sm:w-1/3 md:w-auto border border-black p-2 rounded-2xl bg-white text-xs font-semibold cursor-pointer"
               >
-                {plan}
+                {plan.name}
               </div>
             )
           )}

@@ -11,12 +11,25 @@ import useMyQuery from "../hooks/useMyQuery";
 
 
 const PatientList = ({ filterPatient }) => {
-  const auth = useSelector((state) => state.auth.value);
+  const {value:auth, item} = useSelector((state) => state.auth);
+  // const {id:headerId,name:headerName}=item;
   const { user_id } = auth || {};
   const { value: patientsList, loading: deleteLoader, error } = useSelector((state) => state.patientnames);
   const { loading } = useSelector((state) => state.askQ);
+  // const {icd_value,cpt_value}=useSelector((state)=>state.codes)
 
-  console.log("patients list from store", patientsList);
+  // let codes_data=[];
+  // if(headerId==='icd_codes'){
+  //   codes_data=icd_value
+  // }
+  // if(headerId==='cpt_codes'){
+  //   codes_data=cpt_value
+  // }
+
+  // console.log('codedata',codes_data)
+  // console.log('codeheader',headerId)
+
+  // console.log("patients list from store", patientsList);
   const dispatch = useDispatch();
   const [openName, setOpenName] = useState(null);
 
@@ -31,8 +44,9 @@ const PatientList = ({ filterPatient }) => {
     if (!isSuccess || !data) return;
     console.log("patients list", data);
     
-    const { data: patientsList, pcc_data } = data;
-    const filteredPatients = (patientsList || []).map((p) => ({
+    const { data: patientsList_api, pcc_data } = data;
+    // const updatedPatientsList = [...codes_data, ...patientsList_api];
+    const filteredPatients = (patientsList_api || []).map((p) => ({
       type: "data",
       name: p.name,
       raw: p,
@@ -51,38 +65,6 @@ const PatientList = ({ filterPatient }) => {
     const merged = [...filteredPatients, ...filteredPcc];
     dispatch(addPatientNames(merged));
   }, [isSuccess, data, dispatch]);// dispatch only for Eslint fix
-
-  // useEffect(() => {
-  //   const fetchPatient = async () => {
-  //     try {
-  //       const res = await getPatients();
-  //       console.log("patients list", res.data);
-  //       const { data: patientsList, pcc_data } = res;
-  //       const filteredPatients = (patientsList || []).map((p) => ({
-  //         type: "data",
-  //         name: p.name,
-  //         raw: p,
-  //       }));
-  //       console.log("Filtered Patients List from DATA:", filteredPatients);
-  //       const pccDetails = (pcc_data && pcc_data.details) || {};
-  //       const filteredPcc = Object.entries(pccDetails)
-  //         .map(([name, detailsArray]) => ({
-  //           type: "pcc",
-  //           name,
-  //           details: detailsArray,
-  //           raw: { patient_type: pcc_data.patient_type || "PCC" },
-  //         }));
-
-  //       const merged = [...filteredPatients, ...filteredPcc];
-
-  //       dispatch(addPatientNames(merged));
-  //     } catch (error) {
-  //       console.error("Error while fetching the patient list", error);
-  //     }
-  //   };
-  //   fetchPatient();
-  //   //  console.log("patients list from store", patientsList);
-  // }, [bottom_button]);
 
   const handlePatientClick = (id, item) => {
     dispatch(clearChat())
@@ -113,7 +95,7 @@ const PatientList = ({ filterPatient }) => {
 
   return (
     <div className="bg-white rounded  h-full grid grid-rows-[1fr_1fr] min-h-0 ">
-      <ul className="overflow-y-auto min-h-0 bg-white mb-2 border-b">
+      <ul className="overflow-y-auto min-h-0 bg-white mb-4">
         {filterPatient.length === 0 && (
           <li className="p-3 text-gray-500">No patients found</li>
         )}
@@ -128,7 +110,7 @@ const PatientList = ({ filterPatient }) => {
               <div key={key}>
                 <li
                   onClick={() => setOpenName(isOpen ? null : item.name)}
-                  className={`flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-200`}
+                  className={`hover:bg-gray-300 flex items-center gap-2 py-2 px-2 cursor-pointer mb-1`}
                 >
                   <FaUser />
                   {item.name}
@@ -140,7 +122,7 @@ const PatientList = ({ filterPatient }) => {
                       <li
                         onClick={() => handlePatientClick(date, item)}
                         key={`${date.dates}-${date.lancedb_table}`}
-                        className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-300"} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-200`}
+                        className={`${loading || deleteLoader ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-200"} flex items-center justify-between gap-2 py-2 px-2 mb-1 bg-gray-100`}
                       >
                         <span>{date.dates}</span>
                         <span

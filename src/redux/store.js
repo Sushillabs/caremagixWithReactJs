@@ -8,6 +8,7 @@ import bottomButtonsReducer from './bottomButtonsSlice'
 import { logout } from './authSlice';
 import jobsIdReducer from './jobsIdslice';
 import finalJobsStatusReducer from './finalJobsStatusSlice';
+import codesReducer from'./codesSlice'
 
 const appReducer = combineReducers({
   hospitalnames: hospitalReducer,
@@ -18,6 +19,7 @@ const appReducer = combineReducers({
   buttonNames: bottomButtonsReducer,
   jobsId: jobsIdReducer,
   finalJobStatus: finalJobsStatusReducer,
+  codes:codesReducer
 });
 
 const rootReducer = (state, action) => {

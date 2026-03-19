@@ -16,12 +16,15 @@ import Mmta from "../components/Mmta";
 import MobileRightBar from "../components/MobileRightBar";
 import UploadPatientDocument from "../components/UploadPatientDocument";
 import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
+import Codes from "../components/Codes";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const { loading, isAskPending } = useSelector((state) => state.askQ);
   const bottom_button = useSelector((state) => state.buttonNames.value);
+  const {value:auth, item} = useSelector((state) => state.auth);
+  const {id:headerId,name:headerName}=item;
   const dispatch = useDispatch();
   const [handleSidebar, setHandleSidebar] = useState(false);
   const [rightBar, setRightBar] = useState(false);
@@ -132,6 +135,7 @@ function CareGiver() {
             onChange={handleInputChange}
           // className="mb-4"
           />
+          {(headerName==="ICD-Codes" ||headerName==="CPT-Codes")&&<Codes/>}
           <PatientList filterPatient={filteredPatients} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">

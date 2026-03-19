@@ -22,6 +22,11 @@ export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
 export const getProgress = (jobId) => http.get(`/ocr-progress/${jobId}`, { withAuth: true });
 export const sendOTP = (data)=> http.post('/send-otp',data,{withAuth: true});
 export const verifyOTP = (data)=> http.post('/verify-otp',data,{withAuth: true});
+export const fillCMS485 = (data)=> http.post('/get_filled_485',data,{withAuth: true});
+export const getICDCodes=()=>http.get(`/retrieve-patient-name?patient-type=ICD-Codes`,{withAuth: true})
+export const getCPTCodes=()=>http.get(`/retrieve-patient-name?patient-type=CPT-Codes`,{withAuth: true})
+
+
 
 
 
