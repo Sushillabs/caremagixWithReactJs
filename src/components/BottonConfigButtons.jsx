@@ -10,7 +10,7 @@ import useMyQuery from '../hooks/useMyQuery';
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import useMyMutation from "../hooks/useMyMutation";
-import { Spinner } from "./Spiner";
+import { FaArrowsSpin } from "react-icons/fa6";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
@@ -28,7 +28,7 @@ const BottonConfigButtons = () => {
   const { data: CMS_data, error: CMS_error, isError: CMS_isError, isPending: CMS_isPending, isFetching: CMS_isFetching, mutate, mutateAsync } = useMyMutation({ api: fillCMS485, toastId: 'fillCMS485' })
 
   let bottom_buttons = [
-    { id: "pull-pcc", name: "Pull PCC Data", icon: <FaUser /> },
+    { id: "pull-pcc", name: "Pull PCC Data", icon: <FaArrowsSpin /> },
     { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure /> },
     { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
     { id: "upload-image", name: "Upload Image", icon: <FaUpload /> },
@@ -129,9 +129,7 @@ const BottonConfigButtons = () => {
           
           border border-green-500 text-gray-700 rounded-md`}
         >
-          <span>
-            {isCMS485 && CMS_isPending ? "Filling CMS 485..." : button.name}
-          </span>
+          {button.icon}<span>{isCMS485 && CMS_isPending ? "Filling CMS 485..." : button.name}</span>
         </li>
 
       })}

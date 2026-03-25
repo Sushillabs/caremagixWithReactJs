@@ -17,6 +17,7 @@ import MobileRightBar from "../components/MobileRightBar";
 import UploadPatientDocument from "../components/UploadPatientDocument";
 import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
 import Codes from "../components/Codes";
+import CodesForm from "../components/CodesForm";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -25,6 +26,7 @@ function CareGiver() {
   const bottom_button = useSelector((state) => state.buttonNames.value);
   const {value:auth, item} = useSelector((state) => state.auth);
   const {id:headerId,name:headerName}=item;
+  console.log('headerName',headerName);
   const dispatch = useDispatch();
   const [handleSidebar, setHandleSidebar] = useState(false);
   const [rightBar, setRightBar] = useState(false);
@@ -98,6 +100,8 @@ function CareGiver() {
     "create-progress-notes": <div>Progress Notes Component</div>,
     "ai-agent": <div>AI Agent Component</div>,
     "efax-configuration": <EFaxConfigForm onClose={onClose} setActiveTab={setActiveTab} />,
+    "upload-icd":<CodesForm onClose={onClose} title="ICD"/>,
+    "upload-cpt":<CodesForm onClose={onClose} title="CPT"/>,
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}

@@ -95,7 +95,7 @@ const PatientList = ({ filterPatient }) => {
 
   return (
     <div className="bg-white rounded  h-full grid grid-rows-[1fr_1fr] min-h-0 ">
-      <ul className="overflow-y-auto min-h-0 bg-white mb-4">
+      <ul className="overflow-y-auto min-h-0 bg-white mb-4 ">
         {filterPatient.length === 0 && (
           <li className="p-3 text-gray-500">No patients found</li>
         )}
@@ -110,7 +110,7 @@ const PatientList = ({ filterPatient }) => {
               <div key={key}>
                 <li
                   onClick={() => setOpenName(isOpen ? null : item.name)}
-                  className={`hover:bg-gray-300 flex items-center gap-2 py-2 px-2 cursor-pointer mb-1`}
+                  className={`hover:bg-gray-300 flex items-center gap-2 py-2 px-2 cursor-pointer`}
                 >
                   <FaUser />
                   {item.name}

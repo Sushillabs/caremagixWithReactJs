@@ -7,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { getICDCodes, getCPTCodes } from "../api/hospitalApi";
 import useMyQuery from "../hooks/useMyQuery";
 import { addICD, addCPT } from "../redux/codesSlice";
+import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
+import useAskQuestion from "../hooks/useAskQuestion";
+
 
 function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) {
 
@@ -16,13 +19,15 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
     { id: 'transition_plan', name: "Transition-CarePlan" },
     { id: 'icd_codes', name: "ICD-Codes" },
     { id: 'cpt_codes', name: "CPT-Codes" },
-    { id: 'medical_adherence', name: "Medical Adherence" },
+    { id: 'medications', name: "Medications" },
   ];
 
   const [isDischargeToggle, setIsDishchargeToggle] = useState(true)
   const user = useSelector((state) => state.auth.value);
+  const patient_data = useSelector((state) => state.patientsingledata.value)
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { askQuestion, isPending, error } = useAskQuestion();
 
   const { data: icd_data, error: icd_Error, isSuccess: icd_isSuccess, isError: icd_isError, isPending: icd_isPending, isFetching: icd_isFetching, refetch: icd_refetch } = useMyQuery({ api: getICDCodes, id: 'icd', enabled: false })
   const { data: cpt_data, error: cpt_Error, isSuccess: cpt_isSuccess, isError: cpt_isError, isPending: cpt_isPending, isFetching: cpt_isFetching, refetch: cpt_refetch } = useMyQuery({ api: getCPTCodes, id: 'cpt', enabled: false })
@@ -37,11 +42,12 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
   }
 
   const handleHeader = async (id, name) => {
+    console.log('id', id)
     if (id === 'icd_codes') {
       dispatch(setHederKey({ id, name }))
       const res = await icd_refetch();
       if (res.isSuccess) {
-        const formatedPatients = (res?.data?.data|| []).map((p) => ({
+        const formatedPatients = (res?.data?.data || []).map((p) => ({
           type: "data",
           name: p.name,
           raw: p,
@@ -54,13 +60,19 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
       dispatch(setHederKey({ id, name }))
       const res = await cpt_refetch();
       if (res.isSuccess) {
-        const formatedPatients = (res?.data?.data|| []).map((p) => ({
+        const formatedPatients = (res?.data?.data || []).map((p) => ({
           type: "data",
           name: p.name,
           raw: p,
         }));
         dispatch(addCPT(formatedPatients))
       }
+    }
+    if (id === 'medications') {
+      dispatch(clearChat())
+      let message = "What specific medications were prescribed to the patient, along with their intended uses,potential side effects and Medication schedule in tabular format?";
+
+      askQuestion(message);
     }
   }
   return (
@@ -144,13 +156,14 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
                 )}
               </div>
             ) : (
-              <div
+              <button
                 key={ind}
                 onClick={() => handleHeader(plan.id, plan.name)}
-                className="w-1/2 sm:w-1/3 md:w-auto border border-black p-2 rounded-2xl bg-white text-xs font-semibold cursor-pointer"
+                disabled={(plan.id === 'medications' && !patient_data)}
+                className={`${(plan.id === 'medications' && !patient_data) ? 'bg-gray-200 opacity-50 cursor-not-allowed' : 'bg-white'} w-1/2 sm:w-1/3 md:w-auto border border-black p-2 rounded-2xl  text-xs font-semibold cursor-pointer`}
               >
                 {plan.name}
-              </div>
+              </button>
             )
           )}
       </div>
