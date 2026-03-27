@@ -8,42 +8,36 @@ import { MdDelete } from "react-icons/md";
 import BottonConfigButtons from "./BottonConfigButtons";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
 import useMyQuery from "../hooks/useMyQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 const PatientList = ({ filterPatient }) => {
-  const {value:auth, item} = useSelector((state) => state.auth);
+  const queryClient = useQueryClient();
+  const { value: auth, item } = useSelector((state) => state.auth);
   // const {id:headerId,name:headerName}=item;
   const { user_id } = auth || {};
-  const { value: patientsList, loading: deleteLoader, error } = useSelector((state) => state.patientnames);
+  const { value: patientsList, loading: deleteLoader, error, success } = useSelector((state) => state.patientnames);
   const { loading } = useSelector((state) => state.askQ);
   // const {icd_value,cpt_value}=useSelector((state)=>state.codes)
-
-  // let codes_data=[];
-  // if(headerId==='icd_codes'){
-  //   codes_data=icd_value
+  // if (success) {
+  //   queryClient.invalidateQueries({ queryKey: ['patientList'] });
   // }
-  // if(headerId==='cpt_codes'){
-  //   codes_data=cpt_value
-  // }
-
-  // console.log('codedata',codes_data)
-  // console.log('codeheader',headerId)
-
-  // console.log("patients list from store", patientsList);
+ 
   const dispatch = useDispatch();
   const [openName, setOpenName] = useState(null);
 
   const { data, error: patientListError, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({
     api: getPatients,
     id: 'patientList',
-    enabled: true
+    enabled: true,
+    staleTime:0
   });
   // console.log("Patient List from useMyQuery hook:", data, patientListError, isError, isPending, isFetching, refetch);
 
   useEffect(() => {
     if (!isSuccess || !data) return;
     console.log("patients list", data);
-    
+
     const { data: patientsList_api, pcc_data } = data;
     // const updatedPatientsList = [...codes_data, ...patientsList_api];
     const filteredPatients = (patientsList_api || []).map((p) => ({
@@ -69,10 +63,10 @@ const PatientList = ({ filterPatient }) => {
   const handlePatientClick = (id, item) => {
     dispatch(clearChat())
     //make two paload based on type
-    console.log('iitwm',item);
+    console.log('iitwm', item);
     let payload = {};
     if (item.type === "data") {
-      payload = { ...id, user_id: user_id, patient:item }
+      payload = { ...id, user_id: user_id, patient: item }
     } else if (item.type === "pcc") {
       payload = { patient_collection: id, user_id: user_id, patient_type: item.type.toUpperCase(), patient_name: item.name }
     }

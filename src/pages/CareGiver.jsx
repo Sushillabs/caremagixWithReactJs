@@ -18,6 +18,7 @@ import UploadPatientDocument from "../components/UploadPatientDocument";
 import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
 import Codes from "../components/Codes";
 import CodesForm from "../components/CodesForm";
+import CallReport from "../components/CallReport"
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -102,6 +103,7 @@ function CareGiver() {
     "efax-configuration": <EFaxConfigForm onClose={onClose} setActiveTab={setActiveTab} />,
     "upload-icd":<CodesForm onClose={onClose} title="ICD"/>,
     "upload-cpt":<CodesForm onClose={onClose} title="CPT"/>,
+    "call-report":<CallReport onClose={onClose}/>,
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}

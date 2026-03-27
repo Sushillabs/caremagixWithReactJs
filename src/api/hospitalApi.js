@@ -25,6 +25,8 @@ export const verifyOTP = (data)=> http.post('/verify-otp',data,{withAuth: true})
 export const fillCMS485 = (data)=> http.post('/get_filled_485',data,{withAuth: true});
 export const getICDCodes=()=>http.get(`/retrieve-patient-name?patient-type=ICD-Codes`,{withAuth: true})
 export const getCPTCodes=()=>http.get(`/retrieve-patient-name?patient-type=CPT-Codes`,{withAuth: true})
+export const getCallReport=()=>http.get(`/reports`,{withAuth: true})
+export const generateCallReport = (data)=> http.post('/generate_report',data,{withAuth: true});
 
 
 

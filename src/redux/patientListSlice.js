@@ -9,7 +9,7 @@ export const deletePatientThunk = createAsyncThunk(
         try {
             const response = await deletePatientAPI(patient_type, patient_name, patient_date);
             console.log("Delete response:", response);
-            return { patient_type, nameWithKey: patient_name, dataType, data: response.data }; // return what you need
+            return { patient_type, patient_date, patient_name, dataType, data: response.data }; // return what you need
         } catch (error) {
             return rejectWithValue(error?.response?.data || "Failed to delete patient");
         }
@@ -22,39 +22,40 @@ export const patientListSlice = createSlice({
         value: [],
         loading: false,
         error: null,
+        success: false,
     },
     reducers: {
         addPatientNames: (state, action) => {
             state.value = action.payload;
-        },
+        }
     },
     extraReducers: (builder) => {
         builder
             .addCase(deletePatientThunk.pending, (state) => {
                 state.loading = true;
                 state.error = null;
+                state.success = false;
             })
             .addCase(deletePatientThunk.fulfilled, (state, action) => {
-                state.loading = false;
-                const { nameWithKey, dataType } = action.payload;
 
-                state.value = state.value
-                    .map((patient) => {
-                        if (dataType === "data" && patient.raw?.data) {
-                            const updatedSubData = patient.raw.data.filter(
-                                (p) => p?.patient_name !== nameWithKey
-                            );
-                            return updatedSubData.length > 0
-                                ? { ...patient, raw: { ...patient.raw, data: updatedSubData } }
-                                : null;
-                        }
-                        return patient; 
-                    })
-                    .filter(Boolean); 
+                const { patient_name, patient_date } = action.payload;
+
+                const patient = state.value.find(p => p.name === patient_name);
+
+                if (patient?.raw?.data) {
+                    patient.raw.data = patient.raw.data.filter(item => item.dates !== patient_date)
+                }
+
+                state.value = state.value.filter(
+                    (p) => (p.type==='pcc' || (p.raw?.data?.length > 1 && patient_date!=='Consolidated Med Summary'))
+                );
+                state.success = true;
+                state.loading = false;
             })
 
             .addCase(deletePatientThunk.rejected, (state, action) => {
                 state.loading = false;
+                state.success = false;
                 state.error = action.payload || "Something went wrong";
             });
     },

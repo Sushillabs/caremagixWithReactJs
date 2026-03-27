@@ -61,46 +61,55 @@ const BottonConfigButtons = () => {
   };
 
 
-  const handleLeftButtonClick = async (id) => {
-    const isFill_form = (id === "fil-cms-485");
-    if (isFill_form) {
-      const { patient_name, patient_type, dates } = patientData
-      const payload = {
-        form_name: "CMS-485",
-        patient_name,
-        patient_type,
-        dates
-      };
-      const res = await mutateAsync(payload)
-      console.log(res);
-      if (res && res.form_link) {
-        window.open(res.form_link, "_blank");
-      } else {
-        alert("Form link not found in response.");
-        console.error("Invalid response:", response.data);
+const handleLeftButtonClick = async (id) => {
+  console.log("Button clicked:", id);
+
+  dispatch(addButtonNames(id));
+
+  switch (id) {
+    case "fil-cms-485": {
+      try {
+        const { patient_name, patient_type, dates } = patientData;
+
+        const payload = {
+          form_name: "CMS-485",
+          patient_name,
+          patient_type,
+          dates,
+        };
+
+        const res = await mutateAsync(payload);
+
+        if (res?.form_link) {
+          window.open(res.form_link, "_blank");
+        } else {
+          alert("Form link not found in response.");
+          console.error("Invalid response:", res);
+        }
+      } catch (err) {
+        console.error("Error generating form:", err);
       }
-
+      break;
     }
-    console.log("Button clicked:", id);
-    dispatch(addButtonNames(id));
 
-    switch (id) {
-      case 'pull-pcc':
-        pccData();
-        break;
-      case 'efax-configuration':
-      // eFaxConfig();
-      case 'upload-plan':
-      case 'create-progress-notes':
-      case 'ai-agent':
-      case 'clear-conversations':
-        // handled in CareGiver.jsx
-        break;
-      default:
-        break;
-    }
-    // if(!patientData)
-  };
+    case "pull-pcc":
+      pccData();
+      break;
+    // case "efax-configuration":
+    //   break;
+    // case "upload-plan":
+    //   break;
+    // case "create-progress-notes":
+    //   break;
+    // case "ai-agent":
+    //   break;
+    // case "clear-conversations":
+    //   break;
+    default:
+      console.warn("Unhandled button id:", id);
+      break;
+  }
+};
 
 
   return (
