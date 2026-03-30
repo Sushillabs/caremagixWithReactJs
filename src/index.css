@@ -1,6 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 @theme {
   --color-leafgreen-500: #14d414;
   --color-signinFree: #201665;
