@@ -19,6 +19,7 @@ import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
 import Codes from "../components/Codes";
 import CodesForm from "../components/CodesForm";
 import CallReport from "../components/CallReport"
+import Notes from "../components/Notes";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -44,6 +45,9 @@ function CareGiver() {
   };
   const handleUploadedPlans = () => {
     setActiveTab("uploadedPlans");
+  };
+  const handleCreateNotes = () => {
+    setActiveTab("create-notes");
   };
 
 
@@ -85,6 +89,11 @@ function CareGiver() {
     };
   }, [debouncedSetFilterName]);
 
+  useEffect(()=>{
+    if(bottom_button==='create-visit-notes'){
+      setActiveTab("create-notes");
+    }
+  },[bottom_button])
   const handleInputChange = (value) => {
     setInputValue(value);
     debouncedSetFilterName(value);
@@ -104,6 +113,7 @@ function CareGiver() {
     "upload-icd":<CodesForm onClose={onClose} title="ICD"/>,
     "upload-cpt":<CodesForm onClose={onClose} title="CPT"/>,
     "call-report":<CallReport onClose={onClose}/>,
+    // "create-visit-notes": <Notes onClose={onClose}/>,
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}
@@ -150,7 +160,8 @@ function CareGiver() {
               {<button onClick={handleChat} className={`${activeTab === "chat" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Chat</button>}
               {<button onClick={handleCallRegister} className={`${activeTab === "callRegister" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Call</button>}
               {<button onClick={handleMMTA} className={` ${activeTab === "mmta" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>MMTA</button>}
-              {<button onClick={handleUploadedPlans} className={` ${activeTab === "uploadedPlans" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Uploaded Plans</button>}
+              {<button onClick={handleUploadedPlans} className={` ${activeTab === "uploadedPlans" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Plan Creation</button>}
+              {<button onClick={handleCreateNotes} className={` ${activeTab === "create-notes" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Create Notes</button>}
               {/* singleDate && */}
             </div>
             {singleDate && <p className="text-yellow-600 sm:font-bold sm:text-lg text-xs">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
@@ -161,6 +172,7 @@ function CareGiver() {
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}
             {activeTab === "uploadedPlans" && <UploadPlan />}
+            {activeTab === "create-notes" && <Notes/>}
           </div>
         </div>
       </div>

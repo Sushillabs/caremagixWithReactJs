@@ -9,6 +9,7 @@ import { logout } from './authSlice';
 import jobsIdReducer from './jobsIdslice';
 import finalJobsStatusReducer from './finalJobsStatusSlice';
 import codesReducer from'./codesSlice'
+import notesReducer from './notesSlice'
 
 const appReducer = combineReducers({
   hospitalnames: hospitalReducer,
@@ -19,7 +20,8 @@ const appReducer = combineReducers({
   buttonNames: bottomButtonsReducer,
   jobsId: jobsIdReducer,
   finalJobStatus: finalJobsStatusReducer,
-  codes:codesReducer
+  codes:codesReducer,
+  notes:notesReducer,
 });
 
 const rootReducer = (state, action) => {

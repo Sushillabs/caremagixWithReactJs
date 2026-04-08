@@ -27,6 +27,7 @@ export const getICDCodes=()=>http.get(`/retrieve-patient-name?patient-type=ICD-C
 export const getCPTCodes=()=>http.get(`/retrieve-patient-name?patient-type=CPT-Codes`,{withAuth: true})
 export const getCallReport=()=>http.get(`/reports`,{withAuth: true})
 export const generateCallReport = (data)=> http.post('/generate_report',data,{withAuth: true});
+export const dischargePlan = (data)=> http.post('/discharge_plan_agent',data,{withAuth: true});
 
 
 

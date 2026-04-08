@@ -26,6 +26,7 @@ type CallLog = {
   Question: string;
   Answer: string;
 };
+
 type CallReportResponse = {
   [patientName: string]: CallLog[];
 };

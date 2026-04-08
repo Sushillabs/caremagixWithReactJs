@@ -5,12 +5,14 @@ import { SiReacthookform } from "react-icons/si";
 import { GrConfigure } from "react-icons/gr";
 import { addButtonNames } from '../redux/bottomButtonsSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { getPccData, fillCMS485 } from '../api/hospitalApi';
+import { getPccData, fillCMS485, dischargePlan } from '../api/hospitalApi';
 import useMyQuery from '../hooks/useMyQuery';
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import useMyMutation from "../hooks/useMyMutation";
 import { FaArrowsSpin } from "react-icons/fa6";
+import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
+import { addTemplate } from "../redux/notesSlice";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
@@ -27,15 +29,26 @@ const BottonConfigButtons = () => {
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
   const { data: CMS_data, error: CMS_error, isError: CMS_isError, isPending: CMS_isPending, isFetching: CMS_isFetching, mutate, mutateAsync } = useMyMutation({ api: fillCMS485, toastId: 'fillCMS485' })
 
+  const { 
+    data: notes_data, 
+    error: notes_error, 
+    isError: notes_isError, 
+    isPending: notes_isPending, 
+    isFetching: notes_isFetching, 
+    mutate:notes_mutate, 
+    mutateAsync:notes_mutateAsync 
+  } = useMyMutation({ api: dischargePlan, toastId: 'dischargePlan' })
+
+
   let bottom_buttons = [
     { id: "pull-pcc", name: "Pull PCC Data", icon: <FaArrowsSpin /> },
     { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure /> },
     { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
     { id: "upload-image", name: "Upload Image", icon: <FaUpload /> },
+    { id: "create-visit-notes", name: "Create Visit Notes", icon: <FaUser /> },
     { id: "fil-cms-485", name: "Fill CMS 485", icon: <SiReacthookform /> },
     { id: "fil-oasis-e", name: "Fill OASIS-E", icon: <SiReacthookform /> },
-    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },
-    { id: "edit-handoff", name: "Edit Handoff Template", icon: <FaUser /> },
+    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },  
     { id: "upload-icd", name: "Upload ICD Codes", icon: <FaUpload /> },
     { id: "upload-cpt", name: "Upload CPT Codes", icon: <FaUpload /> },
     { id: "medication-alert", name: "Medication Alerts", icon: <FaUpload /> },
@@ -60,6 +73,22 @@ const BottonConfigButtons = () => {
     }
   };
 
+  const createNotes= async()=>{
+    const {patient_name, patient_type}=patientData
+    const payload={
+      action: 'get_template',
+      patient_name,
+      patient_type
+    }
+    try {
+      const res=await notes_mutateAsync(payload)
+      if(res){
+        dispatch(addTemplate(res));
+      }
+    } catch (error) {
+      console.error('Error in get Tamplate', error);
+    }
+  }
 
 const handleLeftButtonClick = async (id) => {
   console.log("Button clicked:", id);
@@ -95,8 +124,9 @@ const handleLeftButtonClick = async (id) => {
     case "pull-pcc":
       pccData();
       break;
-    // case "efax-configuration":
-    //   break;
+    case "create-visit-notes":
+      createNotes();
+      break;
     // case "upload-plan":
     //   break;
     // case "create-progress-notes":

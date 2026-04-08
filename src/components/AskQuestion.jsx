@@ -2,12 +2,29 @@ import { FaMicrophone, FaArrowUp } from "react-icons/fa";
 import { CiCircleRemove } from "react-icons/ci";
 import { useState } from "react";
 import useAskQuestion from "../hooks/useAskQuestion";
+import { addInputAns } from "../redux/notesSlice";
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { dischargePlan } from '../api/hospitalApi';
+import { addTemplate } from "../redux/notesSlice";
+import useMyMutation from "../hooks/useMyMutation";
+
+
 const AskQuestion = () => {
   const [inputValue, setInputValue] = useState('');
   const { askQuestion, isPending } = useAskQuestion();
+  const dispatch = useDispatch();
+  const bottom_button = useSelector((state) => state.buttonNames.value);
   // const [text, setText] = useState("");
   const [isListening, setIsListening] = useState(false);
+
+  const activeTemplate = useSelector((state) => state.notes.activeTemplate);
+  const patientData = useSelector((state) => state?.patientsingledata?.value);
+
+  const { mutateAsync } = useMyMutation({
+    api: dischargePlan,
+    toastId: 'dischargePlan'
+  });
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
@@ -30,10 +47,50 @@ const AskQuestion = () => {
   recognition.onerror = () => setIsListening(false);
   console.log('isPending', isPending);
 
-  const handleAskSubmit = () => {
+  const handleAskSubmit = async () => {
     if (inputValue.trim() === '') return;
     askQuestion(inputValue);
-    setInputValue('');
+    dispatch(addInputAns(inputValue))
+    if (bottom_button === 'create-visit-notes') {
+      const { current_field, template, awaiting_confirmation = false } = activeTemplate || {};
+
+      let payload;
+
+      if (awaiting_confirmation) {
+        // ✅ when Ans to Q
+        template[current_field] = inputValue;
+        payload = {
+          action: "process_response",
+          patient_name: template.patient_name,
+          field: current_field,
+          response: template[current_field],
+          template: template,
+          awaiting_confirmation: awaiting_confirmation,
+        };
+      } else {
+        // ✅ When choosing Y or N
+        payload = {
+          action: "process_response",
+          patient_name: template.patient_name,
+          patient_type: patientData.patient_type,
+          field: current_field,
+          response: inputValue,
+          template: template,
+         
+        };
+      }
+
+      try {
+        const res = await mutateAsync(payload);
+        if (res) {
+          dispatch(addTemplate(res));
+        }
+
+      } catch (error) {
+        console.error('Error submitting answer:', error);
+      }
+      setInputValue('');
+    }
   }
   return (
     <div className="sm:bg-white sm:mt-4 sm:p-2 grid grid-cols-12 items-center sm:gap-6 border border-gray-300 rounded ">
@@ -77,5 +134,4 @@ const AskQuestion = () => {
     </div>
   );
 };
-
 export default React.memo(AskQuestion);
