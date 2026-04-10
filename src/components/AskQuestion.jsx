@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { dischargePlan } from '../api/hospitalApi';
 import { addTemplate } from "../redux/notesSlice";
 import useMyMutation from "../hooks/useMyMutation";
+import {fetchDischargePlan} from "../redux/notesSlice";
 
 
 const AskQuestion = () => {
@@ -49,47 +50,58 @@ const AskQuestion = () => {
 
   const handleAskSubmit = async () => {
     if (inputValue.trim() === '') return;
-    askQuestion(inputValue);
+
     dispatch(addInputAns(inputValue))
+
+    if (bottom_button !== 'create-visit-notes') {
+      askQuestion(inputValue);
+    }
+
     if (bottom_button === 'create-visit-notes') {
       const { current_field, template, awaiting_confirmation = false } = activeTemplate || {};
 
       let payload;
 
       if (awaiting_confirmation) {
-        // ✅ when Ans to Q
-        template[current_field] = inputValue;
+        // ✅ when Ans to Q        
         payload = {
           action: "process_response",
           patient_name: template.patient_name,
+          patient_type: patientData.patient_type,
           field: current_field,
           response: template[current_field],
           template: template,
-          awaiting_confirmation: awaiting_confirmation,
+          user_confirmation: awaiting_confirmation,
         };
       } else {
         // ✅ When choosing Y or N
+        const updatedTemplate = {
+          ...template,
+          [current_field]: inputValue,
+        };
         payload = {
           action: "process_response",
           patient_name: template.patient_name,
           patient_type: patientData.patient_type,
           field: current_field,
           response: inputValue,
-          template: template,
-         
+          template: updatedTemplate,
+
         };
       }
-
-      try {
-        const res = await mutateAsync(payload);
-        if (res) {
-          dispatch(addTemplate(res));
-        }
-
-      } catch (error) {
-        console.error('Error submitting answer:', error);
-      }
+      console.log('visit payload', payload)
       setInputValue('');
+      // try {
+      //   const res = await mutateAsync(payload);
+      //   if (res) {
+      //     dispatch(addTemplate(res));
+      //   }
+
+      // } catch (error) {
+      //   console.error('Error submitting answer:', error);
+      // }
+       dispatch(fetchDischargePlan(payload))
+      
     }
   }
   return (

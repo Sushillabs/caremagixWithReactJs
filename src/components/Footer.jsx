@@ -234,7 +234,7 @@ const Footer = () => {
           <span className="font-bold">LEGAL</span>
           <ul className="footer-list mt-2">
             <li className=" hover:underline">
-              <Link to="PrivacyPolicy">Privacy Policy</Link>
+              <Link to="privacy-policy">Privacy Policy</Link>
             </li>
           </ul>
         </div>

@@ -1,12 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "My Health App",
+  "name": "Caremagix",
   "version": "1.0.0",
-  "description": "Quick access to patient data for healthcare staff",
+  "description": "Quick access to Caremagix platform from your browser.",
 
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open Health App"
+    "default_title": "Welcome to the Caremagix"
+  },
+
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
   },
 
   "permissions": [

@@ -6,6 +6,7 @@ import CareGiverLayout from "./layouts.jsx/CareGiverLayout";
 import AuthLayout from "./layouts.jsx/AuthLayout";
 import RequireAuth from "./components/RequireAuth";
 import { Toaster } from "react-hot-toast";
+import PrivacyPolicy from "./components/PrivacyPolicy";
 
 const isExtension = window.location.protocol === 'chrome-extension:';
 console.log('protocol:', window.location.protocol);
@@ -31,7 +32,9 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Route>
+          
           <Route
             element={
               <RequireAuth roles={roles}>

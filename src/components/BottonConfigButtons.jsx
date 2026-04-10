@@ -12,14 +12,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import useMyMutation from "../hooks/useMyMutation";
 import { FaArrowsSpin } from "react-icons/fa6";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
-import { addTemplate } from "../redux/notesSlice";
+import { addTemplate, clearNotes } from "../redux/notesSlice";
+import {fetchDischargePlan} from "../redux/notesSlice";
 
 const BottonConfigButtons = () => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const patientData = useSelector((state) => state.patientsingledata.value)
-  const {id:headerId} = useSelector((state) => state.auth.item);
-  console.log('headerId',headerId);
+  const { id: headerId } = useSelector((state) => state.auth.item);
+
+  console.log('headerId', headerId);
 
   const { data, error, isSuccess, isError, isPending, isFetching, refetch } = useMyQuery({
     api: getPccData,
@@ -29,33 +31,33 @@ const BottonConfigButtons = () => {
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
   const { data: CMS_data, error: CMS_error, isError: CMS_isError, isPending: CMS_isPending, isFetching: CMS_isFetching, mutate, mutateAsync } = useMyMutation({ api: fillCMS485, toastId: 'fillCMS485' })
 
-  const { 
-    data: notes_data, 
-    error: notes_error, 
-    isError: notes_isError, 
-    isPending: notes_isPending, 
-    isFetching: notes_isFetching, 
-    mutate:notes_mutate, 
-    mutateAsync:notes_mutateAsync 
+  const {
+    data: notes_data,
+    error: notes_error,
+    isError: notes_isError,
+    isPending: notes_isPending,
+    isFetching: notes_isFetching,
+    mutate: notes_mutate,
+    mutateAsync: notes_mutateAsync
   } = useMyMutation({ api: dischargePlan, toastId: 'dischargePlan' })
 
 
   let bottom_buttons = [
-    { id: "pull-pcc", name: "Pull PCC Data", icon: <FaArrowsSpin /> },
-    { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure /> },
-    { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload /> },
-    { id: "upload-image", name: "Upload Image", icon: <FaUpload /> },
-    { id: "create-visit-notes", name: "Create Visit Notes", icon: <FaUser /> },
-    { id: "fil-cms-485", name: "Fill CMS 485", icon: <SiReacthookform /> },
-    { id: "fil-oasis-e", name: "Fill OASIS-E", icon: <SiReacthookform /> },
-    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate /> },  
-    { id: "upload-icd", name: "Upload ICD Codes", icon: <FaUpload /> },
-    { id: "upload-cpt", name: "Upload CPT Codes", icon: <FaUpload /> },
-    { id: "medication-alert", name: "Medication Alerts", icon: <FaUpload /> },
-    { id: "call-report", name: "Call Reports", icon: <FaUpload /> },
-    { id: "set-caller-id", name: "Set Caller Id", icon: <FaUpload /> },
-    { id: "ai-agent", name: "AI Agent", icon: <FaUser /> },
-    { id: "clear-conversations", name: "Clear Conversations", icon: <MdDelete /> },
+    { id: "pull-pcc", name: "Pull PCC Data", icon: <FaArrowsSpin />, requirePatient: false },
+    { id: "efax-configuration", name: "eFax Configuration", icon: <GrConfigure />, requirePatient: false },
+    { id: "upload-plan", name: "Upload Patients Plan", icon: <FaUpload />, requirePatient: false },
+    { id: "upload-image", name: "Upload Image", icon: <FaUpload />, requirePatient: false },
+    { id: "create-visit-notes", name: "Create Visit Notes", icon: <FaUser />, requirePatient: true },
+    { id: "fil-cms-485", name: "Fill CMS 485", icon: <SiReacthookform />, requirePatient: true },
+    { id: "fil-oasis-e", name: "Fill OASIS-E", icon: <SiReacthookform />, requirePatient: true },
+    { id: "create-progress-notes", name: "Create Progress Notes", icon: <MdCreate />, requirePatient: true },
+    { id: "upload-icd", name: "Upload ICD Codes", icon: <FaUpload />, requirePatient: false },
+    { id: "upload-cpt", name: "Upload CPT Codes", icon: <FaUpload />, requirePatient: false },
+    { id: "medication-alert", name: "Medication Alerts", icon: <FaUpload />, requirePatient: true },
+    { id: "call-report", name: "Call Reports", icon: <FaUpload />, requirePatient: false },
+    { id: "set-caller-id", name: "Set Caller Id", icon: <FaUpload />, requirePatient: false },
+    { id: "ai-agent", name: "AI Agent", icon: <FaUser />, requirePatient: false },
+    { id: "clear-conversations", name: "Clear Conversations", icon: <MdDelete />, requirePatient: false },
   ];
 
   const pccData = async () => {
@@ -73,80 +75,91 @@ const BottonConfigButtons = () => {
     }
   };
 
-  const createNotes= async()=>{
-    const {patient_name, patient_type}=patientData
-    const payload={
+  const createNotes = async () => {
+
+    dispatch(clearNotes())
+    const { patient_name, patient_type } = patientData || {}
+    const payload = {
       action: 'get_template',
       patient_name,
       patient_type
     }
-    try {
-      const res=await notes_mutateAsync(payload)
-      if(res){
-        dispatch(addTemplate(res));
-      }
-    } catch (error) {
-      console.error('Error in get Tamplate', error);
-    }
+
+    dispatch(fetchDischargePlan(payload))
+    // try {
+    //   const res = await notes_mutateAsync(payload)
+    //   if (res) {
+    //     dispatch(addTemplate(res));
+    //   }
+    // } catch (error) {
+    //   console.error('Error in get Tamplate', error);
+    // }
   }
 
-const handleLeftButtonClick = async (id) => {
-  console.log("Button clicked:", id);
+  const handleLeftButtonClick = async (id) => {
+    console.log("Button clicked:", id);
+    const button = bottom_buttons.find(btn => btn.id === id);
 
-  dispatch(addButtonNames(id));
+    if (button?.requirePatient && !patientData) {
+      toast.error("⚠️ Please select a patient", {
+        position: "top-center",
+      });
+      return;
+    }
+    console.log('dispatch',dispatch)
+    dispatch(addButtonNames(id));
 
-  switch (id) {
-    case "fil-cms-485": {
-      try {
-        const { patient_name, patient_type, dates } = patientData;
+    switch (id) {
+      case "fil-cms-485": {
+        try {
+          const { patient_name, patient_type, dates } = patientData;
 
-        const payload = {
-          form_name: "CMS-485",
-          patient_name,
-          patient_type,
-          dates,
-        };
+          const payload = {
+            form_name: "CMS-485",
+            patient_name,
+            patient_type,
+            dates,
+          };
 
-        const res = await mutateAsync(payload);
+          const res = await mutateAsync(payload);
 
-        if (res?.form_link) {
-          window.open(res.form_link, "_blank");
-        } else {
-          alert("Form link not found in response.");
-          console.error("Invalid response:", res);
+          if (res?.form_link) {
+            window.open(res.form_link, "_blank");
+          } else {
+            alert("Form link not found in response.");
+            console.error("Invalid response:", res);
+          }
+        } catch (err) {
+          console.error("Error generating form:", err);
         }
-      } catch (err) {
-        console.error("Error generating form:", err);
+        break;
       }
-      break;
+      case "pull-pcc":
+        pccData();
+        break;
+      case "create-visit-notes":
+        createNotes();
+        break;
+      // case "upload-plan":
+      //   break;
+      // case "create-progress-notes":
+      //   break;
+      // case "ai-agent":
+      //   break;
+      // case "clear-conversations":
+      //   break;
+      default:
+        console.warn("Unhandled button id:", id);
+        break;
     }
-
-    case "pull-pcc":
-      pccData();
-      break;
-    case "create-visit-notes":
-      createNotes();
-      break;
-    // case "upload-plan":
-    //   break;
-    // case "create-progress-notes":
-    //   break;
-    // case "ai-agent":
-    //   break;
-    // case "clear-conversations":
-    //   break;
-    default:
-      console.warn("Unhandled button id:", id);
-      break;
-  }
-};
+  };
 
 
   return (
     <ul className='flex flex-col gap-1 overflow-y-auto min-h-0'>
       {bottom_buttons && bottom_buttons.map((button) => {
-        if(button.id==='upload-icd' && headerId !=='icd_codes') return null;
-        if(button.id==='upload-cpt' && headerId !=='cpt_codes') return null;
+        if (button.id === 'upload-icd' && headerId !== 'icd_codes') return null;
+        if (button.id === 'upload-cpt' && headerId !== 'cpt_codes') return null;
         const isCMS485 = button.id === "fil-cms-485";
         const disabled =
           ((isCMS485 || button.id === "fil-oasis-e") && !patientData) ||

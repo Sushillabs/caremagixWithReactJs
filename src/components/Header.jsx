@@ -9,7 +9,7 @@ function Header() {
     <header>
       <nav className="shadow-md fixed top-0 w-full z-10 bg-white">
         <div className="grid grid-cols-12 md:ml-14 md:mr-14 mt-4 p-2 items-center">
-          <div className="col-span-6 md:col-span-4 w-40 hover:cursor-pointer">
+          <div className="col-span-6 md:col-span-3 w-40 hover:cursor-pointer">
             <svg
             width="160"
             height="66"
@@ -78,7 +78,7 @@ function Header() {
           </div>
 
           <div
-            className={`col-span-12 md:col-span-5 mt-10 md:mt-0 ${
+            className={`col-span-12 md:col-span-6 mt-10 md:mt-0 ${
               menuOpen ? "block" : "hidden"
             } md:block`}
           >
@@ -92,6 +92,11 @@ function Header() {
               <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Other Benefits
               </li>
+              {/* <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
+                <Link to={'/privacy-policy'}>Privacy Policy</Link>
+                
+              </li> */}
+              
               <li className="relative h-full">
                 <div
                   className="flex items-center h-full px-3 py-2 hover:text-green-500 hover:font-bold cursor-pointer"
