@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useMyMutation from "../hooks/useMyMutation";
 import { FaArrowsSpin } from "react-icons/fa6";
 import { fetchPatientChat, clearChat, addQconversation } from '../redux/chatSlice';
-import { addTemplate, clearNotes } from "../redux/notesSlice";
+import { clearNotes } from "../redux/notesSlice";
 import {fetchDischargePlan} from "../redux/notesSlice";
 
 const BottonConfigButtons = () => {
@@ -31,15 +31,7 @@ const BottonConfigButtons = () => {
   // console.log('all data fron query while fetching pcc', data, error, isLoading, isFetching);
   const { data: CMS_data, error: CMS_error, isError: CMS_isError, isPending: CMS_isPending, isFetching: CMS_isFetching, mutate, mutateAsync } = useMyMutation({ api: fillCMS485, toastId: 'fillCMS485' })
 
-  const {
-    data: notes_data,
-    error: notes_error,
-    isError: notes_isError,
-    isPending: notes_isPending,
-    isFetching: notes_isFetching,
-    mutate: notes_mutate,
-    mutateAsync: notes_mutateAsync
-  } = useMyMutation({ api: dischargePlan, toastId: 'dischargePlan' })
+
 
 
   let bottom_buttons = [

@@ -5,10 +5,12 @@ export const bottomButtonsSlice= createSlice({
     name:'buttonNames',
     initialState:{
         value:'',
+        version: 0,
     },
     reducers:{
         addButtonNames:(state, action)=>{
             state.value=action.payload;
+            state.version+=1
         }
     }
 })

@@ -20,15 +20,17 @@ import Codes from "../components/Codes";
 import CodesForm from "../components/CodesForm";
 import CallReport from "../components/CallReport"
 import Notes from "../components/Notes";
+import { addActiveTab } from "../redux/tabSlice";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const { loading, isAskPending } = useSelector((state) => state.askQ);
-  const bottom_button = useSelector((state) => state.buttonNames.value);
-  const {value:auth, item} = useSelector((state) => state.auth);
-  const {id:headerId,name:headerName}=item;
-  console.log('headerName',headerName);
+  const { value: bottom_button, version } = useSelector((state) => state.buttonNames);
+  console.log('version', version)
+  const { value: auth, item } = useSelector((state) => state.auth);
+  const { id: headerId, name: headerName } = item;
+  console.log('headerName', headerName);
   const dispatch = useDispatch();
   const [handleSidebar, setHandleSidebar] = useState(false);
   const [rightBar, setRightBar] = useState(false);
@@ -89,11 +91,17 @@ function CareGiver() {
     };
   }, [debouncedSetFilterName]);
 
-  useEffect(()=>{
-    if(bottom_button==='create-visit-notes'){
+  useEffect(() => {
+    if (bottom_button === 'create-visit-notes') {
       setActiveTab("create-notes");
     }
-  },[bottom_button])
+    console.log('activeTab', activeTab)
+  }, [bottom_button, version])
+
+  useEffect(() => {
+    dispatch(addActiveTab(activeTab));
+  }, [activeTab, dispatch]);
+
   const handleInputChange = (value) => {
     setInputValue(value);
     debouncedSetFilterName(value);
@@ -110,9 +118,9 @@ function CareGiver() {
     "create-progress-notes": <div>Progress Notes Component</div>,
     "ai-agent": <div>AI Agent Component</div>,
     "efax-configuration": <EFaxConfigForm onClose={onClose} setActiveTab={setActiveTab} />,
-    "upload-icd":<CodesForm onClose={onClose} title="ICD"/>,
-    "upload-cpt":<CodesForm onClose={onClose} title="CPT"/>,
-    "call-report":<CallReport onClose={onClose}/>,
+    "upload-icd": <CodesForm onClose={onClose} title="ICD" />,
+    "upload-cpt": <CodesForm onClose={onClose} title="CPT" />,
+    "call-report": <CallReport onClose={onClose} />,
     // "create-visit-notes": <Notes onClose={onClose}/>,
     "upload-plan": (
       <UploadPatientDocument
@@ -151,7 +159,7 @@ function CareGiver() {
             onChange={handleInputChange}
           // className="mb-4"
           />
-          {(headerName==="ICD-Codes" ||headerName==="CPT-Codes")&&<Codes/>}
+          {(headerName === "ICD-Codes" || headerName === "CPT-Codes") && <Codes />}
           <PatientList filterPatient={filteredPatients} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
@@ -172,7 +180,7 @@ function CareGiver() {
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}
             {activeTab === "uploadedPlans" && <UploadPlan />}
-            {activeTab === "create-notes" && <Notes/>}
+            {activeTab === "create-notes" && <Notes />}
           </div>
         </div>
       </div>

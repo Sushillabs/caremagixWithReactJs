@@ -18,6 +18,7 @@ const notesSlice = createSlice({
         notes_chat: [],
         pendingChat: null,
         firstQ: '',
+        final_template:null,
         template: {
             data: null,
             loading: false,
@@ -25,19 +26,12 @@ const notesSlice = createSlice({
         }
     },
     reducers: {
-        // addTemplate: (state, action) => {
-        //     if (!state.pendingChat) {
-        //         state.firstQ = action.payload?.next_question
-        //     }
+        reviewTempalte: (state, action) => {
 
-        //     if (state.pendingChat) {
-        //         const completed = { ...state.pendingChat, question: action.payload?.next_question };
-        //         state.notes_chat.push(completed);
-        //         state.pendingChat = null;
-        //     }
+            state.activeTemplate.template = action.payload;
 
-        //     state.activeTemplate = action.payload;
-        // },
+            state.template.data.template = action.payload;
+        },
         addInputAns: (state, action) => {
             state.pendingChat = {
                 id: crypto.randomUUID(),
@@ -48,6 +42,7 @@ const notesSlice = createSlice({
             state.notes_chat = [];
             state.pendingChat = null;
             state.activeTemplate = null;
+            state.final_template=null;
             state.firstQ = '';
             state.template = {
                 data: null,
@@ -71,7 +66,22 @@ const notesSlice = createSlice({
                 }
 
                 if (state.pendingChat) {
-                    const completed = { ...state.pendingChat, question: action.payload?.next_question };
+                    let completed;
+                    if(action.payload?.current_field){
+                        completed = { ...state.pendingChat, question: action.payload?.next_question };
+                    }
+                    if (action.payload?.final_template) {
+                        state.final_template= action.payload?.final_template;
+                        completed = { ...state.pendingChat, question: action.payload?.next_question, final_template:action.payload?.final_template };
+                    }
+                    if(action.payload?.email_status === 'Email not sent (missing flag or recipient).'){
+                        let newQ=`${action.payload?.message} Would you like to email this visit note? Please provide email id.`
+                        completed = { ...state.pendingChat, question: newQ, isDownload:true };
+                    }
+                    if(action.payload?.email_status === 'Email sent successfully.'){                    
+                        completed = { ...state.pendingChat, question: action.payload?.email_status, isEmailDone:true };
+                    }  
+                    
                     state.notes_chat.push(completed);
                     state.pendingChat = null;
                 }
@@ -83,5 +93,5 @@ const notesSlice = createSlice({
     }
 });
 
-export const { addTemplate, addInputAns, clearNotes } = notesSlice.actions;
+export const { reviewTempalte, addInputAns, clearNotes } = notesSlice.actions;
 export default notesSlice.reducer;

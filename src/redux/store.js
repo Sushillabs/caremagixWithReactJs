@@ -10,6 +10,7 @@ import jobsIdReducer from './jobsIdslice';
 import finalJobsStatusReducer from './finalJobsStatusSlice';
 import codesReducer from'./codesSlice'
 import notesReducer from './notesSlice'
+import tabReducer, { tabSlice } from './tabSlice'
 
 const appReducer = combineReducers({
   hospitalnames: hospitalReducer,
@@ -22,6 +23,7 @@ const appReducer = combineReducers({
   finalJobStatus: finalJobsStatusReducer,
   codes:codesReducer,
   notes:notesReducer,
+  tab:tabReducer,
 });
 
 const rootReducer = (state, action) => {

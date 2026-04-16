@@ -3,27 +3,41 @@ import { useDispatch, useSelector } from "react-redux"
 import { Spinner } from "./Spiner";
 import useMyMutation from "../hooks/useMyMutation";
 import { dischargePlan } from '../api/hospitalApi';
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, memo } from "react";
+import ReviewModal from "./ReviewModal";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 
 const Notes = () => {
   const { activeTemplate, firstQ, pendingChat, notes_chat, template } = useSelector((state) => state.notes);
+  console.log()
+  const file_path = template?.data?.pdf_path;
+  const isEmailSent = template?.data?.email_status === 'Email sent successfully.';
   const bottom_button = useSelector((state) => state.buttonNames.value);
   console.log('notes_chat', notes_chat)
   const bottomRef = useRef(null);
+  const [isReviewed, setIsReviewd] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
-  // const {
-  //   data: notes_data,
-  //   error: notes_error,
-  //   isError: notes_isError,
-  //   isPending: notes_isPending,
-  //   isFetching: notes_isFetching,
-  //   mutate: notes_mutate,
-  //   mutateAsync: notes_mutateAsync
-  // } = useMyMutation({ api: dischargePlan, toastId: 'dischargePlan' })
+  const handleReview = () => {
+    // setIsReviewd(true);
+    setShowReview(true)
+  }
+
+  const handleDownload=()=>{
+
+    console.log('file_path', file_path);
+    if(file_path){
+      window.open(file_path, '_blank');
+    }
+    
+  }
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [pendingChat, notes_chat, template.error])
+  }, [pendingChat, notes_chat, template.error, isReviewed])
 
   // if (template.loading) return <Spinner />
   return (
@@ -38,13 +52,7 @@ const Notes = () => {
           </span>
         </p>
       )}
-      {/* {bottom_button === 'create-visit-notes' && template.error && (
-        <p className="text-red-500 text-xl text-center font-bold flex items-center justify-center h-full">
-          <span className="">
-            Data Not Found
-          </span>
-        </p>
-      )} */}
+
       {bottom_button === 'create-visit-notes' && template.data && <div className="overflow-y-auto">
         {/* {notes_chat.length === 0 ? ( */}
         <div className="flex items-center gap-2 sm:mb-2 mb-1">
@@ -59,28 +67,60 @@ const Notes = () => {
         </div>
 
 
-        {notes_chat && (notes_chat.map((chat) => (
-          <div key={chat.id} className="mb-4">
+        {notes_chat && (notes_chat.map((chat) => {
+          const isReviewStep = chat.question === "All sections complete! Shall I generate the final visit note now? (yes/no)";
 
+          return (<div key={chat.id} className="mb-4">
             {/* Answer */}
             <div className="text-xs sm:text-sm overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2">
               {chat.answer}
             </div>
-
+            {/* Review Button */}
+            {isReviewStep && (
+              <button
+                className={`p-2 mb-2  ${isReviewed ? 'bg-gray-200 cursor-not-allowed text-gray-500' : 'bg-blue-500 text-white hover:cursor-pointer hover:bg-blue-600'} rounded-md`}
+                onClick={handleReview}
+                disabled={isReviewed}
+              >
+                {isReviewed ? 'Reviewed' : 'Review'}
+              </button>)
+            }
             {/* Question */}
-            <div className="flex items-center gap-2 sm:mb-2 mb-1">
+            {chat.final_template && <div className="flex gap-2 sm:mb-2 mb-1">
               <img
                 src="images/favicon/android-chrome-192x192.png"
                 alt="App Icon"
                 className="w-8 h-6 sm:w-12 sm:h-12 border border-gray-500 object-contain rounded-lg"
               />
               <span className="text-xs sm:text-sm">
-                {chat.question}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {chat.final_template}
+                </ReactMarkdown>
               </span>
-            </div>
+            </div>}
+            {chat?.isDownload && (
+              <button
+                className={`p-2 mb-2 bg-blue-500 hover:cursor-pointer hover:bg-blue-600 rounded-md text-white`}
+                onClick={handleDownload}
+              >
+                Download
+              </button>)
+            }
+            {(!isReviewStep || isReviewed) && <div className="flex items-center gap-2 sm:mb-2 mb-1">
+              <img
+                src="images/favicon/android-chrome-192x192.png"
+                alt="App Icon"
+                className="w-8 h-6 sm:w-12 sm:h-12 border border-gray-500 object-contain rounded-lg"
+              />
+              <span className="text-xs sm:text-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                 {`${chat?.isEmailDone ? '✅ ' : ''}${chat.question}`}
+                </ReactMarkdown>
+              </span>
+            </div>}
 
-          </div>
-        )))}
+          </div>)
+        }))}
 
         {pendingChat && <div className="text-xs sm:text-sm overflow-x-auto border border-gray-300 rounded p-2 bg-gray-100 mb-2">
           {pendingChat.answer}
@@ -101,7 +141,14 @@ const Notes = () => {
         )}
         <div ref={bottomRef} />
       </div>}
-      {bottom_button === 'create-visit-notes' && template.data && <AskQuestion />}
+      {bottom_button === 'create-visit-notes' && template.data && !isEmailSent &&<AskQuestion />}
+      {showReview && (
+        <ReviewModal
+          template={activeTemplate?.template}
+          onClose={() => setShowReview(false)}
+          setIsReviewd={setIsReviewd}
+        />
+      )}
     </div>
   )
 }
