@@ -18,19 +18,21 @@ import UploadPatientDocument from "../components/UploadPatientDocument";
 import { uploadPlan, uploadPatientImage } from "../api/hospitalApi";
 import Codes from "../components/Codes";
 import CodesForm from "../components/CodesForm";
-import CallReport from "../components/CallReport"
+import CallReport from "../components/CallReport";
 import Notes from "../components/Notes";
 import { addActiveTab } from "../redux/tabSlice";
+import EditTemplate from "../components/EditTemplate";
+import { IoIosNotifications } from "react-icons/io";
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const { loading, isAskPending } = useSelector((state) => state.askQ);
   const { value: bottom_button, version } = useSelector((state) => state.buttonNames);
-  console.log('version', version)
+  console.log("version", version);
   const { value: auth, item } = useSelector((state) => state.auth);
   const { id: headerId, name: headerName } = item;
-  console.log('headerName', headerName);
+  console.log("headerName", headerName);
   const dispatch = useDispatch();
   const [handleSidebar, setHandleSidebar] = useState(false);
   const [rightBar, setRightBar] = useState(false);
@@ -41,7 +43,7 @@ function CareGiver() {
   };
   const handleCallRegister = () => {
     setActiveTab("callRegister");
-  }
+  };
   const handleMMTA = () => {
     setActiveTab("mmta");
   };
@@ -51,7 +53,6 @@ function CareGiver() {
   const handleCreateNotes = () => {
     setActiveTab("create-notes");
   };
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -76,7 +77,7 @@ function CareGiver() {
   // const [openModal, setOpenModal] = useState(false);
 
   const onClose = useCallback(() => {
-    dispatch(addButtonNames(''));
+    dispatch(addButtonNames(""));
     // setOpenModal(false);
   }, []);
 
@@ -92,11 +93,11 @@ function CareGiver() {
   }, [debouncedSetFilterName]);
 
   useEffect(() => {
-    if (bottom_button === 'create-visit-notes') {
+    if (bottom_button === "create-visit-notes") {
       setActiveTab("create-notes");
     }
-    console.log('activeTab', activeTab)
-  }, [bottom_button, version])
+    console.log("activeTab", activeTab);
+  }, [bottom_button, version]);
 
   useEffect(() => {
     dispatch(addActiveTab(activeTab));
@@ -109,10 +110,10 @@ function CareGiver() {
 
   const filteredPatients = useMemo(() => {
     const q = (filterName || "").trim().toLowerCase();
-    return (patientsList || []).filter((p) =>
-      p?.name?.toLowerCase().includes(q)
-    );
+    return (patientsList || []).filter((p) => p?.name?.toLowerCase().includes(q));
   }, [patientsList, filterName]);
+
+  const handleNotification = () => {};
 
   const modalContent = {
     "create-progress-notes": <div>Progress Notes Component</div>,
@@ -122,6 +123,7 @@ function CareGiver() {
     "upload-cpt": <CodesForm onClose={onClose} title="CPT" />,
     "call-report": <CallReport onClose={onClose} />,
     // "create-visit-notes": <Notes onClose={onClose}/>,
+    "edit-visit-template": <EditTemplate onClose={onClose} />,
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}
@@ -149,33 +151,85 @@ function CareGiver() {
   return (
     <div className="relative bg-caregiverbg h-dvh grid grid-rows-[auto_1fr] pb-2">
       <CareHeader setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} setRightBar={setRightBar} rightBar={rightBar} />
-      {(handleSidebar && !rightBar) && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
-      {(rightBar && !handleSidebar) && <MobileRightBar setRightBar={setRightBar} />}
+      {handleSidebar && !rightBar && <MobileSideBar setHandleSidebar={setHandleSidebar} handleSidebar={handleSidebar} />}
+      {rightBar && !handleSidebar && <MobileRightBar setRightBar={setRightBar} />}
       <div className="grid grid-cols-15 pl-4 pr-4 min-h-0">
         <div className="hidden sm:grid sm:col-span-3 h-full grid-rows-[auto_1fr] min-h-0 gap-1">
           <SearchInput
             placeholder="Search Patient Name ..."
             value={inputValue}
             onChange={handleInputChange}
-          // className="mb-4"
+            // className="mb-4"
           />
           {(headerName === "ICD-Codes" || headerName === "CPT-Codes") && <Codes />}
           <PatientList filterPatient={filteredPatients} />
         </div>
         <div className="col-span-15 sm:col-span-12 h-full grid grid-rows-[auto_1fr] min-h-0">
-          <div className="text-xs sm:ml-4 grid grid-cols-1 md:grid-cols-3 sm:gap-2">
-            <div className="gap-4 flex pb-2 pt-3 ">
-              {<button onClick={handleChat} className={`${activeTab === "chat" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Chat</button>}
-              {<button onClick={handleCallRegister} className={`${activeTab === "callRegister" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Call</button>}
-              {<button onClick={handleMMTA} className={` ${activeTab === "mmta" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>MMTA</button>}
-              {<button onClick={handleUploadedPlans} className={` ${activeTab === "uploadedPlans" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Plan Creation</button>}
-              {<button onClick={handleCreateNotes} className={` ${activeTab === "create-notes" ? "text-green-600 , border-b-green-600" : ""} hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}>Create Notes</button>}
+          <div className="text-xs sm:ml-4 grid grid-cols-1 md:grid-cols-3 sm:gap-2 justify-items-end">
+            <div className="gap-4 flex pb-2 pt-3">
+              {
+                <button
+                  onClick={handleChat}
+                  className={`${
+                    activeTab === "chat" ? "text-green-600 , border-b-green-600" : ""
+                  } hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}
+                >
+                  Chat
+                </button>
+              }
+              {
+                <button
+                  onClick={handleCallRegister}
+                  className={`${
+                    activeTab === "callRegister" ? "text-green-600 , border-b-green-600" : ""
+                  } hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}
+                >
+                  Call
+                </button>
+              }
+              {
+                <button
+                  onClick={handleMMTA}
+                  className={` ${
+                    activeTab === "mmta" ? "text-green-600 , border-b-green-600" : ""
+                  } hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}
+                >
+                  MMTA
+                </button>
+              }
+              {
+                <button
+                  onClick={handleUploadedPlans}
+                  className={` ${
+                    activeTab === "uploadedPlans" ? "text-green-600 , border-b-green-600" : ""
+                  } hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}
+                >
+                  Plan Creation
+                </button>
+              }
+              {
+                <button
+                  onClick={handleCreateNotes}
+                  className={` ${
+                    activeTab === "create-notes" ? "text-green-600 , border-b-green-600" : ""
+                  } hover:cursor-pointer text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-green-600 `}
+                >
+                  Create Notes
+                </button>
+              }
               {/* singleDate && */}
             </div>
-            {singleDate && <p className="text-yellow-600 sm:font-bold sm:text-lg text-xs">Patient Name: {singleDate?.patient_name.split("_")[0]}</p>}
+            {
+              <p className="text-yellow-600 sm:font-bold sm:text-sm text-xs flex items-center">
+                Patient Name: {singleDate && singleDate?.patient_name.split("_")[0]}
+              </p>
+            }
+            <div className="flex justify-center items-center">
+              <IoIosNotifications size={24} className="cursor-pointer" onClick={handleNotification} />
+            </div>
           </div>
+          {<div></div>}
           <div className="bg-white  sm:ml-4 rounded sm:p-4 min-h-0">
-
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
             {activeTab === "mmta" && <Mmta />}
@@ -186,9 +240,7 @@ function CareGiver() {
       </div>
 
       {bottom_button && modalContent[bottom_button] && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-          {modalContent[bottom_button]}
-        </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">{modalContent[bottom_button]}</div>
       )}
     </div>
   );
