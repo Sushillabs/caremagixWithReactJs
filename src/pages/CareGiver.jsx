@@ -103,6 +103,37 @@ function CareGiver() {
     dispatch(addActiveTab(activeTab));
   }, [activeTab, dispatch]);
 
+  // SSE: /notifications/stream/{caregiverId} — connect only (no UI yet)
+  useEffect(() => {
+    const caregiverId = auth?.user_id;
+    const token = auth?.token || localStorage.getItem("token");
+    if (!token || !caregiverId || auth?.role !== "caregiver") return;
+
+    const url = `${import.meta.env.VITE_API_URL}/notifications/stream/${encodeURIComponent(caregiverId)}`;
+    const source = new EventSource(url);
+
+    source.onopen = () => {
+      console.log("SSE Connected:", url);
+    };
+
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("SSE Notification:", data);
+      } catch {
+        // ignore non-JSON frames
+      }
+    };
+
+    source.onerror = (error) => {
+      console.error("SSE Error:", error);
+    };
+
+    return () => {
+      source.close();
+    };
+  }, [auth?.user_id, auth?.token, auth?.role]);
+
   const handleInputChange = (value) => {
     setInputValue(value);
     debouncedSetFilterName(value);
@@ -228,7 +259,7 @@ function CareGiver() {
               <IoIosNotifications size={24} className="cursor-pointer" onClick={handleNotification} />
             </div>
           </div>
-          {<div></div>}
+          {/* {<div></div>} */}
           <div className="bg-white  sm:ml-4 rounded sm:p-4 min-h-0">
             {activeTab === "chat" && <Chat />}
             {activeTab === "callRegister" && <CallRegister />}
