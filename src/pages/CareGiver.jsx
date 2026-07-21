@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import { Spinner } from "../components/Spiner";
 import CareHeader from "../components/CareHeader";
 import SearchInput from "../components/SearchInput";
@@ -23,6 +23,9 @@ import Notes from "../components/Notes";
 import { addActiveTab } from "../redux/tabSlice";
 import EditTemplate from "../components/EditTemplate";
 import { IoIosNotifications } from "react-icons/io";
+import toast from "react-hot-toast";
+
+const SSE_OFFLINE_MS = 20000;
 
 function CareGiver() {
   const patientsList = useSelector((state) => state?.patientnames?.value);
@@ -37,6 +40,9 @@ function CareGiver() {
   const [handleSidebar, setHandleSidebar] = useState(false);
   const [rightBar, setRightBar] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
+  const [sseStatus, setSseStatus] = useState("connecting"); // connecting | connected | offline
+  const sseOfflineTimerRef = useRef(null);
+  const [notification, setNotifications] = useState([]);
 
   const handleChat = () => {
     setActiveTab("chat");
@@ -103,33 +109,63 @@ function CareGiver() {
     dispatch(addActiveTab(activeTab));
   }, [activeTab, dispatch]);
 
-  // SSE: /notifications/stream/{caregiverId} — connect only (no UI yet)
+  // SSE: /notifications/stream/{caregiverId}
   useEffect(() => {
     const caregiverId = auth?.user_id;
     const token = auth?.token || localStorage.getItem("token");
     if (!token || !caregiverId || auth?.role !== "caregiver") return;
 
+    const clearOfflineTimer = () => {
+      if (sseOfflineTimerRef.current) {
+        clearTimeout(sseOfflineTimerRef.current);
+        sseOfflineTimerRef.current = null;
+      }
+    };
+
+    setSseStatus("connecting");
     const url = `${import.meta.env.VITE_API_URL}/notifications/stream/${encodeURIComponent(caregiverId)}`;
     const source = new EventSource(url);
 
     source.onopen = () => {
+      clearOfflineTimer();
+      setSseStatus("connected");
       console.log("SSE Connected:", url);
     };
 
     source.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        let map = {
+          id: data.msg_id, // key + dedupe
+          title: data.patient_name || "Alert",
+          message: data.message || "",
+          unread: data.new_msg !== false,
+          date: data.date,
+          category: data.notification_type || "system", // call_alert, metriport_data…
+          patient_name: data.patient_name || "",
+          to_number: data.to_number || "",
+        };
         console.log("SSE Notification:", data);
-      } catch {
-        // ignore non-JSON frames
-      }
+        setNotifications((pre) => {
+          if (pre.some((n) => n.id === data.msg_id)) return pre;
+          return [map, ...pre];
+        });
+      } catch {}
     };
 
     source.onerror = (error) => {
       console.error("SSE Error:", error);
+
+      if (!sseOfflineTimerRef.current) {
+        sseOfflineTimerRef.current = setTimeout(() => {
+          setSseStatus("offline");
+          sseOfflineTimerRef.current = null;
+        }, SSE_OFFLINE_MS);
+      }
     };
 
     return () => {
+      clearOfflineTimer();
       source.close();
     };
   }, [auth?.user_id, auth?.token, auth?.role]);
@@ -144,7 +180,13 @@ function CareGiver() {
     return (patientsList || []).filter((p) => p?.name?.toLowerCase().includes(q));
   }, [patientsList, filterName]);
 
-  const handleNotification = () => {};
+  const handleNotification = () => {
+    if (sseStatus === "offline") {
+      toast("Trying to reconnect…", { id: "sse-offline" });
+      return;
+    }
+    // later: open notification dropdown
+  };
 
   const modalContent = {
     "create-progress-notes": <div>Progress Notes Component</div>,
@@ -256,7 +298,18 @@ function CareGiver() {
               </p>
             }
             <div className="flex justify-center items-center">
-              <IoIosNotifications size={24} className="cursor-pointer" onClick={handleNotification} />
+              <button
+                type="button"
+                title={sseStatus === "offline" ? "Trying to reconnect…" : "Notifications"}
+                onClick={handleNotification}
+                className="relative cursor-pointer"
+              >
+                <IoIosNotifications size={30} className={sseStatus === "offline" ? "text-gray-400" : "text-gray-700"} />
+                {sseStatus === "offline" && <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-500" />}
+                {notification && (
+                  <span className="absolute h-4 w-4 -top-0.5 -right-0.5 rounded-full bg-red-500 text-white text-xs">{notification.length}</span>
+                )}
+              </button>
             </div>
           </div>
           {/* {<div></div>} */}
