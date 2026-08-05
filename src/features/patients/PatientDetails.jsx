@@ -1,24 +1,17 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ChevronDown, Trash2, Download, Eye, MessageSquare, History, User } from "lucide-react";
 import { Spinner } from "../../components/Spiner";
+import useAskQuestion from "../../hooks/useAskQuestion";
 
-// Table styling matches the shell's emerald/gray palette (see Dashboard/TopBar),
-// not the legacy blue table styling in components/Chat.jsx.
 const markdownTableComponents = {
   table: ({ children }) => <table className="min-w-full border-collapse text-xs">{children}</table>,
   thead: ({ children }) => <thead className="bg-emerald-50 text-left text-gray-700">{children}</thead>,
   th: ({ children }) => <th className="border border-gray-200 px-3 py-2 font-semibold">{children}</th>,
-  td: ({ children }) => (
-    <td className="whitespace-pre-line border border-gray-200 px-3 py-2 align-top text-gray-600">{children}</td>
-  ),
+  td: ({ children }) => <td className="whitespace-pre-line border border-gray-200 px-3 py-2 align-top text-gray-600">{children}</td>,
 };
-
-// Static layout skeleton per Figma. Nothing here is wired up yet — dropdowns
-// open/close but their items don't do anything, action buttons are inert.
-// Each feature gets wired one at a time in later phases.
 
 const DOCUMENT_ITEMS = [
   "Consolidated Med Summary",
@@ -68,9 +61,27 @@ function DropdownButton({ label, items }) {
   );
 }
 
+const TABS = [
+  { key: "conversation", label: "Conversation" },
+  { key: "summary", label: "Summary" },
+  { key: "history", label: "Chat History" },
+];
+
 export default function PatientDetails() {
-  const patient = useSelector((state) => state.patientsingledata?.value);
+  const [activeTab, setActiveTab] = useState("conversation");
+  // patientsingledata is the legacy-shaped payload (buildPatientPayload) —
+  // the full normalized patient object lives under .patient
+  const singleData = useSelector((state) => state.patientsingledata?.value);
+  const patient = singleData?.patient;
   const { data: chatData, loading: chatLoading, error: chatError } = useSelector((state) => state.askQ) || {};
+  const conversation = useSelector((state) => state.askQ?.value) || [];
+  const { askQuestion, isPending: askPending } = useAskQuestion();
+  const questionsRef = useRef(null);
+  const scrollToQuestions = () => questionsRef.current?.scrollIntoView({ behavior: "smooth" });
+  const chatEndRef = useRef(null);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation, askPending]);
   const summaryTable = chatData?.[0];
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
   const defaultQuestions = chatData?.length > 2 ? chatData.slice(1, -1) : [];
@@ -131,60 +142,112 @@ export default function PatientDetails() {
         </div>
       </div>
       {/* chat */}
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+      <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
+        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
           <div>
-            <h3 className="font-medium text-gray-800">Discharged Plan</h3>
+            <h3 className="text-xs font-bold text-gray-800">Discharged Plan</h3>
             <p className="text-xs text-gray-400">Generated on —</p>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <span className="flex items-center gap-1 hover:text-gray-700">
-              <Eye size={14} /> View
-            </span>
-            <span className="flex items-center gap-1 hover:text-gray-700">
-              <MessageSquare size={14} /> Conversation
-            </span>
-            <span className="flex items-center gap-1 hover:text-gray-700">
-              <History size={14} /> Chat History
-            </span>
-            <button type="button" className="flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-500 hover:bg-red-50">
+          <div className="flex items-center gap-3 text-sm text-gray-500 ">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+              >
+                {tab.label}
+              </button>
+            ))}
+            {/* <button type="button" className="flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-500 hover:bg-red-50">
               <Trash2 size={14} /> Delete
-            </button>
+            </button> */}
             <button type="button" className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700">
               <Download size={14} /> Download
             </button>
           </div>
         </div>
-        {chatLoading ? (
-          <Spinner />
-        ) : chatError ? (
-          <p className="mt-3 text-sm text-red-600">Error: {chatError}</p>
-        ) : summaryTable ? (
-          <>
-            <div className="mt-3 overflow-x-auto">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
-                {summaryTable}
-              </ReactMarkdown>
-            </div>
-
-            {defaultQuestions.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {defaultQuestions.map((q, i) => (
-                  // Not clickable yet — wiring these into /ask is a later phase
-                  <button
-                    key={i}
-                    type="button"
-                    className="rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    {q}
-                  </button>
-                ))}
+        <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+          {chatLoading ? (
+            <Spinner />
+          ) : chatError ? (
+            <p className="mt-3 text-sm text-red-600">Error: {chatError}</p>
+          ) : activeTab === "summary" ? (
+            summaryTable ? (
+              <div className="mt-3 overflow-x-auto px-2">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
+                  {summaryTable}
+                </ReactMarkdown>
               </div>
-            )}
-          </>
-        ) : (
-          <p className="mt-3 text-sm text-gray-400">Document content will render here in a later phase.</p>
-        )}
+            ) : (
+              <p className="mt-3 px-2 text-sm text-gray-400">No summary available yet.</p>
+            )
+          ) : activeTab === "history" ? (
+            <p className="mt-3 px-2 text-sm text-gray-400">Chat History will be built in a later phase.</p>
+          ) : defaultQuestions.length > 0 || conversation.length > 0 ? (
+            <div className="mt-3 space-y-3 px-2 text-sm">
+              {defaultQuestions.length > 0 && (
+                <div>
+                  <p className="mb-2 text-gray-700" ref={questionsRef}>
+                    Welcome!! Try asking me questions related to Discharged Plan. You can ask questions like:
+                  </p>
+                  <ul className="space-y-1">
+                    {defaultQuestions.map((q, i) => (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          disabled={askPending}
+                          onClick={() => askQuestion(q)}
+                          className="flex items-start gap-2 text-left text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                          {q}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {conversation.length > 0 && (
+                <div className="space-y-3 border-t border-gray-100 pt-3">
+                  {conversation.map((msg, i) =>
+                    msg.role === "user" ? (
+                      <div key={i} className="flex items-start justify-end gap-2 text-right">
+                        <span className="text-gray-700">{msg.content}</span>
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
+                          A
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={i} className="text-gray-700 space-x-2">
+                        {typeof msg.content === "string" && (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        )}
+                        <button type="button" className="mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100">
+                          Doc Reference
+                        </button>
+                        <button
+                          type="button"
+                          className="mt-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
+                          onClick={scrollToQuestions}
+                        >
+                          Quich Questions
+                        </button>
+                      </div>
+                    )
+                  )}
+                  {askPending && <p className="text-xs text-gray-400">Thinking...</p>}
+                  <div ref={chatEndRef} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="mt-3 px-2 text-sm text-gray-400">Document content will render here in a later.</p>
+          )}
+        </div>
       </div>
     </div>
   );

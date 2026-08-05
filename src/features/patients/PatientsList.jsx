@@ -5,6 +5,7 @@ import { getPatients } from "../../api/hospitalApi";
 import { addPatientNames } from "../../redux/patientListSlice";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
+import { buildPatientPayload } from "../../utils/buildPatientPayload";
 import useMyQuery from "../../hooks/useMyQuery";
 
 export default function PatientsList() {
@@ -57,27 +58,11 @@ export default function PatientsList() {
     dispatch(addPatientNames([...fromApi, ...fromExtraSources]));
   }, [isSuccess, data, dispatch]);
 
-  // Backend /ask (query_api.py:690-714) branches on patient_type using exact
-  // literals for pulled sources ("PCC", "epic", "metriport"), not our
-  // display casing ("Pcc", "Epic", "Metriport").
-  const BACKEND_PATIENT_TYPE = { Pcc: "PCC", Epic: "epic", Metriport: "metriport" };
-
   const handlePatient = (p) => {
-    // No specific document is picked yet on this page (that's the real
-    // Patient Details page, a later phase) — default to each patient's
-    // first document/detail entry so the assistant has a valid target,
-    // same two-branch shape as legacy PatientList.jsx:68-72.
-
-    let payload = {};
-    if (p?.type === "Uploaded") {
-      const firstDoc = p.raw?.data?.[0];
-      payload = { patient_date: firstDoc?.dates, patient_name: p.name, patient_type: firstDoc?.patient_type, user_id };
-    } else {
-      payload = { patient_collection: p.details?.[0], user_id, patient_type: BACKEND_PATIENT_TYPE[p?.type], patient_name: p.name };
-    }
+    const payload = buildPatientPayload(p, user_id);
 
     dispatch(clearChat());
-    dispatch(addDischargePatientDate(p));
+    dispatch(addDischargePatientDate(payload));
     dispatch(fetchPatientChat(payload));
     navigate(`/app/patients/${p.id}`);
   };

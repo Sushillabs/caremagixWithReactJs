@@ -29,16 +29,12 @@ export default function AiCareAssistant() {
         <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <Sparkles size={16} className="text-emerald-500" />
           AI Care Assistant
-          {patientName && (
-            <span className="text-xs font-normal text-gray-400">· {patientName}</span>
-          )}
+          {patientName && <span className="text-xs font-normal text-gray-400">· {patientName}</span>}
         </div>
-        <span className="text-[11px] text-gray-400">
-          AI responses are model-generated. Verify with relevant clinical information.
-        </span>
+        <span className="text-[11px] text-gray-400">AI responses are model-generated. Verify with relevant clinical information.</span>
       </div>
 
-      {conversation.length > 0 && (
+      {/* {conversation.length > 0 && (
         <div className="mb-2 max-h-40 space-y-2 overflow-y-auto rounded-md bg-gray-50 p-3 text-sm">
           {conversation.map((msg, i) => (
             <div
@@ -50,12 +46,9 @@ export default function AiCareAssistant() {
             </div>
           ))}
         </div>
-      )}
+      )} */}
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2"
-      >
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
         <input
           type="text"
           value={input}
