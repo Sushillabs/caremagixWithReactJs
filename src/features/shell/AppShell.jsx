@@ -4,13 +4,18 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import DockedAssistant from "./DockedAssistant";
 import { getSectionByPath } from "../../config/sections";
+import useJobsTracker from "../../hooks/useJobsTracker";
 
 export default function AppShell() {
   const location = useLocation();
   const [search, setSearch] = useState("");
   const section = getSectionByPath(location.pathname);
 
+  useJobsTracker();
+
   const isSectionDetail = Boolean(section) && location.pathname !== section.path;
+
+  const assistantSuppressed = Boolean(section?.noAssistantPaths?.some((p) => location.pathname.includes(p)));
 
   return (
     <div className="grid h-dvh grid-cols-[15rem_1fr] overflow-hidden bg-gray-100">
@@ -23,7 +28,7 @@ export default function AppShell() {
           <Outlet context={{ search, section }} />
         </main>
 
-        <DockedAssistant section={section} isDetail={isSectionDetail} />
+        <DockedAssistant section={section} isDetail={isSectionDetail} suppressed={assistantSuppressed} />
       </div>
     </div>
   );

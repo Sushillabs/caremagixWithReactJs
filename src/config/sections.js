@@ -31,7 +31,18 @@ export const SECTIONS = {
     assistant: false,
     requiresPatient: false,
   },
-  patients: { key: "patients", label: "Patients", icon: Users, path: "/app/patients", group: "primary", assistant: true, requiresPatient: true },
+  // noAssistantPaths: URL fragments where the docked assistant should stay
+  // hidden even though this section otherwise wants it (non-chat features).
+  patients: {
+    key: "patients",
+    label: "Patients",
+    icon: Users,
+    path: "/app/patients",
+    group: "primary",
+    assistant: true,
+    requiresPatient: true,
+    noAssistantPaths: ["/care-plan"],
+  },
   // configurations: {
   //   key: "configurations",
   //   label: "Configurations",

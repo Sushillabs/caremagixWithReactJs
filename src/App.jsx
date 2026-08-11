@@ -11,6 +11,9 @@ import AppShell from "./features/shell/AppShell";
 import Dashboard from "./features/dashboard/Dashboard";
 import PatientsList from "./features/patients/PatientsList";
 import PatientDetails from "./features/patients/PatientDetails";
+import ConversationCard from "./features/patients/ConversationCard";
+import CarePlan from "./features/patients/CarePlan";
+import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
 import ComingSoon from "./features/common/ComingSoon";
 import { SECTIONS } from "./config/sections";
 
@@ -66,7 +69,16 @@ function App() {
             }
           >
             <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
-            <Route path="/app/patients/:id" element={<PatientDetails />} />
+            {/* Patient Details is a layout (header + toolbar) with its own nested
+                content: index = conversation, care-plan = the Care Plan dashboard
+                header. The full accordion detail (care-plan/view) is intentionally
+                NOT nested here — it drops the header/toolbar chrome entirely and
+                renders full-width, since it's a dense document, not a quick view. */}
+            <Route path="/app/patients/:id" element={<PatientDetails />}>
+              <Route index element={<ConversationCard />} />
+              <Route path="care-plan" element={<CarePlan />} />
+            </Route>
+            <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
             {Object.values(SECTIONS).map((section) => (
               <Route
                 key={section.key}

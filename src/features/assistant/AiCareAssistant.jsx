@@ -3,15 +3,11 @@ import { useSelector } from "react-redux";
 import { Sparkles, Mic, Send } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 
-// Docked AI assistant. Reuses the existing useAskQuestion hook untouched.
-// Gated on patient context: the /ask endpoint needs a selected patient,
-// so the input is disabled until one is chosen (patient picker lands in a
-// later phase).
 export default function AiCareAssistant() {
   const [input, setInput] = useState("");
   const { askQuestion, isPending } = useAskQuestion();
   const patient = useSelector((state) => state.patientsingledata?.value);
-  const conversation = useSelector((state) => state.askQ?.value) || [];
+  // const conversation = useSelector((state) => state.askQ?.value) || [];
 
   const hasPatient = Boolean(patient);
   const patientName = patient?.patient_name || patient?.patient?.name;

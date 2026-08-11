@@ -6,6 +6,7 @@ const jobsIdSlice = createSlice({
     initialState: {
         eFaxJobs: [],
         ocrJobs: [],
+        carePlanJobs: [],
     },
     reducers: {
         setJobsId: (state, action) => {
@@ -16,10 +17,15 @@ const jobsIdSlice = createSlice({
             if (action.payload?.ocrJobs && typeof action.payload.ocrJobs === "object") {
                 state.ocrJobs.push(action.payload.ocrJobs);
             }
+
+            if (action.payload?.carePlanJobs && typeof action.payload.carePlanJobs === "object") {
+                state.carePlanJobs.push(action.payload.carePlanJobs);
+            }
         },
         clearJobsId: (state) => {
             state.eFaxJobs = [];
             state.ocrJobs = [];
+            state.carePlanJobs = [];
         }
     }
 });

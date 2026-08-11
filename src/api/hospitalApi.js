@@ -31,6 +31,9 @@ export const generateCallReport = (data)=> http.post('/generate_report',data,{wi
 export const dischargePlan = (data)=> http.post('/discharge_plan_agent',data,{withAuth: true});
 export const edit_visit_template= ()=> http.get('/discharge_plan_agent/edit_template',{withAuth: true})
 export const update_visit_template= (data)=> http.post('/discharge_plan_agent/edit_template', data, {withAuth: true})
+export const generateCarePlan = (data) => http.post('/generate_care_plan', data, { withAuth: true });
+export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, { withAuth: true });
+export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
 
 
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template

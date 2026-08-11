@@ -1,11 +1,11 @@
 import { useQueries } from "@tanstack/react-query";
 import { getProgress } from "../api/hospitalApi";
-import { useSelector, useDispatch } from "react-redux"
+import { useSelector, useDispatch } from "react-redux";
 // import { saveServerFailMap } from "../redux/finalJobsStatusSlice"
 
 const useProgress = (jobs = []) => {
   const finalJobStatusMap = useSelector((state) => state.finalJobStatus.finalJobs);
-  
+
   return useQueries({
     queries: jobs.map((job) => {
       const jobIdExists = !!job.job_id;
@@ -32,14 +32,13 @@ const useProgress = (jobs = []) => {
           if (status === "COMPLETED" || status === "FAILED" || query?.state?.status === "error") {
             return false;
           }
-          return 2 * 60 * 1000;
+          return 8000;
         },
         staleTime: Infinity,
-        gcTime: 24*60 * 60 * 1000,
+        gcTime: 24 * 60 * 60 * 1000,
       };
     }),
   });
-
 };
 
 export default useProgress;
