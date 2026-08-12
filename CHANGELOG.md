@@ -5,6 +5,80 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Care Plan, Phase 2 (editable document + PDF export)
+
+Builds on the Care Plan feature below — that phase made the plan
+*generate and display*; this phase makes it *editable and exportable*.
+Full write-up: [`docs/features/care-plan.md`](./docs/features/care-plan.md)
+(flows/API) and
+[`docs/features/care-plan-backend-spec.md`](./docs/features/care-plan-backend-spec.md)
+(a self-contained backend spec, written so a different backend team — or an
+AI coding agent — could rebuild this feature from scratch without access to
+this codebase).
+
+**What it does now:** the document is no longer read-only. Each section has
+its own Edit/Cancel/Save (checkboxes, status, target dates, the problem
+statement, item wording, red-flag/reference lists, and the Assessment of
+Progress row all become editable). The patient info block (Primary Care
+Provider, Diagnosis, the four dates) has its own separate Edit/Cancel/Save.
+None of that touches the server by itself — it's staged locally. One
+page-level "Save Care Plan" button batches every pending edit into a single
+save. A "Generate PDF" button renders whatever is currently saved into a
+downloadable PDF — if there are unsaved edits when it's clicked, it saves
+them first automatically, so the PDF can never be stale.
+
+**Backend (`caremagix-be`)**
+- `careplan.py`:
+  - AI prompt schema: every goal/intervention/action/barrier item now
+    includes a `selected` field (the AI always sets it `false` — it proposes
+    the menu, the Care Manager is the one who ticks what applies).
+  - `assessment_of_progress` changed from an always-empty array to a
+    `{header_data, table_data}` object — one real, editable progress-log row
+    per section instead of a dead placeholder that was never actually
+    rendered with data.
+  - New: `_render_care_plan_html()` / `generate_care_plan_pdf()` — renders
+    the JSON-shaped care plan straight into a styled, print-ready HTML/PDF
+    document. Reused the print stylesheet (`CARE_PLAN_CSS`) that was already
+    sitting in this file from an earlier phase of the project, before the AI
+    generated raw HTML directly — added a "checked" checkbox style to it
+    since it previously only drew empty boxes.
+  - `POST /export_care_plan_pdf` — repurposed: it already existed but the
+    frontend never called it, and it expected the *caller* to hand it
+    pre-built HTML. Now takes `{care_plan_id}` and renders entirely
+    server-side from the saved database row, so there's one source of truth
+    for what an exported plan looks like.
+
+**Frontend — existing files changed**
+- `src/features/patients/CarePlanDetailPage.jsx` — the bulk of this phase:
+  per-section and per-patient-block edit sessions, the page-level
+  "Save Care Plan" button (`PUT /care_plan/:id`, one call for everything),
+  and the "Generate PDF" button (auto-save-then-export).
+- `src/api/hospitalApi.js` — added `exportCarePlanPdf()`.
+
+**Design decisions worth knowing**
+- Edits are staged locally (per section, per patient block) and only reach
+  the server on the one page-level Save — avoids an API call per
+  keystroke/checkbox and avoids ever saving a half-finished edit.
+- Nothing is ever removed from an AI-generated item list when unticked —
+  `selected` just toggles. Every AI-proposed option stays visible (and shows
+  up in the PDF either way, checked or not) so the full menu of options the
+  AI considered is never lost.
+- The Assessment of Progress table is intentionally a single editable row
+  per section (an ongoing log entry updated at each patient contact), not a
+  growing/appendable list — a deliberate scope decision, not an oversight.
+- After a successful page-level save, the result is dispatched into the same
+  Redux slice (`finalJobsStatusSlice`) that tracks a freshly *generated*
+  plan — caught during design, before it shipped, that keeping the saved
+  data only in local component state would show stale (pre-edit) data if the
+  Care Manager navigated away and back to the same patient in one session.
+
+**Known issues / not done yet**
+- Still no explicit "Regenerate" action (unchanged from Phase 1, below).
+- A hard refresh mid-generation still loses in-progress job tracking
+  (unchanged from Phase 1, below).
+- No history of previously generated PDFs — "Generate PDF" always renders
+  the current saved state; nothing is kept of earlier exports.
+
 #### Added — Care Plan feature (generate, view, and track across the app)
 
 Full write-up with API payloads and step-by-step flows:
@@ -28,8 +102,8 @@ that patient before it's done.
   response instead of saving/forwarding bad data. Three routes: start
   generation (`POST /generate_care_plan`, reuses an existing saved plan
   when `regenerate: false` instead of re-running the AI), fetch a saved
-  plan (`GET /care_plan/:id`), save edits (`PUT /care_plan/:id`, not wired
-  to the UI yet).
+  plan (`GET /care_plan/:id`), save edits (`PUT /care_plan/:id` — wired to
+  the UI in Phase 2, see above).
 - `ocr_upload_api.py` — the existing job-status endpoint
   (`GET /ocr-progress/:job_id`, shared with eFax/OCR uploads) now also
   returns `care_plan_id`/`care_plan_data` once a care-plan job finishes.
@@ -92,9 +166,7 @@ that patient before it's done.
   `localStorage`; in-progress ones don't yet).
 - No explicit "Regenerate" action yet (force a fresh plan when one already
   exists) — only "generate if none exists, else show the existing one."
-- PDF export for Care Plan not built yet (Phase 6, still pending).
-- No per-field editing yet (the green Edit/Save controls from the Figma
-  design) — the document is read-only for now.
+- Editing and PDF export were both added in Phase 2 — see the entry above.
 
 #### Added — Chat, Phase 1 (default questions become real answers)
 

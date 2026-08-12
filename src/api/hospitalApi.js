@@ -34,6 +34,7 @@ export const update_visit_template= (data)=> http.post('/discharge_plan_agent/ed
 export const generateCarePlan = (data) => http.post('/generate_care_plan', data, { withAuth: true });
 export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, { withAuth: true });
 export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
+export const exportCarePlanPdf = (carePlanId) => http.post('/export_care_plan_pdf', { care_plan_id: carePlanId }, { withAuth: true });
 
 
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template

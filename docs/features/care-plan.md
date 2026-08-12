@@ -94,13 +94,13 @@ Response: `{ "message": "Care plan updated.", "care_plan_id": "string", "care_pl
     {
       "title": "",
       "problem": "",
-      "smart_goals": [{ "text": "", "target_date": "", "status": "not_started|in_progress|complete" }],
+      "smart_goals": [{ "text": "", "target_date": "", "status": "not_started|in_progress|complete", "selected": false }],
       "interventions": [ "...same shape as smart_goals" ],
       "patient_self_management_actions": [ "...same shape" ],
       "red_flag_symptoms": ["string"],
       "potential_barriers": [ "...same shape as smart_goals" ],
       "evidence_based_references": ["string"],
-      "assessment_of_progress": [],
+      "assessment_of_progress": { "header_data": "", "table_data": { "date": "", "goal_intervention": "", "status": "", "note": "" } },
       "follow_up_communication": { "method": "", "next_contact_date": "" }
     }
   ]
