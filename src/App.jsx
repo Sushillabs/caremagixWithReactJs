@@ -16,6 +16,7 @@ import CarePlan from "./features/patients/CarePlan";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
 import ComingSoon from "./features/common/ComingSoon";
 import { SECTIONS } from "./config/sections";
+import OasisFieldPreview from "./features/oasis/OasisFieldPreview";
 
 const isExtension = window.location.protocol === "chrome-extension:";
 console.log("protocol:", window.location.protocol);
@@ -44,6 +45,9 @@ function App() {
       <Toaster position="top-right" containerStyle={{ top: 60 }} />
       <Router initialEntries={["/"]}>
         <Routes>
+          {/* Phase 0 smoke test only — no auth, remove once Phase 1's real FU page exists */}
+          <Route path="/oasis-preview" element={<OasisFieldPreview />} />
+
           <Route element={<AuthLayout />}>
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
