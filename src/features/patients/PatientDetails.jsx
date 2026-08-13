@@ -1,22 +1,12 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { ChevronDown, User } from "lucide-react";
+// import useAskQuestion from "../../hooks/useAskQuestion";
+import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
+import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
 
-const DOCUMENT_ITEMS = [
-  "Consolidated Med Summary",
-  "Family Member History",
-  "Observation",
-  "Appointments",
-  "Consent",
-  "Conditions",
-  "CarePlan-Outpatient",
-  "CarePlan-Inpatient",
-  "Device-Information",
-  "Diagnostic Report",
-  "Clinical-Notes",
-  "Patient-Information",
-];
+let DOCUMENT_ITEMS = [];
 
 const NOTES_ITEMS = ["Visit notes", "Create Progress Notes"];
 
@@ -26,7 +16,7 @@ const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH
 
 const UPLOAD_ITEMS = ["Uploaded Plans", "Upload Plans", "Upload via Image"];
 
-function DropdownButton({ label, items }) {
+function DropdownButton({ label, items, onItemClick }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
@@ -39,9 +29,16 @@ function DropdownButton({ label, items }) {
         <ChevronDown size={14} className="text-gray-400" />
       </button>
       {open && (
-        <ul className="absolute right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
+        <ul className="absolute h-60 overflow-y-auto right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
           {items.map((item) => (
-            <li key={item} className="cursor-pointer px-3 py-1.5 text-gray-600 hover:bg-gray-50">
+            <li
+              key={item}
+              onClick={() => {
+                setOpen(false);
+                onItemClick?.(item);
+              }}
+              className="cursor-pointer px-3 py-1.5 text-gray-600 hover:bg-gray-50"
+            >
               {item}
             </li>
           ))}
@@ -52,14 +49,37 @@ function DropdownButton({ label, items }) {
 }
 
 export default function PatientDetails() {
+  // const { askQuestion } = useAskQuestion();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const singleData = useSelector((state) => state.patientsingledata?.value);
   const patient = singleData?.patient;
+  const type = patient?.type;
   const auth = useSelector((state) => state.auth?.value) || {};
   const caregiverName = `${auth.first_name || ""} ${auth.last_name || ""}`.trim() || auth.name || auth.username || "";
 
   const age = patient?.raw?.age || patient?.age || "";
   const admissionDate = patient?.raw?.admission_date || patient?.admissionDate || "";
+
+  if (type === "Uploaded") {
+    DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
+  } else {
+    DOCUMENT_ITEMS = [...patient?.details];
+  }
+
+  const handleDocumentClick = (item) => {
+    let payload = null;
+    if (type === "Uploaded") {
+      payload = { ...singleData, dates: item, patient_date: item };
+    } else {
+      payload = { ...singleData, patient_collection: item };
+    }
+
+    dispatch(clearChat());
+    dispatch(addDischargePatientDate(payload));
+    dispatch(fetchPatientChat(payload));
+    navigate(".");
+  };
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -83,7 +103,7 @@ export default function PatientDetails() {
         </div>
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
-          <DropdownButton label="Documents" items={DOCUMENT_ITEMS} />
+          <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />
           <DropdownButton label="Notes" items={NOTES_ITEMS} />
           <DropdownButton label="Plan" items={PLAN_ITEMS} />
           <DropdownButton label="Forms" items={FORMS_ITEMS} />

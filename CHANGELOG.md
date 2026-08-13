@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — Patient Details: Documents dropdown now switches the active document
+
+`src/features/patients/PatientDetails.jsx`.
+
+The Documents dropdown's list items were dead — the `<li>` used a typo'd
+`onkey={item}` prop (not a real React/DOM event) instead of `onClick`, so
+clicking a document silently did nothing. Now:
+
+1. `DOCUMENT_ITEMS` is built from the actual patient record instead of a
+   hardcoded placeholder list: each upload's `dates` for `Uploaded` patients,
+   or `patient?.details` for PCC/Epic/Metriport patients.
+2. Clicking an item clears the current conversation (`clearChat`), rebuilds
+   the patient payload with that document selected (`dates`/`patient_date`
+   for `Uploaded`, `patient_collection` otherwise), and re-fetches the
+   default question set for it via `fetchPatientChat` (`/generate_questions`)
+   — the same pattern `PatientsList`'s "View Details" already uses.
+3. If the user was on the Care Plan tab, picking a document navigates back
+   to the Conversation tab (`navigate(".")`) so the refreshed chat is visible.
+
+`DropdownButton` gained an `onItemClick` prop (only wired up for Documents
+so far — Notes/Plan/Forms/Upload are still inert, see Known issues below).
+
 #### Added — Care Plan, Phase 2 (editable document + PDF export)
 
 Builds on the Care Plan feature below — that phase made the plan
@@ -228,6 +250,7 @@ duplicated) at every place that calls the backend.
 
 - TopBar: facility name/beds-available field names are guessed, notification
   bell has no logic yet, logout handler is broken (missing `dispatch`/`navigate`).
-- Patient Details: dropdown items, action buttons, and question chips are not
-  wired to anything yet (UI only).
+- Patient Details: Documents dropdown is wired (see "Fixed" entry above);
+  Notes/Plan/Forms/Upload dropdowns, the action buttons (MMTA, Register a
+  Call, etc.), and question chips are still not wired to anything (UI only).
 - Header card's Age/Admission Date have no backing data — rendered blank.
