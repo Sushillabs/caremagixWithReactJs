@@ -5,6 +5,8 @@ import { ChevronDown, User } from "lucide-react";
 // import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
+import RegisterCallModal from "./RegisterCallModal";
+import UnregisterCallModal from "./UnregisterCallModal";
 
 let DOCUMENT_ITEMS = [];
 
@@ -52,6 +54,8 @@ export default function PatientDetails() {
   // const { askQuestion } = useAskQuestion();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [showUnregisterModal, setShowUnregisterModal] = useState(false);
   const singleData = useSelector((state) => state.patientsingledata?.value);
   const patient = singleData?.patient;
   const type = patient?.type;
@@ -60,6 +64,7 @@ export default function PatientDetails() {
 
   const age = patient?.raw?.age || patient?.age || "";
   const admissionDate = patient?.raw?.admission_date || patient?.admissionDate || "";
+  const isCallRegistered = patient?.raw?.call_registered;
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -111,9 +116,15 @@ export default function PatientDetails() {
           <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             MMTA
           </button>
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
-            Register a Call
-          </button>
+          {type === "Uploaded" && (
+            <button
+              type="button"
+              onClick={() => (isCallRegistered ? setShowUnregisterModal(true) : setShowCallModal(true))}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              {isCallRegistered ? "Unregister Call" : "Register a Call"}
+            </button>
+          )}
           <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Medication Alerts
           </button>
@@ -137,6 +148,9 @@ export default function PatientDetails() {
       </div>
 
       <Outlet />
+
+      {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
+      {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
     </div>
   );
 }

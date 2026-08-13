@@ -11,8 +11,7 @@ export const PatientSingleDateSlice = createSlice({
             state.value = action.payload;
         },
         updatePatientData: (state, action) => {
-            console.log("Updating patient data with payload:", action.payload);
-            state.value.patient.raw.call_registered = action.payload.call_registered;
+            Object.assign(state.value.patient.raw, action.payload);
         }
     }
 });

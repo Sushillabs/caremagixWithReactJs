@@ -5,6 +5,89 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Patient Details: Unregister Call (phase 2) + toggle button
+
+New: `src/features/patients/UnregisterCallModal.jsx`. Same centered-modal
+shell as `RegisterCallModal`, but simpler — a confirm step instead of a
+form.
+
+**Toolbar button is now one toggle, not two.** In `PatientDetails.jsx`, the
+Register/Unregister button:
+- Only renders when `patient?.type === "Uploaded"` — call registration only
+  applies to that patient type (PCC/Epic/Metriport records never carry
+  `call_registered`/`calling_number`, so there's nothing to toggle for them).
+- Reads `patient?.raw?.call_registered` to decide label + action: `false` →
+  "Register a Call" (opens `RegisterCallModal`), `true` → "Unregister Call"
+  (opens `UnregisterCallModal`).
+
+**Flow:** "Unregister this call? The scheduled call will be cancelled." with
+Cancel/Unregister buttons, then `POST /pause_call` (`unregisterCall`) with
+`{ to_number: patient.raw.calling_number }` — no lookup call needed, the
+number is already on the patient record from registration. Same no-toast
+pattern as Register: Unregister button dims + reads "Unregistering..." while
+pending, inline red error on failure (modal stays open to retry), checkmark
++ "Call unregistered" panel on success, auto-closes after ~1.2s.
+
+**Redux fix that made the toggle actually work end-to-end:**
+`PatientSingleDateSlice.js`'s `updatePatientData` reducer used to hardcode a
+single field (`state.value.patient.raw.call_registered = ...`); it's now
+`Object.assign(state.value.patient.raw, action.payload)`, so a dispatch can
+update multiple raw-patient fields at once. `RegisterCallModal`'s success
+handler was also missing a write entirely — it flipped `call_registered`
+but never recorded the number that had just been used, so unregistering
+immediately after a patient's *first-ever* registration (before the patient
+list next refetched from the backend) would find `calling_number` undefined
+and the Unregister button would stay disabled. Now register success
+dispatches `updatePatientData({ call_registered: true, calling_number: phone })`,
+so both flags are correct without waiting on a refetch.
+
+Note: `registered_number` (used by `UploadPatientDocument.jsx` to prefill
+the upload form's contact field) is a different, unrelated field — the
+patient's contact number for upload/OTP notifications, not the call-register
+number. Not touched by this change.
+
+#### Added — Patient Details: "Register a Call" modal
+
+New: `src/features/patients/RegisterCallModal.jsx`, wired from the
+"Register a Call" toolbar button in `PatientDetails.jsx`. Centered modal
+(`fixed inset-0`, same overlay pattern as `ReviewModal.jsx`) rather than an
+anchored popover.
+
+**Flow**
+1. Opening the modal silently calls `POST /get-details` (`getCallDetail`)
+   with `{ patient_name, patient_type, dates }` — `patient_name`/`patient_type`
+   come from the already-selected patient in redux
+   (`patientsingledata.value`); `dates` is `singleData.dates` for `Uploaded`
+   patients or `singleData.patient_collection` otherwise (same branch
+   `PatientDetails`'s own `handleDocumentClick` already uses). The response's
+   `phone_number` prefills the Mobile Number field.
+2. Mobile Number uses `react-phone-number-input` (`defaultCountry="US"`,
+   `international`) — country-code picker + number, same library the legacy
+   call-register form used. Editable even after autofill, e.g. if the lookup
+   fails or the number is wrong.
+3. Schedule Time is a native `datetime-local` input, defaulted to now + 90
+   minutes ("Schedule it for 1 hour 30 minutes from now" hint), which already
+   emits the `"YYYY-MM-DDTHH:mm"` shape the backend expects for `time_slots`
+   — no reformatting needed.
+4. "Schedule" calls `POST /register-call` (`registerCall`) with
+   `{ patient_name, patient_type, dates, to_number, time_slots }`.
+
+**Pending/error/success — no toast.** Both calls use `useMutation` directly
+(not the app's usual `useMyMutation`, which auto-fires `react-hot-toast`) so
+feedback stays inside the modal:
+- Phone lookup: field disabled + "Looking up phone number..." while
+  pending; inline red text if it fails (user can still type the number by
+  hand).
+- Schedule button: dims/disables and reads "Scheduling..." while pending;
+  inline red error text below on failure.
+- Success: the form is replaced with a checkmark + "Call scheduled" panel,
+  then the modal auto-closes after ~1.2s.
+
+Unregistering a call was deliberately left out of this pass (see
+"Unregister Call (phase 2)" entry above for that). Patient Name/Type aren't
+shown as fields (unlike the legacy form) — they're derived from the
+selected patient and sent silently.
+
 #### Fixed — Patient Details: Documents dropdown now switches the active document
 
 `src/features/patients/PatientDetails.jsx`.
@@ -250,7 +333,8 @@ duplicated) at every place that calls the backend.
 
 - TopBar: facility name/beds-available field names are guessed, notification
   bell has no logic yet, logout handler is broken (missing `dispatch`/`navigate`).
-- Patient Details: Documents dropdown is wired (see "Fixed" entry above);
-  Notes/Plan/Forms/Upload dropdowns, the action buttons (MMTA, Register a
-  Call, etc.), and question chips are still not wired to anything (UI only).
+- Patient Details: Documents dropdown and "Register a Call" are wired (see
+  entries above); Notes/Plan/Forms/Upload dropdowns, the remaining action
+  buttons (MMTA, Medication Alerts, Call Reports, Medication, Patient
+  Journey), and question chips are still not wired to anything (UI only).
 - Header card's Age/Admission Date have no backing data — rendered blank.
