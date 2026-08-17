@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Add New Patient (`PatientsList.jsx`)
+
+New "Add Patient" button opens `AddPatientModal.jsx`, a 3-step flow:
+
+1. Enter mobile and/or email → `POST /send-otp` per identifier filled in.
+2. Enter the OTP(s) — 6 digits per identifier (backend generates 6-digit
+   codes; the Figma mockup showed 4, which would truncate the code and
+   always fail, so built to match the backend). If both mobile and email
+   were entered, both must verify; if only one was entered, that one is
+   sufficient.
+3. Patient name + Upload PDF/Upload Scan PDF (reuses the same upload logic
+   as the existing-patient flow — see below). On success, invalidates the
+   `patientList` query so the new patient shows up, and for Scan PDF,
+   dispatches into the same `jobsId` tracking the Jobs page already reads.
+
+Refactored to make step 3 possible without duplicating `UploadPlanModal.jsx`:
+extracted `uploadPlanShared.js` (`MODE_CONFIG` + `buildUploadFormData`, the
+verified `/upload`/`/ocr-upload` field contracts) and `UploadFields.jsx`
+(the plan/file/checkbox UI) into shared pieces used by both
+`UploadPlanModal` and `AddPatientModal`'s step 3.
+
 #### Added — Jobs page (background job tracker)
 
 New: `src/features/jobs/JobsPage.jsx`, at `/app/jobs` (new "Jobs" entry in
@@ -35,6 +56,7 @@ form.
 
 **Toolbar button is now one toggle, not two.** In `PatientDetails.jsx`, the
 Register/Unregister button:
+
 - Only renders when `patient?.type === "Uploaded"` — call registration only
   applies to that patient type (PCC/Epic/Metriport records never carry
   `call_registered`/`calling_number`, so there's nothing to toggle for them).
@@ -48,7 +70,8 @@ Cancel/Unregister buttons, then `POST /pause_call` (`unregisterCall`) with
 number is already on the patient record from registration. Same no-toast
 pattern as Register: Unregister button dims + reads "Unregistering..." while
 pending, inline red error on failure (modal stays open to retry), checkmark
-+ "Call unregistered" panel on success, auto-closes after ~1.2s.
+
+- "Call unregistered" panel on success, auto-closes after ~1.2s.
 
 **Redux fix that made the toggle actually work end-to-end:**
 `PatientSingleDateSlice.js`'s `updatePatientData` reducer used to hardcode a
@@ -57,7 +80,7 @@ single field (`state.value.patient.raw.call_registered = ...`); it's now
 update multiple raw-patient fields at once. `RegisterCallModal`'s success
 handler was also missing a write entirely — it flipped `call_registered`
 but never recorded the number that had just been used, so unregistering
-immediately after a patient's *first-ever* registration (before the patient
+immediately after a patient's _first-ever_ registration (before the patient
 list next refetched from the backend) would find `calling_number` undefined
 and the Unregister button would stay disabled. Now register success
 dispatches `updatePatientData({ call_registered: true, calling_number: phone })`,
@@ -76,6 +99,7 @@ New: `src/features/patients/RegisterCallModal.jsx`, wired from the
 anchored popover.
 
 **Flow**
+
 1. Opening the modal silently calls `POST /get-details` (`getCallDetail`)
    with `{ patient_name, patient_type, dates }` — `patient_name`/`patient_type`
    come from the already-selected patient in redux
@@ -97,6 +121,7 @@ anchored popover.
 **Pending/error/success — no toast.** Both calls use `useMutation` directly
 (not the app's usual `useMyMutation`, which auto-fires `react-hot-toast`) so
 feedback stays inside the modal:
+
 - Phone lookup: field disabled + "Looking up phone number..." while
   pending; inline red text if it fails (user can still type the number by
   hand).
@@ -135,7 +160,7 @@ so far — Notes/Plan/Forms/Upload are still inert, see Known issues below).
 #### Added — Care Plan, Phase 2 (editable document + PDF export)
 
 Builds on the Care Plan feature below — that phase made the plan
-*generate and display*; this phase makes it *editable and exportable*.
+_generate and display_; this phase makes it _editable and exportable_.
 Full write-up: [`docs/features/care-plan.md`](./docs/features/care-plan.md)
 (flows/API) and
 [`docs/features/care-plan-backend-spec.md`](./docs/features/care-plan-backend-spec.md)
@@ -155,6 +180,7 @@ downloadable PDF — if there are unsaved edits when it's clicked, it saves
 them first automatically, so the PDF can never be stale.
 
 **Backend (`caremagix-be`)**
+
 - `careplan.py`:
   - AI prompt schema: every goal/intervention/action/barrier item now
     includes a `selected` field (the AI always sets it `false` — it proposes
@@ -170,12 +196,13 @@ them first automatically, so the PDF can never be stale.
     generated raw HTML directly — added a "checked" checkbox style to it
     since it previously only drew empty boxes.
   - `POST /export_care_plan_pdf` — repurposed: it already existed but the
-    frontend never called it, and it expected the *caller* to hand it
+    frontend never called it, and it expected the _caller_ to hand it
     pre-built HTML. Now takes `{care_plan_id}` and renders entirely
     server-side from the saved database row, so there's one source of truth
     for what an exported plan looks like.
 
 **Frontend — existing files changed**
+
 - `src/features/patients/CarePlanDetailPage.jsx` — the bulk of this phase:
   per-section and per-patient-block edit sessions, the page-level
   "Save Care Plan" button (`PUT /care_plan/:id`, one call for everything),
@@ -183,6 +210,7 @@ them first automatically, so the PDF can never be stale.
 - `src/api/hospitalApi.js` — added `exportCarePlanPdf()`.
 
 **Design decisions worth knowing**
+
 - Edits are staged locally (per section, per patient block) and only reach
   the server on the one page-level Save — avoids an API call per
   keystroke/checkbox and avoids ever saving a half-finished edit.
@@ -194,12 +222,13 @@ them first automatically, so the PDF can never be stale.
   per section (an ongoing log entry updated at each patient contact), not a
   growing/appendable list — a deliberate scope decision, not an oversight.
 - After a successful page-level save, the result is dispatched into the same
-  Redux slice (`finalJobsStatusSlice`) that tracks a freshly *generated*
+  Redux slice (`finalJobsStatusSlice`) that tracks a freshly _generated_
   plan — caught during design, before it shipped, that keeping the saved
   data only in local component state would show stale (pre-edit) data if the
   Care Manager navigated away and back to the same patient in one session.
 
 **Known issues / not done yet**
+
 - Still no explicit "Regenerate" action (unchanged from Phase 1, below).
 - A hard refresh mid-generation still loses in-progress job tracking
   (unchanged from Phase 1, below).
@@ -220,6 +249,7 @@ is open, and the button correctly shows "Generating..." if you come back to
 that patient before it's done.
 
 **Backend (`caremagix-be`)**
+
 - `models.py` — new `CarePlan` database table (one row per generated plan:
   patient, owner, the plan itself as JSON text, timestamps).
 - `careplan.py` — the AI prompt now asks for structured JSON (a fixed set of
@@ -236,6 +266,7 @@ that patient before it's done.
   returns `care_plan_id`/`care_plan_data` once a care-plan job finishes.
 
 **Frontend — new files**
+
 - `src/features/patients/CarePlan.jsx` — the "Care Plan" header/button,
   shown inline on the Patient Details page (`/app/patients/:id/care-plan`).
 - `src/features/patients/CarePlanDetailPage.jsx` — the full document view,
@@ -255,6 +286,7 @@ that patient before it's done.
 - `docs/features/care-plan.md` — the detailed reference doc mentioned above.
 
 **Frontend — existing files changed**
+
 - `src/App.jsx` — Patient Details is now a proper layout (header/toolbar
   stay on screen, only the content below changes) with nested routes
   instead of one big page swapping content via local state.
@@ -274,10 +306,11 @@ that patient before it's done.
   the animated dots.
 
 **Bugs found and fixed while building this**
+
 - Care plan tracking was originally keyed off each patient row's `id` —
   turned out that ID is randomly regenerated every time the Patients list
   re-fetches, so navigating back to the list and re-opening the same
-  patient looked like a *different* patient and lost track of their plan.
+  patient looked like a _different_ patient and lost track of their plan.
   Fixed by keying on patient name + type instead (stable, and it's what
   the backend already uses to identify a patient).
 - The finished plan's content was being fetched twice — once already
@@ -288,6 +321,7 @@ that patient before it's done.
   to actually start it). Now one click does both.
 
 **Known issues / not done yet**
+
 - A hard browser refresh while a plan is generating loses track of that
   one in-progress job (finished ones already survive a refresh via
   `localStorage`; in-progress ones don't yet).

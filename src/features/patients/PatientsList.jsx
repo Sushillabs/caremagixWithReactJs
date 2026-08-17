@@ -1,12 +1,14 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { UserPlus } from "lucide-react";
 import { getPatients } from "../../api/hospitalApi";
 import { addPatientNames } from "../../redux/patientListSlice";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
 import { buildPatientPayload } from "../../utils/buildPatientPayload";
 import useMyQuery from "../../hooks/useMyQuery";
+import AddPatientModal from "./AddPatientModal";
 
 export default function PatientsList() {
   const dispatch = useDispatch();
@@ -14,6 +16,7 @@ export default function PatientsList() {
   const { search } = useOutletContext() || {};
   const patients = useSelector((state) => state.patientnames.value);
   const { user_id } = useSelector((state) => state.auth?.value) || {};
+  const [showAddPatient, setShowAddPatient] = useState(false);
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").trim().toLowerCase();
@@ -69,6 +72,16 @@ export default function PatientsList() {
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 p-3">
+        <h2 className="text-sm font-semibold text-gray-800">Patients</h2>
+        <button
+          type="button"
+          onClick={() => setShowAddPatient(true)}
+          className="flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800"
+        >
+          <UserPlus size={14} /> Add New Patient
+        </button>
+      </div>
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
@@ -100,6 +113,8 @@ export default function PatientsList() {
           ))}
         </tbody>
       </table>
+
+      {showAddPatient && <AddPatientModal onClose={() => setShowAddPatient(false)} />}
     </div>
   );
 }
