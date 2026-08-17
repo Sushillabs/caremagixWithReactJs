@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — Routing and logo broke under the new `/new/` base path
+
+`vite.config.js` now sets `base: "/new/"` and `.env`'s `VITE_API_URL` points
+at a remote backend instead of localhost — both changed outside this
+session, but broke two things once in place:
+
+- `App.jsx`: `BrowserRouter` had no matching `basename`, so a real
+  deployment under `/new/` would push wrong URLs and 404 on hard refresh.
+  Added `basename="/new/"` (the chrome-extension build's `MemoryRouter` is
+  unaffected — no real URL bar to match against).
+- `Sidebar.jsx`: the logo `<img>` used a filesystem-style relative path
+  (`../../public/images/logo.png`), which browsers resolve as a URL, not a
+  file path — always 404'd. Now `${import.meta.env.BASE_URL}images/logo.png`,
+  which resolves correctly under the base in both dev and prod.
+
 #### Added — Add New Patient (`PatientsList.jsx`)
 
 New "Add Patient" button opens `AddPatientModal.jsx`, a 3-step flow:

@@ -23,6 +23,11 @@ console.log("protocol:", window.location.protocol);
 console.log("isExtension:", isExtension);
 
 const Router = isExtension ? MemoryRouter : BrowserRouter;
+// vite.config.js builds this app under base: "/new/" — BrowserRouter needs a
+// matching basename or routing breaks (wrong URLs, hard refresh 404s) once
+// deployed there. MemoryRouter (chrome-extension build) has no real URL bar,
+// so it keeps using initialEntries instead.
+const routerProps = isExtension ? { initialEntries: ["/"] } : { basename: "/new/" };
 
 function App() {
   const roles = ["caregiver", "physician", "patient"];
@@ -43,7 +48,7 @@ function App() {
       }
     >
       <Toaster position="top-right" containerStyle={{ top: 60 }} />
-      <Router initialEntries={["/"]}>
+      <Router {...routerProps}>
         <Routes>
           <Route element={<AuthLayout />}>
             <Route path="/" element={<SignIn />} />

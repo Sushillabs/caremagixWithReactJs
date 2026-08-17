@@ -37,7 +37,7 @@ export default function Sidebar() {
   return (
     <aside className="flex h-full w-60 flex-col bg-[#0c3b2e] text-white">
       <div className="flex items-center justify-center px-5 py-4 ">
-        <img src="../../public/images/logo.png" className="w-42.75 h-8"></img>
+        <img src={`${import.meta.env.BASE_URL}images/logo.png`} className="w-42.75 h-8" alt="Logo" />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-2">
