@@ -43,6 +43,19 @@ export const SECTIONS = {
     requiresPatient: true,
     noAssistantPaths: ["/care-plan"],
   },
+  // Background job tracker: uploads (PDF/scan), eFax, care plan generation.
+  // Reads jobsId/finalJobStatus redux state that already exists — no new
+  // polling logic, just a table view over what useProgress/useJobsTracker
+  // already track.
+  jobs: {
+    key: "jobs",
+    label: "Jobs",
+    icon: Files,
+    path: "/app/jobs",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
   // configurations: {
   //   key: "configurations",
   //   label: "Configurations",
@@ -159,6 +172,6 @@ export const SECTIONS = {
 
 // Sections that already have a real screen built. Everything else falls back
 // to the "coming soon" placeholder until its phase ships.
-export const IMPLEMENTED_SECTIONS = ["dashboard", "patients"];
+export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs"];
 
 export const getSectionByPath = (pathname) => Object.values(SECTIONS).find((s) => pathname.startsWith(s.path));

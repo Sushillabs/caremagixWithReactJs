@@ -15,6 +15,7 @@ import ConversationCard from "./features/patients/ConversationCard";
 import CarePlan from "./features/patients/CarePlan";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
 import ComingSoon from "./features/common/ComingSoon";
+import JobsPage from "./features/jobs/JobsPage";
 import { SECTIONS } from "./config/sections";
 
 const isExtension = window.location.protocol === "chrome-extension:";
@@ -83,7 +84,17 @@ function App() {
               <Route
                 key={section.key}
                 path={section.path}
-                element={section.key === "dashboard" ? <Dashboard /> : section.key === "patients" ? <PatientsList /> : <ComingSoon />}
+                element={
+                  section.key === "dashboard" ? (
+                    <Dashboard />
+                  ) : section.key === "patients" ? (
+                    <PatientsList />
+                  ) : section.key === "jobs" ? (
+                    <JobsPage />
+                  ) : (
+                    <ComingSoon />
+                  )
+                }
               />
             ))}
           </Route>

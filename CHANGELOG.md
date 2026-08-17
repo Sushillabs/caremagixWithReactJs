@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Jobs page (background job tracker)
+
+New: `src/features/jobs/JobsPage.jsx`, at `/app/jobs` (new "Jobs" entry in
+the sidebar). Table of background jobs from this session — Scan PDF (OCR),
+eFax, Care Plan generation — with Type, Patient, File, Status, Progress %,
+Message. Reads the existing `jobsId`/`finalJobStatus` redux state via the
+existing `useProgress.js` polling hook; no new polling logic added.
+
+#### Added — Patient Details: Upload PDF / Upload Scan PDF
+
+`src/features/patients/UploadPlanModal.jsx` now takes a `mode` prop
+(`"pdf"` | `"scan"`) instead of being one fixed form. Upload dropdown items
+renamed to `["Upload PDF", "Upload Scan PDF"]` and wired to it.
+
+- `mode="pdf"` → `POST /upload`, synchronous. Fields verified against
+  `file_upload_api.py`: `file`, `file_type`, `patient_name`, `patient_type`
+  (the selected plan), `confirm`, `note_doc`.
+- `mode="scan"` → `POST /ocr-upload`, an RQ background job. Fields verified
+  against `ocr_upload_api.py`: `image`, `image_type`, `note_doc` +
+  `keep_document`. On success, dispatches `setJobsId({ ocrJobs: response })`
+  so it's tracked by the Jobs page above.
+
 #### Added — Patient Details: Unregister Call (phase 2) + toggle button
 
 New: `src/features/patients/UnregisterCallModal.jsx`. Same centered-modal
