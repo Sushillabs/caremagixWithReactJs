@@ -3,7 +3,19 @@
 // "less or more" difference between roles. Add/remove a key to change a role.
 export const ROLE_NAV = {
   caregiver: {
-    primary: ["dashboard", "patients", "configurations", "uploads", "visitNotes", "fillForms", "createCarePlan", "alerts", "reports", "jobs"],
+    primary: [
+      "dashboard",
+      "patients",
+      "configurations",
+      "uploads",
+      "visitNotes",
+      "fillForms",
+      "createCarePlan",
+      "alerts",
+      "reports",
+      "jobs",
+      "configuration",
+    ],
     secondary: ["dischargePlan", "nursingPlan", "transitionCarePlan", "icdCodes", "cptCodes", "medications", "uploadedPlan"],
   },
   physician: {

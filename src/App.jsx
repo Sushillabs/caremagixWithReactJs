@@ -89,23 +89,28 @@ function App() {
             {/* Same reasoning as care-plan/view above — MMTA is a dense
                 single-answer view, not a quick toolbar popup. */}
             <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
-            {Object.values(SECTIONS).map((section) => (
-              <Route
-                key={section.key}
-                path={section.path}
-                element={
-                  section.key === "dashboard" ? (
-                    <Dashboard />
-                  ) : section.key === "patients" ? (
-                    <PatientsList />
-                  ) : section.key === "jobs" ? (
-                    <JobsPage />
-                  ) : (
-                    <ComingSoon />
-                  )
-                }
-              />
-            ))}
+            {Object.values(SECTIONS)
+              // A section with `children` (collapsible nav group, e.g.
+              // "Configuration") has no path of its own and no page to
+              // route to — its items open as modals from Sidebar.jsx instead.
+              .filter((section) => !section.children)
+              .map((section) => (
+                <Route
+                  key={section.key}
+                  path={section.path}
+                  element={
+                    section.key === "dashboard" ? (
+                      <Dashboard />
+                    ) : section.key === "patients" ? (
+                      <PatientsList />
+                    ) : section.key === "jobs" ? (
+                      <JobsPage />
+                    ) : (
+                      <ComingSoon />
+                    )
+                  }
+                />
+              ))}
           </Route>
         </Routes>
       </Router>

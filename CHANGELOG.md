@@ -5,6 +5,54 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — eFax Configuration + collapsible "Configuration" nav group
+
+New: `src/features/configuration/EfaxConfigModal.jsx`, opened from a new
+"Configuration" item in the sidebar (`config/sections.js`/`roles.js`) —
+matches the Figma sidebar, which shows "Configuration" as a collapsible
+group (Pull PCC Data / Set Caller ID / eFax Configuration), not a flat
+link. `Sidebar.jsx`'s `NavGroup` is generic — any section with a
+`children` array gets the same toggle behavior, not just this one; a child
+with a `path` navigates, a child without one (like eFax today) opens as a
+modal instead, special-cased by key. Only eFax is built; the other two
+sub-items aren't added yet.
+
+Started as a page-routed design, corrected mid-build back to a modal to
+match the original Figma popup — `App.jsx`'s route generation and the
+`children` entries were reworked accordingly.
+
+Fields verified directly against `Efax.py`'s `/getfax` route rather than
+copied from the old buggy form: wire keys are `from`/`to` (not
+`date_from`/`date_to`), and `patient_type`/`confirm`/`destination_fax_number`
+are hardcoded server-side, never sent from the client. On success (one job
+per fax found), dispatches into the same `jobsIdSlice.eFaxJobs` the Jobs
+page already reads — verified end-to-end: eFax's `fax_queue` uses the same
+Redis connection as the OCR/care-plan queue, so `/ocr-progress/:jobId` can
+fetch its status too. No toast; inline pending/error/success, matching
+every other feature built this session.
+
+Known issue, not a code bug: submitting currently fails with a 500 from
+the backend's own exception handler — the third-party fax provider
+(Consensus) is rejecting the backend's configured API credentials
+(`EFAX_USER_ID`/`EFAX_APP_ID`/`EFAX_API_KEY`), unrelated to this app's code.
+
+#### Added — Medication (quick question shortcut on `PatientDetails.jsx`)
+
+(Found already in the working tree — not built in this session, documented
+here since it wasn't logged yet.) The "Medication" toolbar button now
+sends a fixed question — "What specific medications were prescribed to
+the patient, along with their intended uses, potential side effects and
+Medication schedule in tabular format?" — through the existing
+`useAskQuestion`/`/ask` flow, after `dispatch(setMode("medication"))`.
+
+`chatSlice.js` gained a `mode` field (`'discharge'` default, reset to
+`'discharge'` on every new `fetchPatientChat`), and `ConversationCard.jsx`
+reads it to adjust the Conversation tab while in medication mode: hides
+the discharge summary table and default question chips, retitles the
+panel header to "Medication", and now shows the loading indicator as soon
+as the question is asked (`conversation.length === 0 && askPending`)
+instead of only after the first message lands.
+
 #### Added — MMTA (`MmtaPage.jsx`)
 
 "MMTA" toolbar button now works. Built as a standalone full-width route

@@ -56,6 +56,21 @@ export const SECTIONS = {
     assistant: false,
     requiresPatient: false,
   },
+  // Collapsible group (Sidebar.jsx renders `children` as a toggleable
+  // sub-list) — matches the Figma sidebar's "Configuration" group (Pull PCC
+  // Data / Set Caller ID / eFax Configuration). Only eFax is built so far.
+  // A child with no `path` opens as a modal (Sidebar.jsx special-cases it by
+  // key) instead of navigating — add `path` here only for a future child
+  // that's a real page.
+  configuration: {
+    key: "configuration",
+    label: "Configuration",
+    icon: Settings,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+    children: [{ key: "efaxConfig", label: "eFax Configuration" }],
+  },
   // configurations: {
   //   key: "configurations",
   //   label: "Configurations",

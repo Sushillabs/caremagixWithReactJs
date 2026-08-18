@@ -22,8 +22,9 @@ const TABS = [
 
 export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
-  const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending } = useSelector((state) => state.askQ) || {};
+  const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
+  const isMedication = mode === "medication";
   const { askQuestion } = useAskQuestion();
   const questionsRef = useRef(null);
   const scrollToQuestions = () => questionsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,15 +32,15 @@ export default function ConversationCard() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation, askPending]);
-  const summaryTable = chatData?.[0];
+  const summaryTable = isMedication ? null : chatData?.[0];
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
-  const defaultQuestions = chatData?.length > 2 ? chatData.slice(1, -1) : [];
+  const defaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
       <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
         <div>
-          <h3 className="text-xs font-bold text-gray-800">Discharged Plan</h3>
+          <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : "Discharged Plan"}</h3>
           <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p>
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500 ">
@@ -75,7 +76,7 @@ export default function ConversationCard() {
           )
         ) : activeTab === "history" ? (
           <p className="mt-3 px-2 text-sm text-gray-400">Chat History will be built in a later phase.</p>
-        ) : defaultQuestions.length > 0 || conversation.length > 0 ? (
+        ) : defaultQuestions.length > 0 || conversation.length > 0 || askPending ? (
           <div className="mt-3 space-y-3 px-2 text-sm">
             {defaultQuestions.length > 0 && (
               <div>
@@ -132,6 +133,12 @@ export default function ConversationCard() {
                 )}
                 {askPending && <ChatLoader />}
                 <div ref={chatEndRef} />
+              </div>
+            )}
+
+            {conversation.length === 0 && askPending && (
+              <div className="border-t border-gray-100 pt-3">
+                <ChatLoader />
               </div>
             )}
           </div>

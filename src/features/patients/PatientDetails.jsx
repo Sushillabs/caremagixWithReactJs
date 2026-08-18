@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { ChevronDown, User } from "lucide-react";
-// import useAskQuestion from "../../hooks/useAskQuestion";
+import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
-import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
+import { clearChat, fetchPatientChat, setMode } from "../../redux/chatSlice";
 import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
@@ -52,7 +52,7 @@ function DropdownButton({ label, items, onItemClick }) {
 }
 
 export default function PatientDetails() {
-  // const { askQuestion } = useAskQuestion();
+  const { askQuestion } = useAskQuestion();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showCallModal, setShowCallModal] = useState(false);
@@ -142,7 +142,17 @@ export default function PatientDetails() {
           <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
           </button>
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+          <button
+            type="button"
+            onClick={() => {
+              dispatch(clearChat());
+              dispatch(setMode("medication"));
+              askQuestion(
+                "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
+              );
+            }}
+            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+          >
             Medication
           </button>
           <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
