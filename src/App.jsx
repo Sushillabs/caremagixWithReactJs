@@ -14,6 +14,7 @@ import PatientDetails from "./features/patients/PatientDetails";
 import ConversationCard from "./features/patients/ConversationCard";
 import CarePlan from "./features/patients/CarePlan";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
+import MmtaPage from "./features/patients/MmtaPage";
 import ComingSoon from "./features/common/ComingSoon";
 import JobsPage from "./features/jobs/JobsPage";
 import { SECTIONS } from "./config/sections";
@@ -85,6 +86,9 @@ function App() {
               <Route path="care-plan" element={<CarePlan />} />
             </Route>
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
+            {/* Same reasoning as care-plan/view above — MMTA is a dense
+                single-answer view, not a quick toolbar popup. */}
+            <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
             {Object.values(SECTIONS).map((section) => (
               <Route
                 key={section.key}

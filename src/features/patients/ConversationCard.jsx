@@ -53,9 +53,9 @@ export default function ConversationCard() {
               {tab.label}
             </button>
           ))}
-          <button type="button" className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700">
+          {/* <button type="button" className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700">
             <Download size={14} /> Download
-          </button>
+          </button> */}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-4">

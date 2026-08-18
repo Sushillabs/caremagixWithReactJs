@@ -120,7 +120,11 @@ export default function PatientDetails() {
           <DropdownButton label="Plan" items={PLAN_ITEMS} />
           <DropdownButton label="Forms" items={FORMS_ITEMS} />
           <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+          <button
+            type="button"
+            onClick={() => navigate("mmta")}
+            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+          >
             MMTA
           </button>
           {type === "Uploaded" && (

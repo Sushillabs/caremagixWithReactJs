@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — MMTA (`MmtaPage.jsx`)
+
+"MMTA" toolbar button now works. Built as a standalone full-width route
+(`/app/patients/:id/mmta`, declared the same way as `care-plan/view` —
+dropping `PatientDetails`'s toolbar chrome, not a popup) instead of a modal,
+per correction during this build.
+
+Reuses data already fetched rather than adding a new question-generation
+call: `ConversationCard.jsx` already documented that the last item of
+`chatData` (from `/generate_questions`) is the auto-generated MMTA
+question, and legacy `Mmta.jsx` confirmed the pattern — send that question
+straight to `POST /mmta`, which answers directly from the LLM (no RAG/no
+document context) and returns `{status, question, response}`. Renders the
+markdown response; no toast, inline "Thinking..."/error states matching
+every other feature built this session.
+
+(Also noticed in the working tree, not part of this change: `Download`
+button on `ConversationCard.jsx`'s Conversation tab is now commented out.)
+
 #### Fixed — Routing and logo broke under the new `/new/` base path
 
 `vite.config.js` now sets `base: "/new/"` and `.env`'s `VITE_API_URL` points
