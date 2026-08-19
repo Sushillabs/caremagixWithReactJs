@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — SignIn redirected physician/patient to routes that don't exist
+
+`src/pages/SignIn.jsx`'s `redirectByRole()` sent `physician` → `/physician`
+and `patient` → `/patient`, neither of which `App.jsx` defines (only `/app`
+and the legacy `/care-giver`) — both roles would have hit a dead route on
+login. Found while reviewing the multi-role (caregiver/physician/patient)
+migration plan: the new shell (`AppShell`/`Sidebar`/`config/roles.js`/
+`config/sections.js`) already treats all three roles as one shared `/app`
+route, with `ROLE_NAV` alone deciding which sidebar sections are visible per
+role — no reason for separate landing paths. All three roles now redirect to
+`/app`.
+
+Decided but not yet built: which `SECTIONS` keys get added to
+`ROLE_NAV.physician`/`ROLE_NAV.patient`, and which features become
+role-independent — deferred, to be done feature-by-feature later. Backend
+already scopes data per role via the auth token on shared endpoints, so no
+frontend-side patient/physician forks of existing components (`PatientsList`,
+`PatientDetails`, chat, etc.) are expected.
+
 #### Added — Pull Epic Data (Configuration)
 
 New: `useEpicPull.js` + `PullEpicModal.jsx`, added to the Configuration

@@ -19,11 +19,11 @@ export const ROLE_NAV = {
     secondary: ["dischargePlan", "nursingPlan", "transitionCarePlan", "icdCodes", "cptCodes", "medications", "uploadedPlan"],
   },
   physician: {
-    primary: ["dashboard", "patients", "createCarePlan", "alerts"],
+    primary: ["dashboard", "patients"],
     secondary: ["dischargePlan", "icdCodes", "cptCodes", "medications"],
   },
   patient: {
-    primary: ["dashboard", "alerts"],
+    primary: ["dashboard", "patients"],
     secondary: [],
   },
 };

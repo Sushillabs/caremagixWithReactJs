@@ -22,11 +22,9 @@ function SignIn() {
   const redirectByRole = (role) => {
     switch (role) {
       case "caregiver":
-        return "/app";
       case "physician":
-        return "/physician";
       case "patient":
-        return "/patient";
+        return "/app";
       default:
         return "/unauthorized";
     }
