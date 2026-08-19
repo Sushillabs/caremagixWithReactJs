@@ -6,6 +6,20 @@ import { SECTIONS } from "../../config/sections";
 import { getRoleNav } from "../../config/roles";
 import { logout } from "../../redux/authSlice";
 import EfaxConfigModal from "../configuration/EfaxConfigModal";
+import PullPccModal from "../configuration/PullPccModal";
+import PullEpicModal from "../configuration/PullEpicModal";
+import ConnectMetriportModal from "../configuration/ConnectMetriportModal";
+import PullMetriportModal from "../configuration/PullMetriportModal";
+
+// Modal-type children (no `path`) are looked up here by key. Adding a new
+// one is a one-line entry — no more if/else branches to grow.
+const CHILD_MODALS = {
+  pullPcc: PullPccModal,
+  connectMetriport: ConnectMetriportModal,
+  pullMetriport: PullMetriportModal,
+  pullEpic: PullEpicModal,
+  efaxConfig: EfaxConfigModal,
+};
 
 function NavItem({ section }) {
   const Icon = section.icon;
@@ -24,16 +38,12 @@ function NavItem({ section }) {
   );
 }
 
-// Collapsible parent — a section with `children` instead of its own `path`.
-// A child with a `path` navigates (NavLink); a child without one opens as a
-// modal instead — special-cased by key below, since eFax is the only one
-// today. Starts open if one of its (page-type) children is the active
-// route, so a hard refresh doesn't land on a collapsed group.
 function NavGroup({ section }) {
   const location = useLocation();
   const [open, setOpen] = useState(section.children.some((c) => c.path && location.pathname.startsWith(c.path)));
-  const [showEfaxModal, setShowEfaxModal] = useState(false);
+  const [activeModalKey, setActiveModalKey] = useState(null);
   const Icon = section.icon;
+  const ActiveModal = activeModalKey && CHILD_MODALS[activeModalKey];
 
   return (
     <div>
@@ -65,7 +75,7 @@ function NavGroup({ section }) {
               <button
                 key={child.key}
                 type="button"
-                onClick={() => child.key === "efaxConfig" && setShowEfaxModal(true)}
+                onClick={() => CHILD_MODALS[child.key] && setActiveModalKey(child.key)}
                 className="block w-full rounded-md px-2 py-1.5 text-left text-xs text-emerald-100/60 transition-colors hover:text-white"
               >
                 {child.label}
@@ -74,7 +84,7 @@ function NavGroup({ section }) {
           )}
         </div>
       )}
-      {showEfaxModal && <EfaxConfigModal onClose={() => setShowEfaxModal(false)} />}
+      {ActiveModal && <ActiveModal onClose={() => setActiveModalKey(null)} />}
     </div>
   );
 }

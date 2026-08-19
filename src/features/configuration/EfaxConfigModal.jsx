@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { X, CheckCircle2, Calendar } from "lucide-react";
 import { uploadEFaxConfig } from "../../api/hospitalApi";
@@ -7,6 +8,7 @@ import { setJobsId } from "../../redux/jobsIdslice";
 
 export default function EfaxConfigModal({ onClose }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [originatingFaxNumber, setOriginatingFaxNumber] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -25,8 +27,19 @@ export default function EfaxConfigModal({ onClose }) {
     },
   });
 
+  // Sidebar (and this modal, mounted inside it) lives outside the route
+  // <Outlet>, so it survives navigation — closing it explicitly here is
+  // required, navigate() alone would leave it open on top of the Jobs page.
+  useEffect(() => {
+    if (!successMessage) return;
+    const t = setTimeout(() => {
+      onClose();
+      navigate("/app/jobs");
+    }, 900);
+    return () => clearTimeout(t);
+  }, [successMessage, navigate, onClose]);
+
   const handleSubmit = () => {
-    setSuccessMessage(null);
     if (!originatingFaxNumber.trim() || !dateFrom || !dateTo) {
       setFormError("Originating fax number and both dates are required.");
       return;
@@ -55,103 +68,106 @@ export default function EfaxConfigModal({ onClose }) {
           </button>
         </div>
 
-        <div className="space-y-4 p-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">Originating Fax Number</label>
-            <input
-              type="text"
-              value={originatingFaxNumber}
-              onChange={(e) => setOriginatingFaxNumber(e.target.value)}
-              placeholder="Type here..."
-              className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
-            />
+        {successMessage ? (
+          <div className="flex flex-col items-center gap-2 p-8 text-center">
+            <CheckCircle2 size={32} className="text-emerald-600" />
+            <p className="text-sm font-medium text-gray-700">{successMessage}</p>
+            <p className="text-xs text-gray-400">Taking you to the Jobs page...</p>
           </div>
+        ) : (
+          <div className="space-y-4 p-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">Originating Fax Number</label>
+              <input
+                type="text"
+                value={originatingFaxNumber}
+                onChange={(e) => setOriginatingFaxNumber(e.target.value)}
+                placeholder="Type here..."
+                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
+              />
+            </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">Choose Date Range</label>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <span className="mb-1 block text-xs text-gray-400">From</span>
-                <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full text-sm text-gray-700 outline-none"
-                  />
-                  <Calendar size={16} className="shrink-0 text-gray-400" />
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">Choose Date Range</label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <span className="mb-1 block text-xs text-gray-400">From</span>
+                  <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full text-sm text-gray-700 outline-none"
+                    />
+                    <Calendar size={16} className="shrink-0 text-gray-400" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1">
-                <span className="mb-1 block text-xs text-gray-400">To</span>
-                <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full text-sm text-gray-700 outline-none"
-                  />
-                  <Calendar size={16} className="shrink-0 text-gray-400" />
+                <div className="flex-1">
+                  <span className="mb-1 block text-xs text-gray-400">To</span>
+                  <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full text-sm text-gray-700 outline-none"
+                    />
+                    <Calendar size={16} className="shrink-0 text-gray-400" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600">Hospital Name</label>
-            <input
-              type="text"
-              value={hospitalName}
-              onChange={(e) => setHospitalName(e.target.value)}
-              placeholder="Type here..."
-              className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-xs font-medium text-gray-600">Save Discharge Doc</label>
-            <div className="flex gap-1">
-              {[
-                { label: "Yes", value: true },
-                { label: "No", value: false },
-              ].map((opt) => (
-                <button
-                  key={opt.label}
-                  type="button"
-                  onClick={() => setSaveDischargeDoc(opt.value)}
-                  className={`rounded-md border px-4 py-1.5 text-xs font-medium ${
-                    saveDischargeDoc === opt.value ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">Hospital Name</label>
+              <input
+                type="text"
+                value={hospitalName}
+                onChange={(e) => setHospitalName(e.target.value)}
+                placeholder="Type here..."
+                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
+              />
             </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-gray-600">Save Discharge Doc</label>
+              <div className="flex gap-1">
+                {[
+                  { label: "Yes", value: true },
+                  { label: "No", value: false },
+                ].map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => setSaveDischargeDoc(opt.value)}
+                    className={`rounded-md border px-4 py-1.5 text-xs font-medium ${
+                      saveDischargeDoc === opt.value ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {formError && <p className="text-xs text-red-600">{formError}</p>}
+            {error && (
+              <p className="text-xs text-red-600">
+                {error?.response?.data?.message || error?.response?.data?.error || "Error submitting eFax configuration."}
+              </p>
+            )}
+
+            <hr className="border-gray-100" />
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isPending}
+              className="w-full rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+            >
+              {isPending ? "Submitting..." : "Submit"}
+            </button>
           </div>
-
-          {formError && <p className="text-xs text-red-600">{formError}</p>}
-          {error && (
-            <p className="text-xs text-red-600">
-              {error?.response?.data?.message || error?.response?.data?.error || "Error submitting eFax configuration."}
-            </p>
-          )}
-          {successMessage && (
-            <p className="flex items-center gap-1.5 text-xs text-emerald-700">
-              <CheckCircle2 size={14} className="shrink-0" /> {successMessage} Track progress on the Jobs page.
-            </p>
-          )}
-
-          <hr className="border-gray-100" />
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending}
-            className="w-full rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-          >
-            {isPending ? "Submitting..." : "Submit"}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import useProgress from "../../hooks/useProgress";
+import useExternalJobsProgress from "../../hooks/useExternalJobsProgress";
 
 const TYPE_LABELS = {
   "ocr-job": "Scan PDF",
@@ -13,8 +14,17 @@ const STATUS_STYLES = {
   INPROGRESS: "bg-blue-50 text-blue-700",
 };
 
+// Group B jobs report lowercase pending/running/completed/failed with no
+// numeric progress — normalized here so the table below needs no branching.
+const normalizeExternalStatus = (status) => {
+  const s = (status || "").toLowerCase();
+  if (s === "completed") return "COMPLETED";
+  if (s === "failed") return "FAILED";
+  return "INPROGRESS";
+};
+
 export default function JobsPage() {
-  const { eFaxJobs, ocrJobs, carePlanJobs } = useSelector((state) => state.jobsId);
+  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, epicJobs, metriportJobs } = useSelector((state) => state.jobsId);
   const finalJobs = useSelector((state) => state.finalJobStatus.finalJobs);
 
   const jobs = [
@@ -45,6 +55,32 @@ export default function JobsPage() {
     })
     .reverse();
 
+  const externalJobs = [
+    ...(Array.isArray(pccJobs) ? pccJobs.map((j) => ({ ...j, type: "PCC" })) : []),
+    ...(Array.isArray(epicJobs) ? epicJobs.map((j) => ({ ...j, type: "Epic" })) : []),
+    ...(Array.isArray(metriportJobs) ? metriportJobs.map((j) => ({ ...j, type: "Metriport" })) : []),
+  ];
+  const externalQueries = useExternalJobsProgress(externalJobs);
+
+  const externalRows = externalJobs
+    .map((job, i) => {
+      const live = externalQueries[i]?.data;
+      const status = normalizeExternalStatus(live?.status);
+
+      return {
+        jobId: job.job_id,
+        type: job.type,
+        patientName: "—",
+        fileName: "—",
+        status,
+        progress: status === "COMPLETED" ? 100 : status === "FAILED" ? 0 : 50,
+        message: live?.message || live?.error || "Waiting...",
+      };
+    })
+    .reverse();
+
+  const allRows = [...externalRows, ...rows];
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="border-b border-gray-100 p-4">
@@ -52,7 +88,7 @@ export default function JobsPage() {
         <p className="text-xs text-gray-500">Uploads, scans, eFax, and care plan generation running in this session.</p>
       </div>
 
-      {rows.length === 0 ? (
+      {allRows.length === 0 ? (
         <p className="p-6 text-center text-sm text-gray-400">No jobs yet.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -68,7 +104,7 @@ export default function JobsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {allRows.map((row) => (
                 <tr key={row.jobId} className="border-b border-gray-50 last:border-0">
                   <td className="px-4 py-2 text-gray-700">{row.type}</td>
                   <td className="max-w-[180px] truncate px-4 py-2 text-gray-700">{row.patientName}</td>

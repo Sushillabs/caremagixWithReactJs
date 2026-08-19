@@ -5,6 +5,80 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Pull Epic Data (Configuration)
+
+New: `useEpicPull.js` + `PullEpicModal.jsx`, added to the Configuration
+group as `pullEpic`. `/ehr_pull` confirmed to return the exact same shape
+as PCC's `/get_pcc_data` (`{success, job_id, status_url, message}` to
+start, lowercase `pending/running/completed/failed` to poll) — since this
+is the second identical consumer, the shared polling logic was extracted
+out of `usePccPull.js` into a new `useJobPull.js` engine first (see PCC
+entry below), and `useEpicPull` is a ~12-line wrapper around it. Legacy
+(`caremagix-fe`) confirmed Epic pull doesn't check Metriport registration
+client-side either — it just calls `/ehr_pull` and shows whatever error
+comes back, same as this version.
+
+On success, closes the modal and navigates to `/app/jobs` instead of just
+showing a static "check the Jobs page" message.
+
+#### Added — Connect Metriport + Pull Metriport Data (Configuration)
+
+New: `ConnectMetriportModal.jsx` (`connectMetriport`) and
+`useMetriportPull.js` + `PullMetriportModal.jsx` (`pullMetriport`).
+
+- **Connect Metriport**: `GET /get-facility` on open decides the view —
+  registered → prefilled Update/Delete form (Delete behind an inline
+  confirm step, not a native `window.confirm`); not registered → empty
+  Register form. Payload (`name`, `npi`, `active`, optional `tin`, nested
+  `address` object) verified against `caregiver-view.html`'s real submit
+  handler, since the backend forwards it straight to Metriport's own API —
+  field names had to match Metriport's schema, not an internal convention.
+  Hit a real version gotcha here: this app runs `@tanstack/react-query@5`,
+  which removed `useQuery`'s `onSuccess`/`onError` — used the same
+  `useEffect`-on-data pattern `useJobPull.js` already uses instead.
+- **Pull Metriport**: also a `useJobPull.js` wrapper — its start call needs
+  a request body (`{pull_all: true, max_patients: 100, async: true}`)
+  unlike PCC/Epic's bare GET, so `startFn` just closes over it; `useJobPull`
+  itself needed no changes. Registration is enforced server-side
+  (`_get_caregiver_metriport_facility`, verified in `metriport.py`) — if the
+  facility isn't connected, the start call returns an error with no
+  `status_url`, which already falls into the normal "failed to start"
+  handling with no special-casing needed.
+
+Both close their modal and navigate to `/app/jobs` on success, same as PCC
+and Epic.
+
+#### Added — Pull PCC Data (Configuration) — and the shared engine behind it
+
+New: `PullPccModal.jsx`, added to the Configuration group as `pullPcc`.
+
+Extracted `useJobPull.js` out of the existing `usePccPull.js` as the shared
+engine behind this whole batch of features (polling, soft progress,
+terminal-state dedup, toast, and pushing the job into `jobsIdSlice` so it's
+still visible on the Jobs page even after the confirm modal that started it
+closes). `usePccPull.js`'s external API (`{start, isRunning, showProgress,
+progress, message, error}`) is unchanged, so its existing legacy consumer
+(`BottonConfigButtons.jsx`) needed no changes — verified by checking exactly
+what it destructures from the hook.
+
+New generic pieces reused by PCC/Epic/Metriport alike:
+- **`useExternalJobsProgress.js`** — polls jobs that carry their own
+  `status_url` (Group B/C) instead of sharing Group A's single
+  `/ocr-progress` endpoint. `JobsPage.jsx` merges these rows in alongside
+  the existing Scan PDF/eFax/Care Plan ones, normalizing lowercase status to
+  uppercase so the existing table/badge rendering needed no changes.
+- **`Sidebar.jsx`**'s modal dispatch generalized from one hardcoded eFax
+  check into a `CHILD_MODALS` lookup table — each new Configuration item is
+  now a one-line registration instead of a growing if/else chain.
+
+Also fixed as part of this: eFax Configuration's own success state used to
+just show an inline message and leave the form sitting there — now it
+matches the checkmark-panel pattern every other modal uses, and closes +
+navigates to `/app/jobs` like the rest. Navigating alone isn't enough for
+any of these — `Sidebar` sits outside the route `<Outlet>` in
+`AppShell.jsx`, so it survives navigation and the modal has to be closed
+explicitly or it's left floating on top of the Jobs page.
+
 #### Added — eFax Configuration + collapsible "Configuration" nav group
 
 New: `src/features/configuration/EfaxConfigModal.jsx`, opened from a new

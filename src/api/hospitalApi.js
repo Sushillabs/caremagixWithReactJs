@@ -20,6 +20,14 @@ export const unregisterCall = (data) => http.post('/pause_call',data,{ withAuth:
 export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
 export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
 export const getPccDataStatus = (jobId) => http.get(`/get_pcc_data/status/${jobId}`, { withAuth: true });
+export const pullEpicData = () => http.get('/ehr_pull', { withAuth: true });
+export const getEpicPullStatus = (jobId) => http.get(`/ehr_pull/status/${jobId}`, { withAuth: true });
+export const getMetriportFacility = () => http.get('/get-facility', { withAuth: true });
+export const createMetriportFacility = (data) => http.post('/create-facility', data, { withAuth: true });
+export const updateMetriportFacility = (data) => http.put('/update-facility', data, { withAuth: true });
+export const deleteMetriportFacility = () => http.delete('/delete-facility', { withAuth: true, data: {} });
+export const pullMetriportPatients = (data) => http.post('/metriport/pull-patients-data', data, { withAuth: true });
+export const getMetriportPullStatus = (jobId) => http.get(`/metriport/pull-patients-data/${jobId}`, { withAuth: true });
 export const getProgress = (jobId) => http.get(`/ocr-progress/${jobId}`, { withAuth: true });
 export const sendOTP = (data)=> http.post('/send-otp',data,{withAuth: true});
 export const verifyOTP = (data)=> http.post('/verify-otp',data,{withAuth: true});
