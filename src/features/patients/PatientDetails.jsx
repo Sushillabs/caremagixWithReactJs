@@ -139,9 +139,9 @@ export default function PatientDetails() {
           <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Medication Alerts
           </button>
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+          {/* <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
-          </button>
+          </button> */}
           <button
             type="button"
             onClick={() => {

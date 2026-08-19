@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Call Reports (`/app/reports`)
+
+New `reports` entry in the sidebar (patient-independent, `requiresPatient:
+false` — already sat in `roles.js`'s nav list, unused until now) → new
+`CallReportsPage.jsx`. A route, not a modal, styled like `PatientsList.jsx`
+(header bar, table, shared `TopBar` search) — deliberately not reusing
+`components/CallReport.tsx`'s modal UI.
+
+`GET /reports` lists patients who have call records; each row's Download
+calls `POST /generate_report` for just that patient and builds the `.xlsx`
+client-side with the `xlsx` package (already a dependency) — confirmed the
+backend never generates a file itself, only returns JSON call records, by
+reading the same logic already working in `CallReport.tsx`. That file was
+read for reference only, not imported or modified — it's untouched, still
+wired into legacy `CareGiver.jsx` only. This page's version tracks
+per-row download state instead of one shared state for the whole list, so
+downloading one patient's report doesn't visually disable every other row.
+
+Also noticed in the working tree, not part of this change: the per-patient
+"Call Reports" button in `PatientDetails.jsx`'s toolbar is now commented
+out — consistent with Call Reports moving to a patient-independent page.
+
 #### Fixed — SignIn redirected physician/patient to routes that don't exist
 
 `src/pages/SignIn.jsx`'s `redirectByRole()` sent `physician` → `/physician`

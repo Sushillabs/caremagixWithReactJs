@@ -49,6 +49,16 @@ export const SECTIONS = {
     requiresPatient: false,
   },
 
+  reports: {
+    key: "reports",
+    label: "Call Reports",
+    icon: FolderOpen,
+    path: "/app/reports",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
   configuration: {
     key: "configuration",
     label: "Configuration",
@@ -131,6 +141,6 @@ export const SECTIONS = {
   // },
 };
 
-export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs"];
+export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs", "reports"];
 
 export const getSectionByPath = (pathname) => Object.values(SECTIONS).find((s) => pathname.startsWith(s.path));
