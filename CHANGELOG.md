@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Create Visit Notes header actions (Review & Edit / Send Email / Download)
+
+Reworking the visit-notes chat flow: a header row (`VisitNotesHeader.jsx`)
+with Review & Edit / Send Email / Download replacing the old in-chat-bubble
+buttons and chat-typed email; wired into both the legacy `/care-giver` route
+and the newer `/app/patients/:id/visit-notes` route via a shared
+`VisitNotesPanel.jsx`; look-and-feel aligned to `ConversationCard.jsx`/
+`AiCareAssistant.jsx`; several behavior gaps found and fixed by comparing
+against `caremagix-fe/js/discharge_plan_agent.js` (yes/no confirmation
+steps were ignoring user input, `template` was being locally overwritten
+before sending, Review & Edit was unlocking a step too late). No backend
+changes. Still mid-implementation — will expand this entry once settled.
+
 #### Added — Call Reports (`/app/reports`)
 
 New `reports` entry in the sidebar (patient-independent, `requiresPatient:

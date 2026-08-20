@@ -5,13 +5,14 @@ import { ChevronDown, User } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat, setMode } from "../../redux/chatSlice";
+import { clearNotes, fetchDischargePlan } from "../../redux/notesSlice";
 import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
 
 let DOCUMENT_ITEMS = [];
 
-const NOTES_ITEMS = ["Visit notes", "Create Progress Notes"];
+const NOTES_ITEMS = ["Create Visit Notes", "Edit Visit Template"];
 
 const PLAN_ITEMS = ["Discharge Plan", "Create Discharge Plan", "Nursing Plan", "Transition-Care Plan"];
 
@@ -79,6 +80,21 @@ export default function PatientDetails() {
     if (item === "Upload Scan PDF") setUploadModalMode("scan");
   };
 
+  const handleNotesItemClick = (item) => {
+    if (item === "Create Visit Notes") {
+      dispatch(clearNotes());
+      dispatch(
+        fetchDischargePlan({
+          action: "get_template",
+          patient_name: singleData?.patient_name,
+          patient_type: singleData?.patient_type,
+        })
+      );
+      navigate("visit-notes");
+    }
+    // "Edit Visit Template" intentionally left unhandled for now — deferred (Part 2)
+  };
+
   const handleDocumentClick = (item) => {
     let payload = null;
     if (type === "Uploaded") {
@@ -116,7 +132,7 @@ export default function PatientDetails() {
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
           <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />
-          <DropdownButton label="Notes" items={NOTES_ITEMS} />
+          {/* <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} /> */}
           <DropdownButton label="Plan" items={PLAN_ITEMS} />
           <DropdownButton label="Forms" items={FORMS_ITEMS} />
           <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />

@@ -1,8 +1,7 @@
-import { FaMicrophone, FaArrowUp } from "react-icons/fa";
-import { CiCircleRemove } from "react-icons/ci";
+import { Mic, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import useAskQuestion from "../hooks/useAskQuestion";
-import { addInputAns } from "../redux/notesSlice";
+import { addInputAns, addLocalTurn } from "../redux/notesSlice";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { dischargePlan } from '../api/hospitalApi';
@@ -11,14 +10,17 @@ import useMyMutation from "../hooks/useMyMutation";
 import { fetchDischargePlan } from "../redux/notesSlice";
 
 
-const AskQuestion = () => {
+const AskQuestion = ({ isVisitNotes = false }) => {
   const [inputValue, setInputValue] = useState('');
   const { askQuestion, isPending } = useAskQuestion();
   const dispatch = useDispatch();
   const bottom_button = useSelector((state) => state.buttonNames.value);
   // const [text, setText] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [awaitingMoreInfo, setAwaitingMoreInfo] = useState(false);
   const inputRef=useRef()
+
+  const prettifyField = (field) => (field || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   const {activeTemplate, final_template} = useSelector((state) => state.notes);
   const patientData = useSelector((state) => state?.patientsingledata?.value);
@@ -51,29 +53,53 @@ const AskQuestion = () => {
   console.log('isPending', isPending);
 
 
-  const isValidEmailFormate = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  };
+  const isVisitNotesMode = isVisitNotes || tab_name === 'create-notes';
 
   const handleAskSubmit = async () => {
     if (inputValue.trim() === '') return;
 
-    if (tab_name !== 'create-notes') {
+    if (!isVisitNotesMode) {
       askQuestion(inputValue);
     }
 
-    if (tab_name === 'create-notes') {
-      dispatch(addInputAns(inputValue))
-      const { current_field, template, awaiting_confirmation = false, next_question, message } = activeTemplate || {};
+    if (isVisitNotesMode) {
+      const { current_field, template, awaiting_confirmation = false, next_field, next_question } = activeTemplate || {};
       const isSavePlan = next_question === 'Discharge plan is complete! Would you like to save or download it?'
-      const isEmailSend = message === 'Visit Note saved successfully.'
+      const isYes = inputValue.trim().toLowerCase().startsWith('y');
+      const isConfirmStep = current_field && awaiting_confirmation && !awaitingMoreInfo;
+
+      // Field confirmation step ("Ready to fill out X? yes/no") — the backend trusts
+      // user_confirmation blindly, so "no" must be handled client-side, same as the
+      // legacy app: stay on the field and let the user add more instead of advancing.
+      if (isConfirmStep && !isYes) {
+        dispatch(addLocalTurn({
+          answer: inputValue,
+          question: `Okay, what else would you like to add for the **${prettifyField(current_field)}** section? If you're ready to move on to **${prettifyField(next_field)}**, please say "Yes."`,
+        }));
+        setAwaitingMoreInfo(true);
+        setInputValue('');
+        return;
+      }
+
+      // Save confirmation step ("...save or download it?") — same issue: save_plan
+      // saves unconditionally whenever called, so "no" must stop it client-side.
+      if (isSavePlan && !current_field && !isYes) {
+        dispatch(addLocalTurn({
+          answer: inputValue,
+          question: 'Okay, this visit note will not be saved.',
+        }));
+        setInputValue('');
+        return;
+      }
+
+      dispatch(addInputAns(inputValue))
 
       let payload;
 
       //process_response
       if (current_field) {
-        if (awaiting_confirmation) {
-          // When choosing Y or N         
+        if (isConfirmStep) {
+          // Yes to the confirmation prompt
           payload = {
             action: "process_response",
             patient_name: patientData.patient_name,
@@ -81,22 +107,20 @@ const AskQuestion = () => {
             field: current_field,
             response: template[current_field],
             template: template,
-            user_confirmation: awaiting_confirmation,
+            user_confirmation: true,
           };
         } else {
-          // when Ans to Q 
-          const updatedTemplate = {
-            ...template,
-            [current_field]: inputValue,
-          };
+          // when Ans to Q (also covers the "no, here's more info" follow-up)
+          // template is echoed back exactly as last received from the backend —
+          // the backend is the sole authority on template[field], derived from
+          // its own chat history at COMPLETE, same as the legacy app does.
           payload = {
             action: "process_response",
             patient_name: patientData.patient_name,
             patient_type: patientData.patient_type,
             field: current_field,
             response: inputValue,
-            template: updatedTemplate,
-
+            template: template,
           };
         }
       }
@@ -111,31 +135,17 @@ const AskQuestion = () => {
         }
       }
 
-      if (isEmailSend && !current_field) {
-        let isEmailOk = isValidEmailFormate(inputValue);
-        if (!isEmailOk) {
-          toast.error("⚠️ Enter the vaild Email", {
-            position: "top-center",
-          });
-          return;
-        }
-        payload = {
-          action: 'save_plan',
-          final_template: final_template,
-          patient_name: patientData.patient_name,
-          patient_type: patientData.patient_type,
-          send_email: true,
-          recipient_email: isEmailOk ? inputValue : null,
-        }
-      }
-
-
       console.log('visit payload', payload)
+      setAwaitingMoreInfo(false);
       setInputValue('');
       dispatch(fetchDischargePlan(payload))
 
     }
   }
+
+  useEffect(() => {
+    setAwaitingMoreInfo(false);
+  }, [activeTemplate?.current_field])
 
   useEffect(()=>{
     if(inputRef.current){
@@ -144,45 +154,38 @@ const AskQuestion = () => {
   },[activeTemplate])
 
   return (
-    <div className="sm:bg-white sm:mt-4 sm:p-2 grid grid-cols-12 items-center sm:gap-6 border border-gray-300 rounded ">
-      <div className=" bg-white border border-gray-300 rounded col-span-12 sm:col-span-12 flex items-center sm:gap-2 sm:p-2">
-        <textarea
+    <div className="border-t border-gray-200 bg-white px-5 py-3">
+      <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+        <input
+          type="text"
           placeholder="Ask a question ..."
-          className="sm:p-2 h-auto w-full"
+          className="flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
           aria-label="Ask a question"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          disabled={isPending}
           ref={inputRef}
-        // disabled={true}
         />
         <button
           type="button"
-          disabled={isPending}
-          onClick={() => setInputValue('')}
-          aria-label="Clear input"
-          className=" hidden sm:block disabled:opacity-45 text-red-500 sm:text-xl text-md cursor-pointer  hover:text-black hover:bg-gray-200"
-        >
-          <CiCircleRemove />
-        </button>
-        <button
-          type="button"
-          className={`disabled:opacity-45 sm:p-4 p-1 hover:text-blue-700 ${isListening ? 'text-blue-700' : ''}`}
+          className={`text-gray-400 hover:text-gray-600 disabled:opacity-40 ${isListening ? 'text-emerald-600' : ''}`}
           disabled={isListening || isPending}
           onClick={startListening}
           aria-label="Start voice input"
         >
-          <FaMicrophone />
+          <Mic size={18} />
         </button>
         <button
-          className="bg-none disabled:opacity-45 text-green-600 rounded-full border sm:p-2 p-1 text-center sm:col-span-2 cursor-pointer"
           type="submit"
+          className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-40"
           onClick={handleAskSubmit}
           disabled={isPending}
-          aria-label="Submit question">
-          <FaArrowUp />
+          aria-label="Submit question"
+        >
+          <Send size={14} />
+          {isPending ? '...' : 'Submit'}
         </button>
       </div>
-
     </div>
   );
 };

@@ -13,6 +13,7 @@ import PatientsList from "./features/patients/PatientsList";
 import PatientDetails from "./features/patients/PatientDetails";
 import ConversationCard from "./features/patients/ConversationCard";
 import CarePlan from "./features/patients/CarePlan";
+import VisitNotes from "./features/patients/VisitNotes";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
 import MmtaPage from "./features/patients/MmtaPage";
 import ComingSoon from "./features/common/ComingSoon";
@@ -85,6 +86,7 @@ function App() {
             <Route path="/app/patients/:id" element={<PatientDetails />}>
               <Route index element={<ConversationCard />} />
               <Route path="care-plan" element={<CarePlan />} />
+              <Route path="visit-notes" element={<VisitNotes />} />
             </Route>
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
             {/* Same reasoning as care-plan/view above — MMTA is a dense
