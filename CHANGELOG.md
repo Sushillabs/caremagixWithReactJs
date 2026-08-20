@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Per-action role gating + physician placeholder, ahead of Wellness Check-in / Book Appointment
+
+Prep work before building the Heart Wellness Check-in and Book Appointment
+features: `ROLE_NAV`/`SECTIONS` only gate whole pages/sidebar entries, not
+individual buttons inside a shared page — `PatientsList.jsx`'s "Add Patient"
+button and most of `PatientDetails.jsx`'s toolbar (Upload, Register/Unregister
+Call, Medication Alerts, Medication, Patient Journey, Create Care Plan,
+Documents/Plan/Forms dropdowns) rendered unconditionally for every role,
+including patient.
+
+New: `config/features.js` (`FEATURE_ROLES`, one entry per gate-able action)
+and `hooks/useCan.js` (reads `state.auth.value.role`, checks it against
+`FEATURE_ROLES`) — same registry-driven pattern as `ROLE_NAV`, so narrowing
+a button to specific roles is a one-line config edit instead of a
+`role === "..."` check scattered into the component. `PatientsList.jsx` and
+`PatientDetails.jsx` now wrap their buttons in `useCan("key") &&`.
+
+Two new placeholder buttons on `PatientDetails.jsx`'s toolbar, patient-role
+only, no page/API behind them yet: **Wellness Check-in** and **Book
+Appointment**.
+
+`AppShell.jsx`: physician role currently renders a blank page (`role ===
+"physician"` short-circuits before the shell/sidebar/`useJobsTracker` mount)
+— deliberate placeholder until physician-specific screens exist, not a bug.
+
 #### In progress — Create Visit Notes header actions (Review & Edit / Send Email / Download)
 
 Reworking the visit-notes chat flow: a header row (`VisitNotesHeader.jsx`)

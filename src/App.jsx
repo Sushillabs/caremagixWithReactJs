@@ -78,24 +78,15 @@ function App() {
             }
           >
             <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
-            {/* Patient Details is a layout (header + toolbar) with its own nested
-                content: index = conversation, care-plan = the Care Plan dashboard
-                header. The full accordion detail (care-plan/view) is intentionally
-                NOT nested here — it drops the header/toolbar chrome entirely and
-                renders full-width, since it's a dense document, not a quick view. */}
             <Route path="/app/patients/:id" element={<PatientDetails />}>
               <Route index element={<ConversationCard />} />
               <Route path="care-plan" element={<CarePlan />} />
               <Route path="visit-notes" element={<VisitNotes />} />
             </Route>
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
-            {/* Same reasoning as care-plan/view above — MMTA is a dense
-                single-answer view, not a quick toolbar popup. */}
+
             <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
             {Object.values(SECTIONS)
-              // A section with `children` (collapsible nav group, e.g.
-              // "Configuration") has no path of its own and no page to
-              // route to — its items open as modals from Sidebar.jsx instead.
               .filter((section) => !section.children)
               .map((section) => (
                 <Route

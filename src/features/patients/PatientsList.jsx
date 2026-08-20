@@ -8,6 +8,7 @@ import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
 import { buildPatientPayload } from "../../utils/buildPatientPayload";
 import useMyQuery from "../../hooks/useMyQuery";
+import useCan from "../../hooks/useCan";
 import AddPatientModal from "./AddPatientModal";
 
 export default function PatientsList() {
@@ -17,6 +18,7 @@ export default function PatientsList() {
   const patients = useSelector((state) => state.patientnames.value);
   const { user_id } = useSelector((state) => state.auth?.value) || {};
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const canAddPatient = useCan("addPatient");
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").trim().toLowerCase();
@@ -74,13 +76,15 @@ export default function PatientsList() {
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b border-gray-200 p-3">
         <h2 className="text-sm font-semibold text-gray-800">Patients</h2>
-        <button
-          type="button"
-          onClick={() => setShowAddPatient(true)}
-          className="flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800"
-        >
-          <UserPlus size={14} /> Add New Patient
-        </button>
+        {canAddPatient && (
+          <button
+            type="button"
+            onClick={() => setShowAddPatient(true)}
+            className="flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800"
+          >
+            <UserPlus size={14} /> Add New Patient
+          </button>
+        )}
       </div>
       <table className="w-full text-left text-sm">
         <thead>

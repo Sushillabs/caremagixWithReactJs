@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -10,6 +11,9 @@ export default function AppShell() {
   const location = useLocation();
   const [search, setSearch] = useState("");
   const section = getSectionByPath(location.pathname);
+  const role = useSelector((state) => state.auth?.value?.role);
+
+  if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
   useJobsTracker();
 

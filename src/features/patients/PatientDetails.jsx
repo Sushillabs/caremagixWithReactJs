@@ -9,6 +9,7 @@ import { clearNotes, fetchDischargePlan } from "../../redux/notesSlice";
 import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
+import useCan from "../../hooks/useCan";
 
 let DOCUMENT_ITEMS = [];
 
@@ -68,6 +69,19 @@ export default function PatientDetails() {
   const age = patient?.raw?.age || patient?.age || "";
   const admissionDate = patient?.raw?.admission_date || patient?.admissionDate || "";
   const isCallRegistered = patient?.raw?.call_registered;
+
+  const canDocuments = useCan("documents");
+  const canPlan = useCan("plan");
+  const canForms = useCan("forms");
+  const canUpload = useCan("upload");
+  const canMmta = useCan("mmta");
+  const canRegisterCall = useCan("registerCall");
+  const canMedicationAlerts = useCan("medicationAlerts");
+  const canMedication = useCan("medication");
+  const canPatientJourney = useCan("patientJourney");
+  const canCreateCarePlan = useCan("createCarePlan");
+  const canWellnessCheckIn = useCan("wellnessCheckIn");
+  const canBookAppointment = useCan("bookAppointment");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -131,19 +145,21 @@ export default function PatientDetails() {
         </div>
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
-          <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />
+          {canDocuments && <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />}
           {/* <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} /> */}
-          <DropdownButton label="Plan" items={PLAN_ITEMS} />
-          <DropdownButton label="Forms" items={FORMS_ITEMS} />
-          <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />
-          <button
-            type="button"
-            onClick={() => navigate("mmta")}
-            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
-          >
-            MMTA
-          </button>
-          {type === "Uploaded" && (
+          {canPlan && <DropdownButton label="Plan" items={PLAN_ITEMS} />}
+          {canForms && <DropdownButton label="Forms" items={FORMS_ITEMS} />}
+          {canUpload && <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />}
+          {canMmta && (
+            <button
+              type="button"
+              onClick={() => navigate("mmta")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              MMTA
+            </button>
+          )}
+          {canRegisterCall && type === "Uploaded" && (
             <button
               type="button"
               onClick={() => (isCallRegistered ? setShowUnregisterModal(true) : setShowCallModal(true))}
@@ -152,35 +168,54 @@ export default function PatientDetails() {
               {isCallRegistered ? "Unregister Call" : "Register a Call"}
             </button>
           )}
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
-            Medication Alerts
-          </button>
+          {canMedicationAlerts && (
+            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+              Medication Alerts
+            </button>
+          )}
           {/* <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
           </button> */}
-          <button
-            type="button"
-            onClick={() => {
-              dispatch(clearChat());
-              dispatch(setMode("medication"));
-              askQuestion(
-                "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
-              );
-            }}
-            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
-          >
-            Medication
-          </button>
-          <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
-            Patient Journey
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("care-plan")}
-            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
-          >
-            Create Care Plan
-          </button>
+          {canMedication && (
+            <button
+              type="button"
+              onClick={() => {
+                dispatch(clearChat());
+                dispatch(setMode("medication"));
+                askQuestion(
+                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
+                );
+              }}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Medication
+            </button>
+          )}
+          {canPatientJourney && (
+            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+              Patient Journey
+            </button>
+          )}
+          {canCreateCarePlan && (
+            <button
+              type="button"
+              onClick={() => navigate("care-plan")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Create Care Plan
+            </button>
+          )}
+          {/* Patient-only, placeholders — no page/API wired up yet */}
+          {canWellnessCheckIn && (
+            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+              Wellness Check-in
+            </button>
+          )}
+          {canBookAppointment && (
+            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+              Book Physician Visit
+            </button>
+          )}
         </div>
       </div>
 
