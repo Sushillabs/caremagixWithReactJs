@@ -20,6 +20,7 @@ import MmtaPage from "./features/patients/MmtaPage";
 import ComingSoon from "./features/common/ComingSoon";
 import JobsPage from "./features/jobs/JobsPage";
 import CallReportsPage from "./features/reports/CallReportsPage";
+import TransitionCareServicesPage from "./features/services/TransitionCareServicesPage";
 import { SECTIONS } from "./config/sections";
 
 const isExtension = window.location.protocol === "chrome-extension:";
@@ -103,6 +104,8 @@ function App() {
                       <JobsPage />
                     ) : section.key === "reports" ? (
                       <CallReportsPage />
+                    ) : section.key === "transitionCareServices" ? (
+                      <TransitionCareServicesPage />
                     ) : (
                       <ComingSoon />
                     )

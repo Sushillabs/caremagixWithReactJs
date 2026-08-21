@@ -59,6 +59,16 @@ export const SECTIONS = {
     requiresPatient: false,
   },
 
+  transitionCareServices: {
+    key: "transitionCareServices",
+    label: "Transition care services",
+    icon: ArrowLeftRight,
+    path: "/app/transition-care-services",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
   configuration: {
     key: "configuration",
     label: "Configuration",

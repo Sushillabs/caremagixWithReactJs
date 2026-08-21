@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — "Transition care services" sidebar section (static, per Figma)
+
+New primary sidebar item, caregiver role only for now.
+
+- `src/config/sections.js` — new `transitionCareServices` section (icon
+  `ArrowLeftRight`, path `/app/transition-care-services`), placed above
+  "Configuration" to match the Figma layout.
+- `src/config/roles.js` — added to the caregiver `primary` nav list.
+- `src/features/services/TransitionCareServicesPage.jsx` — new. Renders the
+  7 tabs from the Figma design (AI Agents, Interactive Contact Scheduler,
+  Non Face 2 Face service, Face 2 Face Service, Billing, Follow up and
+  coordination, Physician Fee Schedule FAQ) as a static button row — no
+  click behavior wired yet.
+- `src/App.jsx` — routes `transitionCareServices` to the new page instead
+  of falling through to the generic `ComingSoon` placeholder.
+
 #### In Progress — Care Plan Dashboard (donut, risk cards, health status table)
 
 Built but **currently switched off** — `CarePlan.jsx` shows the old plain
