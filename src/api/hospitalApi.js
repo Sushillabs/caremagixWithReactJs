@@ -43,6 +43,11 @@ export const generateCarePlan = (data) => http.post('/generate_care_plan', data,
 export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, { withAuth: true });
 export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
 export const exportCarePlanPdf = (carePlanId) => http.post('/export_care_plan_pdf', { care_plan_id: carePlanId }, { withAuth: true });
+export const getCarePlanDashboard = (carePlanId) => http.get(`/care_plan/${carePlanId}/dashboard`, { withAuth: true });
+export const getCarePlanDashboardByPatient = (patientName, patientType) =>
+  http.get(`/care_plan/dashboard?patient_name=${encodeURIComponent(patientName)}&patient_type=${encodeURIComponent(patientType)}`, {
+    withAuth: true,
+  });
 
 // Heart Failure Wellness Check-in — every route wraps its payload as
 // {success, data} EXCEPT /clear, which returns {success, message} with no

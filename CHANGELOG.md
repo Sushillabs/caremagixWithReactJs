@@ -5,6 +5,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In Progress — Care Plan Dashboard (donut, risk cards, health status table)
+
+Built but **currently switched off** — `CarePlan.jsx` shows the old plain
+placeholder ("Care Plan Dashboard" text) instead of the real dashboard, on
+purpose, until a backend bug (below) is properly fixed.
+
+**What's built (code exists, just not turned on):**
+- `src/features/patients/CarePlanDashboard.jsx` — progress donut (SVG, no
+  new chart library), 6 Risk Overview cards, Health Status Analysis table
+  with a per-row "Edit" link into the real document. Pure display
+  component — takes data as a prop, does not fetch on its own.
+- `src/features/patients/CarePlan.jsx` — on page load, checks the backend
+  directly for an existing plan (`GET /care_plan/dashboard?patient_name=`),
+  independent of this session's job-tracking state, so the button/dashboard
+  are correct even on a fresh page load. After a fresh generation, fetches
+  precisely by id instead (`GET /care_plan/<id>/dashboard`) — no duplicate
+  calls. "Last updated" time now shown next to the "Care Plan" title.
+- `src/features/patients/CarePlanDetailPage.jsx` — reads `?section=N` from
+  the URL, so a dashboard row's "Edit" opens straight to that section.
+- `src/api/hospitalApi.js` — `getCarePlanDashboard`,
+  `getCarePlanDashboardByPatient`.
+
+**Known bug found (backend, not yet fixed there — frontend-only workaround
+in place for now):**
+- `POST /generate_care_plan` saves the plan under a **lowercased** patient
+  name in most cases (`careplan/routes.py:484`).
+- `GET /care_plan/dashboard?patient_name=` looks it up **without**
+  lowercasing — exact match fails, returns 404 even when the plan exists.
+- Workaround: `src/utils/buildPatientPayload.js` — new
+  `getCarePlanLookupName()`, mirrors the backend's exact save-time rule
+  before querying. Marked in code as temporary; should be deleted once the
+  backend normalizes both sides the same way (one shared helper, not two
+  separate rules).
+
+**Still deferred:**
+- The "Generated on / Care Plan / View / Delete / Download" history table —
+  no backend support yet (only "latest plan" is queryable), explicitly
+  left out for now.
+
 #### Added — OASIS-SOC form wired (Forms dropdown, `PatientDetails.jsx`)
 
 "OASIS-SOC" item in the Forms dropdown now opens `OasisSocModal.jsx` — a

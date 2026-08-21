@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle } from "lucide-react";
@@ -372,7 +372,11 @@ export default function CarePlanDetailPage() {
   const patientKey = getPatientKey(singleData?.patient_name, singleData?.patient_type);
   const { generate, isStarting, error: startError } = useCarePlan();
   const { status, progress, message, carePlanId, carePlanData: statusCarePlanData } = useCarePlanStatus(patientKey);
-  const [openIndex, setOpenIndex] = useState(0);
+  // Deep-linked here from the Dashboard's per-row "Edit" (?section=N) — open
+  // straight to that section instead of always defaulting to the first one.
+  const [searchParams] = useSearchParams();
+  const sectionParam = Number(searchParams.get("section"));
+  const [openIndex, setOpenIndex] = useState(Number.isInteger(sectionParam) && sectionParam >= 0 ? sectionParam : 0);
   // Which section (if any) is currently unlocked for editing — only one at a
   // time. sectionOverrides holds locally-committed (Save clicked) edits per
   // section index, kept separate from the AI-generated baseline so Cancel
