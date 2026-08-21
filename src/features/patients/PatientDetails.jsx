@@ -10,6 +10,7 @@ import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
 import useCan from "../../hooks/useCan";
+import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 
 let DOCUMENT_ITEMS = [];
 
@@ -60,6 +61,10 @@ export default function PatientDetails() {
   const [showCallModal, setShowCallModal] = useState(false);
   const [showUnregisterModal, setShowUnregisterModal] = useState(false);
   const [uploadModalMode, setUploadModalMode] = useState(null);
+  // Wellness Check-in renders inline in place of the routed Outlet content —
+  // same "swap the content area" pattern the Medication button already uses
+  // (see setMode below), not a new route.
+  const [activePanel, setActivePanel] = useState(null);
   const singleData = useSelector((state) => state.patientsingledata?.value);
   const patient = singleData?.patient;
   const type = patient?.type;
@@ -117,6 +122,7 @@ export default function PatientDetails() {
       payload = { ...singleData, patient_collection: item };
     }
 
+    setActivePanel(null);
     dispatch(clearChat());
     dispatch(addDischargePatientDate(payload));
     dispatch(fetchPatientChat(payload));
@@ -180,6 +186,7 @@ export default function PatientDetails() {
             <button
               type="button"
               onClick={() => {
+                setActivePanel(null);
                 dispatch(clearChat());
                 dispatch(setMode("medication"));
                 askQuestion(
@@ -199,18 +206,25 @@ export default function PatientDetails() {
           {canCreateCarePlan && (
             <button
               type="button"
-              onClick={() => navigate("care-plan")}
+              onClick={() => {
+                setActivePanel(null);
+                navigate("care-plan");
+              }}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Create Care Plan
             </button>
           )}
-          {/* Patient-only, placeholders — no page/API wired up yet */}
           {canWellnessCheckIn && (
-            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setActivePanel("wellness")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
               Wellness Check-in
             </button>
           )}
+          {/* Book Physician Visit — placeholder, no page/API wired up yet */}
           {canBookAppointment && (
             <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
               Book Physician Visit
@@ -219,7 +233,7 @@ export default function PatientDetails() {
         </div>
       </div>
 
-      <Outlet />
+      {activePanel === "wellness" ? <WellnessCheckInPanel /> : <Outlet />}
 
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}

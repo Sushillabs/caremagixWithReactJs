@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Heart Wellness Check-in (`WellnessCheckInPanel.jsx`)
+
+Patient-only panel on Patient Details (`Wellness Check-in` toolbar button, no
+new route). Today's check-in (chat + mic/voice via Deepgram + zone banner +
+alert handoff + Start New Session), My Progress (stats/chart/history), and
+My Baseline (target weight/fluid/sodium/NYHA/check-in time) are built and
+wired to `/hf-wellness/*`, reusing a new generic chat engine
+(`useAgentChat`, `AgentChatThread`, `AgentChatComposer`) meant for Book
+Appointment too. Blocked on testing: the deployed backend at
+`VITE_API_URL` appears to be running a branch without the
+`heart_failure_wellness` module (PATCH `/profile` CORS-fails; likely true
+for the rest of the feature too) — needs the right branch deployed before
+this can be verified end-to-end. Book Appointment not started.
+
 #### Added — Per-action role gating + physician placeholder, ahead of Wellness Check-in / Book Appointment
 
 Prep work before building the Heart Wellness Check-in and Book Appointment

@@ -6,13 +6,7 @@ import { Download } from "lucide-react";
 import { Spinner } from "../../components/Spiner";
 import ChatLoader from "../../components/ChatLoader";
 import useAskQuestion from "../../hooks/useAskQuestion";
-
-const markdownTableComponents = {
-  table: ({ children }) => <table className="min-w-full border-collapse text-xs">{children}</table>,
-  thead: ({ children }) => <thead className="bg-emerald-50 text-left text-gray-700">{children}</thead>,
-  th: ({ children }) => <th className="border border-gray-200 px-3 py-2 font-semibold">{children}</th>,
-  td: ({ children }) => <td className="whitespace-pre-line border border-gray-200 px-3 py-2 align-top text-gray-600">{children}</td>,
-};
+import { markdownTableComponents } from "../../utils/markdownComponents";
 
 const TABS = [
   { key: "conversation", label: "Conversation" },

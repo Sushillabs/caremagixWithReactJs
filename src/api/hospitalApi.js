@@ -44,6 +44,25 @@ export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, 
 export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
 export const exportCarePlanPdf = (carePlanId) => http.post('/export_care_plan_pdf', { care_plan_id: carePlanId }, { withAuth: true });
 
+// Heart Failure Wellness Check-in — every route wraps its payload as
+// {success, data} EXCEPT /clear, which returns {success, message} with no
+// `data` key (verified against routes.py) — unwrapped to `res.data` for all
+// but that one, so callers (useAgentChat, WellnessCheckInPanel) only ever
+// see the inner shape.
+export const wellnessChat = (data) => http.post('/hf-wellness/chat', data, { withAuth: true }).then((res) => res.data);
+export const wellnessHistory = ({ session_id } = {}) =>
+  http.get(`/hf-wellness/history${session_id ? `?session_id=${encodeURIComponent(session_id)}` : ''}`, { withAuth: true }).then((res) => res.data);
+export const wellnessClear = ({ session_id } = {}) => http.post('/hf-wellness/clear', { session_id }, { withAuth: true });
+export const wellnessDashboard = () => http.get('/hf-wellness/dashboard', { withAuth: true }).then((res) => res.data);
+export const getWellnessProfile = () => http.get('/hf-wellness/profile', { withAuth: true }).then((res) => res.data);
+export const updateWellnessProfile = (data) => http.patch('/hf-wellness/profile', data, { withAuth: true }).then((res) => res.data);
+export const getWellnessCheckIns = (days = 30) => http.get(`/hf-wellness/check-ins?days=${days}`, { withAuth: true }).then((res) => res.data);
+export const getWellnessAlerts = (status) =>
+  http.get(`/hf-wellness/alerts${status ? `?status=${status}` : ''}`, { withAuth: true }).then((res) => res.data);
+export const wellnessAlertAction = (alertId, data) =>
+  http.post(`/hf-wellness/alerts/${alertId}/action`, data, { withAuth: true }).then((res) => res.data);
+export const getWellnessVoiceToken = () => http.post('/hf-wellness/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
+
 
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template
 // {
