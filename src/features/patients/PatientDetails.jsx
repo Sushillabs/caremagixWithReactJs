@@ -9,6 +9,7 @@ import { clearNotes, fetchDischargePlan } from "../../redux/notesSlice";
 import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
+import OasisSocModal from "./OasisSocModal";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 
@@ -61,6 +62,7 @@ export default function PatientDetails() {
   const [showCallModal, setShowCallModal] = useState(false);
   const [showUnregisterModal, setShowUnregisterModal] = useState(false);
   const [uploadModalMode, setUploadModalMode] = useState(null);
+  const [showOasisSocModal, setShowOasisSocModal] = useState(false);
   // Wellness Check-in renders inline in place of the routed Outlet content —
   // same "swap the content area" pattern the Medication button already uses
   // (see setMode below), not a new route.
@@ -98,6 +100,11 @@ export default function PatientDetails() {
   const handleUploadItemClick = (item) => {
     if (item === "Upload PDF") setUploadModalMode("pdf");
     if (item === "Upload Scan PDF") setUploadModalMode("scan");
+  };
+
+  const handleFormsItemClick = (item) => {
+    if (item === "OASIS-SOC") setShowOasisSocModal(true);
+    // Other Forms items intentionally left unhandled for now — not built yet
   };
 
   const handleNotesItemClick = (item) => {
@@ -158,7 +165,7 @@ export default function PatientDetails() {
           {canDocuments && <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />}
           {canNotes && <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} />}
           {canPlan && <DropdownButton label="Plan" items={PLAN_ITEMS} />}
-          {canForms && <DropdownButton label="Forms" items={FORMS_ITEMS} />}
+          {canForms && <DropdownButton label="Forms" items={FORMS_ITEMS} onItemClick={handleFormsItemClick} />}
           {canUpload && <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />}
           {canMmta && (
             <button
@@ -242,6 +249,9 @@ export default function PatientDetails() {
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
+      {showOasisSocModal && (
+        <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />
+      )}
     </div>
   );
 }

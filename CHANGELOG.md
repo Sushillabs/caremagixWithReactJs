@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — OASIS-SOC form wired (Forms dropdown, `PatientDetails.jsx`)
+
+"OASIS-SOC" item in the Forms dropdown now opens `OasisSocModal.jsx` — a
+static wireframe of the OASIS-E2 Start of Care assessment (only the patient
+name is dynamic; every other field/button is decorative, no save/export
+logic yet). Other Forms items (CMS-485, OASIS-FU/ROC/DAH/TRN) still unwired.
+
 #### Added — Create Visit Notes AI (voice-first ambient visit notes)
 
 New mic-first flow on `PatientDetails.jsx`'s Notes dropdown (re-enabled —
