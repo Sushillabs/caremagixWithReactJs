@@ -1,8 +1,12 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
 import { useState } from "react";
+import { logout } from "../../redux/authSlice";
 
 export default function TopBar({ search, onSearchChange }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const auth = useSelector((state) => state.auth?.value) || {};
   const headerItem = useSelector((state) => state.auth?.item) || {};
 
@@ -10,7 +14,7 @@ export default function TopBar({ search, onSearchChange }) {
   const bedsAvailable = auth.beds_available ?? "—";
   const firstName = auth.first_name || "";
   const lastName = auth.last_name || "";
-  const displayName = `${firstName} ${lastName}` || headerItem.name || auth.name || auth.username || "User";
+  const displayName = `${firstName} ${lastName}`.trim() || headerItem.name || auth.name || auth.username || "User";
   const role = auth.role || "";
   const [logoutShow, setLogoutShow] = useState(false);
 
@@ -19,12 +23,9 @@ export default function TopBar({ search, onSearchChange }) {
   };
 
   const handleLogout = () => {
-    // localStorage.removeItem("token");
     localStorage.clear();
     dispatch(logout());
     navigate("/");
-
-    console.log("Logged out");
   };
 
   return (

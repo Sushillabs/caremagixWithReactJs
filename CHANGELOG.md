@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — Logout (`TopBar.jsx`)
+
+Logout dropdown was fully built but `handleLogout` referenced `dispatch`/
+`navigate` without importing or instantiating either — undefined refs,
+so clicking it threw instead of logging out (`logout` action itself was
+already correctly wired in `store.js` to reset the whole Redux state).
+Also fixed `displayName`'s fallback chain: `` `${firstName} ${lastName}` ``
+is truthy even when both are blank, so `.trim()` now lets it actually fall
+through to `headerItem.name`/`auth.name`/`auth.username`/`"User"`.
+
 #### Added — Doc Reference popup (`DocReferenceModal.jsx`)
 
 `ConversationCard.jsx`'s "Doc Reference" button was dead until now — wired
