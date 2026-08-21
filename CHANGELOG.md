@@ -24,6 +24,14 @@ state, which doesn't update in time when called right after `reset()` in the
 same handler — silently no-op'd instead of starting a fresh session. Fixed
 with a synchronous ref, same pattern the hook already used for `sessionId`.
 
+Follow-up polish: header's mic toggle is now a filled pill (emerald "Start
+Mic" / red "Stop Mic", not plain text) matching a recording-in-progress
+convention; Review tab shows a highlighted hint beside "Transcript" ("save
+your changes below first" to generate the PDF) and auto-scrolls to the
+Download button after a successful save — via a `saveResult` effect, not
+inline after `setSaveResult`, since the DOM hasn't updated with the new
+content yet at that point in the same tick.
+
 #### Fixed — Logout (`TopBar.jsx`)
 
 Logout dropdown was fully built but `handleLogout` referenced `dispatch`/
