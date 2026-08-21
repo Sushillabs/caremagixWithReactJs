@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Doc Reference popup (`DocReferenceModal.jsx`)
+
+`ConversationCard.jsx`'s "Doc Reference" button was dead until now — wired
+to the existing `POST /doc-ref` endpoint using `msg.id` (already the
+`question_id` the backend saves sources under). Uploaded-patient sources
+(`type: "pdf"`) are fully built: filename link + Page N buttons jumping to
+that page. Epic/PCC/Metriport (`type: "ehr"`) get a category icon + label
+matched off `collection_name` (covers both PCC's and FHIR's naming) and a
+monospace snippet, since Epic/Metriport's snippet is a raw data dump, not
+prose like PCC's.
+
 #### In progress — Heart Wellness Check-in (`WellnessCheckInPanel.jsx`)
 
 Patient-only panel on Patient Details (`Wellness Check-in` toolbar button, no

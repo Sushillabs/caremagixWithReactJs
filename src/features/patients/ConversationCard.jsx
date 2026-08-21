@@ -7,6 +7,7 @@ import { Spinner } from "../../components/Spiner";
 import ChatLoader from "../../components/ChatLoader";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { markdownTableComponents } from "../../utils/markdownComponents";
+import DocReferenceModal from "./DocReferenceModal";
 
 const TABS = [
   { key: "conversation", label: "Conversation" },
@@ -18,8 +19,10 @@ export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
   const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
+  const patientType = useSelector((state) => state.patientsingledata?.value?.patient?.type);
   const isMedication = mode === "medication";
   const { askQuestion } = useAskQuestion();
+  const [docRefQuestionId, setDocRefQuestionId] = useState(null);
   const questionsRef = useRef(null);
   const scrollToQuestions = () => questionsRef.current?.scrollIntoView({ behavior: "smooth" });
   const chatEndRef = useRef(null);
@@ -112,7 +115,12 @@ export default function ConversationCard() {
                           {msg.content}
                         </ReactMarkdown>
                       )}
-                      <button type="button" className="mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100">
+                      <button
+                        type="button"
+                        onClick={() => setDocRefQuestionId(msg.id)}
+                        disabled={!msg.id}
+                        className="mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
                         Doc Reference
                       </button>
                       <button
@@ -140,6 +148,10 @@ export default function ConversationCard() {
           <p className="mt-3 px-2 text-sm text-gray-400">Document content will render here in a later.</p>
         )}
       </div>
+
+      {docRefQuestionId && (
+        <DocReferenceModal questionId={docRefQuestionId} sourceType={patientType} onClose={() => setDocRefQuestionId(null)} />
+      )}
     </div>
   );
 }
