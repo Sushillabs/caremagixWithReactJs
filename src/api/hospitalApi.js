@@ -63,6 +63,17 @@ export const wellnessAlertAction = (alertId, data) =>
   http.post(`/hf-wellness/alerts/${alertId}/action`, data, { withAuth: true }).then((res) => res.data);
 export const getWellnessVoiceToken = () => http.post('/hf-wellness/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
 
+// Caregiver Ambient AI (voice-first visit notes) — separate backend/session
+// model from /discharge_plan_agent, same {success, data} envelope as
+// hf-wellness above, unwrapped to res.data for every route (all error cases
+// return a non-2xx status, so they reject before reaching .then, same as
+// the rest of this file).
+export const ambientAiStart = (data) => http.post('/caregiver-ambient-ai/session/start', data, { withAuth: true }).then((res) => res.data);
+export const ambientAiTurn = (data) => http.post('/caregiver-ambient-ai/session/turn', data, { withAuth: true }).then((res) => res.data);
+export const ambientAiStop = (data) => http.post('/caregiver-ambient-ai/session/stop', data, { withAuth: true }).then((res) => res.data);
+export const ambientAiSave = (data) => http.post('/caregiver-ambient-ai/session/save', data, { withAuth: true }).then((res) => res.data);
+export const getAmbientAiVoiceToken = () => http.post('/caregiver-ambient-ai/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
+
 
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template
 // {

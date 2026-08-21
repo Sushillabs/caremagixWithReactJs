@@ -14,7 +14,7 @@ import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 
 let DOCUMENT_ITEMS = [];
 
-const NOTES_ITEMS = ["Create Visit Notes", "Edit Visit Template"];
+const NOTES_ITEMS = ["Create Visit Notes AI", "Edit Visit Template"]; //"Create Visit Notes"
 
 const PLAN_ITEMS = ["Discharge Plan", "Create Discharge Plan", "Nursing Plan", "Transition-Care Plan"];
 
@@ -84,6 +84,7 @@ export default function PatientDetails() {
   const canMedicationAlerts = useCan("medicationAlerts");
   const canMedication = useCan("medication");
   const canPatientJourney = useCan("patientJourney");
+  const canNotes = useCan("notes");
   const canCreateCarePlan = useCan("createCarePlan");
   const canWellnessCheckIn = useCan("wellnessCheckIn");
   const canBookAppointment = useCan("bookAppointment");
@@ -110,6 +111,9 @@ export default function PatientDetails() {
         })
       );
       navigate("visit-notes");
+    }
+    if (item === "Create Visit Notes AI") {
+      navigate("visit-notes-ai");
     }
     // "Edit Visit Template" intentionally left unhandled for now — deferred (Part 2)
   };
@@ -152,7 +156,7 @@ export default function PatientDetails() {
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
           {canDocuments && <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />}
-          {/* <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} /> */}
+          {canNotes && <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} />}
           {canPlan && <DropdownButton label="Plan" items={PLAN_ITEMS} />}
           {canForms && <DropdownButton label="Forms" items={FORMS_ITEMS} />}
           {canUpload && <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />}

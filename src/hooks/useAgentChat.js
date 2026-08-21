@@ -14,21 +14,23 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const sessionIdRef = useRef(null);
   sessionIdRef.current = sessionId;
+  // Mirrors `historyLoaded` but updates synchronously — reset() followed
+  // immediately by hydrateHistory() (e.g. a "start over" handler) would
+  // otherwise call hydrateHistory() with the stale pre-reset `historyLoaded`
+  // still closed over, since the state update hasn't re-rendered yet.
+  const historyLoadedRef = useRef(false);
 
-  const send = useCallback(
-    async (message, opts = {}) => {
-      const text = message?.trim();
-      if (!text || pending) return null;
-
+  // Runs an arbitrary async call and records its result as an assistant-only
+  // turn — no user message pushed first. `send` (below) is the common case
+  // (user typed/spoke something); this is for actions the agent takes on its
+  // own, e.g. a "generate now" button that has no user message to echo.
+  const runAction = useCallback(
+    async (action) => {
+      if (pending) return null;
       setError(null);
-      setTurns((prev) => [...prev, { role: "user", content: text }]);
       setPending(true);
       try {
-        const response = await sendMessage({
-          message: text,
-          session_id: sessionIdRef.current || undefined,
-          ...opts,
-        });
+        const response = await action();
         setSessionId(response?.session_id || sessionIdRef.current);
         setLastResponse(response);
         setTurns((prev) => [...prev, { role: "assistant", content: response?.message, meta: response }]);
@@ -40,13 +42,31 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
         setPending(false);
       }
     },
-    [sendMessage, pending]
+    [pending]
+  );
+
+  const send = useCallback(
+    async (message, opts = {}) => {
+      const text = message?.trim();
+      if (!text || pending) return null;
+
+      setTurns((prev) => [...prev, { role: "user", content: text }]);
+      return runAction(() =>
+        sendMessage({
+          message: text,
+          session_id: sessionIdRef.current || undefined,
+          ...opts,
+        })
+      );
+    },
+    [sendMessage, pending, runAction]
   );
 
   // Hydrates prior turns for today's/this session's thread. Only runs once
   // per mount — call reset() first if a fresh session is needed.
   const hydrateHistory = useCallback(async () => {
-    if (!loadHistory || historyLoaded) return null;
+    if (!loadHistory || historyLoadedRef.current) return null;
+    historyLoadedRef.current = true;
     setHistoryLoaded(true);
     try {
       const res = await loadHistory({ session_id: sessionIdRef.current || undefined });
@@ -57,7 +77,7 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
       setError(err?.message || "Could not load history");
       return null;
     }
-  }, [loadHistory, historyLoaded]);
+  }, [loadHistory]);
 
   const reset = useCallback(async () => {
     if (clearSession) {
@@ -73,8 +93,9 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
     setTurns([]);
     setLastResponse(null);
     setError(null);
+    historyLoadedRef.current = false;
     setHistoryLoaded(false);
   }, [clearSession]);
 
-  return { sessionId, turns, lastResponse, pending, error, historyLoaded, send, hydrateHistory, reset };
+  return { sessionId, turns, lastResponse, pending, error, historyLoaded, send, runAction, hydrateHistory, reset };
 }

@@ -14,6 +14,7 @@ import PatientDetails from "./features/patients/PatientDetails";
 import ConversationCard from "./features/patients/ConversationCard";
 import CarePlan from "./features/patients/CarePlan";
 import VisitNotes from "./features/patients/VisitNotes";
+import VisitNotesAI from "./features/patients/VisitNotesAI";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
 import MmtaPage from "./features/patients/MmtaPage";
 import ComingSoon from "./features/common/ComingSoon";
@@ -82,6 +83,7 @@ function App() {
               <Route index element={<ConversationCard />} />
               <Route path="care-plan" element={<CarePlan />} />
               <Route path="visit-notes" element={<VisitNotes />} />
+              <Route path="visit-notes-ai" element={<VisitNotesAI />} />
             </Route>
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
 

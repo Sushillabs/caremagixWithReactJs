@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Create Visit Notes AI (voice-first ambient visit notes)
+
+New mic-first flow on `PatientDetails.jsx`'s Notes dropdown (re-enabled —
+it had been fully commented out), separate from the existing chat-wizard
+`/discharge_plan_agent` flow (untouched). Backend already existed and needed
+no changes: `caregiver_ambient_ai`'s session/{start,turn,stop,save} +
+voice/live-token, same visit template as the old flow but with server-side
+yes/no handling this time. New `VisitNotesAI.jsx` + `useAmbientVisitNotes.js`
+(adapter over the existing `useAgentChat`), reusing `useDeepgramVoice`,
+`AgentChatThread`, and `AgentChatComposer` as-is from Wellness Check-in —
+only 2 new files for the whole feature. Landing card → tap mic → live
+chat (voice or typed) → Generate → Review & Save tab → PDF/email.
+
+Found and fixed a real bug in the shared `useAgentChat.js` while wiring
+"Start New Session": `hydrateHistory()`'s once-only guard read `historyLoaded`
+state, which doesn't update in time when called right after `reset()` in the
+same handler — silently no-op'd instead of starting a fresh session. Fixed
+with a synchronous ref, same pattern the hook already used for `sessionId`.
+
 #### Fixed — Logout (`TopBar.jsx`)
 
 Logout dropdown was fully built but `handleLogout` referenced `dispatch`/
