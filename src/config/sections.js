@@ -59,6 +59,18 @@ export const SECTIONS = {
     requiresPatient: false,
   },
 
+  // No `path`/`children` — a top-level nav item that opens a popup directly
+  // (Sidebar.jsx's ModalNavItem), same CHILD_MODALS registry the
+  // Configuration group's modal-type children already use.
+  editVisitTemplate: {
+    key: "editVisitTemplate",
+    label: "Edit Visit Template",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
   transitionCareServices: {
     key: "transitionCareServices",
     label: "Transition care services",

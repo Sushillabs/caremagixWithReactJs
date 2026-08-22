@@ -196,7 +196,6 @@ function CareGiver() {
     "upload-cpt": <CodesForm onClose={onClose} title="CPT" />,
     "call-report": <CallReport onClose={onClose} />,
     // "create-visit-notes": <Notes onClose={onClose}/>,
-    "edit-visit-template": <EditTemplate onClose={onClose} />,
     "upload-plan": (
       <UploadPatientDocument
         onClose={onClose}
@@ -326,6 +325,7 @@ function CareGiver() {
       {bottom_button && modalContent[bottom_button] && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">{modalContent[bottom_button]}</div>
       )}
+      {bottom_button === "edit-visit-template" && <EditTemplate onClose={onClose} />}
     </div>
   );
 }

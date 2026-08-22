@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Edit Visit Template popup (per new Figma)
+
+Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST
+/discharge_plan_agent/edit_template`, no backend changes) from a stacked
+list of every field to the numbered-strip-plus-single-field-below pattern
+already used in the visit-notes Review & Edit popup — click a section up
+top, its Question/Check Prompt show below. Save stays persistent/always
+visible rather than gated to the last field, since editing one section
+shouldn't require paging through the rest.
+
 #### Added — Patient-role dashboard (skip patients list, role-wise static cards)
 
 Patient role no longer sees the shared `PatientsList` roster — as a patient
@@ -47,6 +57,7 @@ placeholder ("Care Plan Dashboard" text) instead of the real dashboard, on
 purpose, until a backend bug (below) is properly fixed.
 
 **What's built (code exists, just not turned on):**
+
 - `src/features/patients/CarePlanDashboard.jsx` — progress donut (SVG, no
   new chart library), 6 Risk Overview cards, Health Status Analysis table
   with a per-row "Edit" link into the real document. Pure display
@@ -64,6 +75,7 @@ purpose, until a backend bug (below) is properly fixed.
 
 **Known bug found (backend, not yet fixed there — frontend-only workaround
 in place for now):**
+
 - `POST /generate_care_plan` saves the plan under a **lowercased** patient
   name in most cases (`careplan/routes.py:484`).
 - `GET /care_plan/dashboard?patient_name=` looks it up **without**
@@ -75,6 +87,7 @@ in place for now):**
   separate rules).
 
 **Still deferred:**
+
 - The "Generated on / Care Plan / View / Delete / Download" history table —
   no backend support yet (only "latest plan" is queryable), explicitly
   left out for now.
@@ -284,6 +297,7 @@ progress, message, error}`) is unchanged, so its existing legacy consumer
 what it destructures from the hook.
 
 New generic pieces reused by PCC/Epic/Metriport alike:
+
 - **`useExternalJobsProgress.js`** — polls jobs that carry their own
   `status_url` (Group B/C) instead of sharing Group A's single
   `/ocr-progress` endpoint. `JobsPage.jsx` merges these rows in alongside

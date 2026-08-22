@@ -13,6 +13,7 @@ export const ROLE_NAV = {
       "createCarePlan",
       "alerts",
       "reports",
+      "editVisitTemplate",
       "jobs",
       "transitionCareServices",
       "configuration",

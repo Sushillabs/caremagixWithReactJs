@@ -10,6 +10,7 @@ import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
 import OasisSocModal from "./OasisSocModal";
+import EditTemplate from "../../components/EditTemplate";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 
@@ -63,6 +64,7 @@ export default function PatientDetails() {
   const [showUnregisterModal, setShowUnregisterModal] = useState(false);
   const [uploadModalMode, setUploadModalMode] = useState(null);
   const [showOasisSocModal, setShowOasisSocModal] = useState(false);
+  const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
   // Wellness Check-in renders inline in place of the routed Outlet content —
   // same "swap the content area" pattern the Medication button already uses
   // (see setMode below), not a new route.
@@ -122,7 +124,9 @@ export default function PatientDetails() {
     if (item === "Create Visit Notes AI") {
       navigate("visit-notes-ai");
     }
-    // "Edit Visit Template" intentionally left unhandled for now — deferred (Part 2)
+    if (item === "Edit Visit Template") {
+      setShowEditTemplateModal(true);
+    }
   };
 
   const handleDocumentClick = (item) => {
@@ -250,6 +254,7 @@ export default function PatientDetails() {
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
+      {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
     </div>
   );
 }

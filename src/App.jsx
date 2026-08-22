@@ -90,7 +90,7 @@ function App() {
 
             <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
             {Object.values(SECTIONS)
-              .filter((section) => !section.children)
+              .filter((section) => !section.children && section.path)
               .map((section) => (
                 <Route
                   key={section.key}

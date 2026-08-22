@@ -10,6 +10,7 @@ import PullPccModal from "../configuration/PullPccModal";
 import PullEpicModal from "../configuration/PullEpicModal";
 import ConnectMetriportModal from "../configuration/ConnectMetriportModal";
 import PullMetriportModal from "../configuration/PullMetriportModal";
+import EditTemplate from "../../components/EditTemplate";
 
 // Modal-type children (no `path`) are looked up here by key. Adding a new
 // one is a one-line entry — no more if/else branches to grow.
@@ -19,6 +20,7 @@ const CHILD_MODALS = {
   pullMetriport: PullMetriportModal,
   pullEpic: PullEpicModal,
   efaxConfig: EfaxConfigModal,
+  editVisitTemplate: EditTemplate,
 };
 
 function NavItem({ section }) {
@@ -35,6 +37,28 @@ function NavItem({ section }) {
       {Icon && <Icon size={18} className="shrink-0" />}
       <span className="truncate">{section.label}</span>
     </NavLink>
+  );
+}
+
+// Top-level section with no `path` and no `children` — opens a CHILD_MODALS
+// entry directly, same registry NavGroup's modal-type children already use.
+function ModalNavItem({ section }) {
+  const [open, setOpen] = useState(false);
+  const Icon = section.icon;
+  const ActiveModal = CHILD_MODALS[section.key];
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-3 rounded-md px-4 py-2 text-sm text-emerald-100/80 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        {Icon && <Icon size={18} className="shrink-0" />}
+        <span className="truncate">{section.label}</span>
+      </button>
+      {open && ActiveModal && <ActiveModal onClose={() => setOpen(false)} />}
+    </>
   );
 }
 
@@ -109,11 +133,13 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2 py-2">
         <div className="space-y-1">
-          {nav.primary.map(
-            (key) =>
-              SECTIONS[key] &&
-              (SECTIONS[key].children ? <NavGroup key={key} section={SECTIONS[key]} /> : <NavItem key={key} section={SECTIONS[key]} />)
-          )}
+          {nav.primary.map((key) => {
+            const section = SECTIONS[key];
+            if (!section) return null;
+            if (section.children) return <NavGroup key={key} section={section} />;
+            if (section.path) return <NavItem key={key} section={section} />;
+            return <ModalNavItem key={key} section={section} />;
+          })}
         </div>
 
         {nav.secondary.length > 0 && (
