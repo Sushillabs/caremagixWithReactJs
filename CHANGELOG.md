@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Patient-role dashboard (skip patients list, role-wise static cards)
+
+Patient role no longer sees the shared `PatientsList` roster — as a patient
+there's only one record (themselves), not a list to pick from. `config/roles.js`
+drops `"patients"` from the patient nav only (route + `PatientsList.jsx`
+untouched, still used by caregiver/physician). `Dashboard.jsx` now branches
+on role: patient gets 6 static placeholder cards (Your Plan, Your
+Appointments, Alerts, Medications, Wellness Check-ins, Documents) plus a
+"View Details" button that opens their own record, via the same navigation
+chain `PatientsList` already used — extracted into two new shared hooks,
+`hooks/usePatientRecords.js` and `hooks/useOpenPatientDetail.js`, so list and
+dashboard can't drift apart. Caregiver/physician dashboard and patients list
+unchanged. Card content is static for now; real per-role data is a later
+phase once the backing APIs exist.
+
+Also: `TopBar`'s search box is now scoped to the patients list page only
+(`AppShell.jsx`'s new `showSearch` flag) — hidden on the dashboard, patient
+details, and everywhere else, for every role.
+
 #### Added — "Transition care services" sidebar section (static, per Figma)
 
 New primary sidebar item, caregiver role only for now.

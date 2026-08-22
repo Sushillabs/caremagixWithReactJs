@@ -4,7 +4,7 @@ import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucid
 import { useState } from "react";
 import { logout } from "../../redux/authSlice";
 
-export default function TopBar({ search, onSearchChange }) {
+export default function TopBar({ search, onSearchChange, showSearch }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const auth = useSelector((state) => state.auth?.value) || {};
@@ -30,17 +30,19 @@ export default function TopBar({ search, onSearchChange }) {
 
   return (
     <header className="flex items-center gap-4 border-b border-gray-200 bg-white px-5 py-3">
-      {/* Patient-name search (global patient picker in later phases) */}
-      <div className="relative w-full max-w-md">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => onSearchChange?.(e.target.value)}
-          placeholder="Search patient by name"
-          className="w-full rounded-md border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
-      </div>
+      {/* Patient-name search — only relevant on the patients list page */}
+      {showSearch && (
+        <div className="relative w-full max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            placeholder="Search patient by name"
+            className="w-full rounded-md border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+      )}
 
       <div className="ml-auto flex items-center gap-4 relative">
         <div className="hidden items-center gap-3 rounded-md bg-gray-50 px-3 py-1.5 text-xs sm:flex">

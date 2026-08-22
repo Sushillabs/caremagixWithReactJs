@@ -12,11 +12,7 @@ export default function AppShell() {
   const [search, setSearch] = useState("");
   const section = getSectionByPath(location.pathname);
   const role = useSelector((state) => state.auth?.value?.role);
-  // Lets deeply-nested content (e.g. WellnessCheckInPanel, which has its own
-  // AgentChatComposer instead of the shared AiCareAssistant) hide the docked
-  // assistant without a route change — read via useOutletContext(). Path-based
-  // `noAssistantPaths` can't cover this since swapping panels in place
-  // doesn't change the URL.
+
   const [assistantHidden, setAssistantHidden] = useState(false);
 
   if (role === "physician") return <div className="h-dvh bg-gray-100" />;
@@ -24,6 +20,7 @@ export default function AppShell() {
   useJobsTracker();
 
   const isSectionDetail = Boolean(section) && location.pathname !== section.path;
+  const showSearch = section?.key === "patients" && !isSectionDetail;
 
   const assistantSuppressed = assistantHidden || Boolean(section?.noAssistantPaths?.some((p) => location.pathname.includes(p)));
 
@@ -32,7 +29,7 @@ export default function AppShell() {
       <Sidebar />
 
       <div className="grid min-h-0 grid-rows-[auto_1fr_auto]">
-        <TopBar search={search} onSearchChange={setSearch} />
+        <TopBar search={search} onSearchChange={setSearch} showSearch={showSearch} />
 
         <main className="min-h-0 overflow-y-auto p-5">
           <Outlet context={{ search, section, setAssistantHidden }} />

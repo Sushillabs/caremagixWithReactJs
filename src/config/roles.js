@@ -24,7 +24,11 @@ export const ROLE_NAV = {
     secondary: ["dischargePlan", "icdCodes", "cptCodes", "medications"],
   },
   patient: {
-    primary: ["dashboard", "patients"],
+    // "patients" list is intentionally left out of nav — patient role has no
+    // roster to browse, their own record now opens straight from the
+    // dashboard. Route + PatientsList component are untouched, still
+    // reachable directly and still used by caregiver/physician nav.
+    primary: ["dashboard"],
     secondary: [],
   },
 };

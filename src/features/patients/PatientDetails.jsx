@@ -229,7 +229,7 @@ export default function PatientDetails() {
           {canWellnessCheckIn && (
             <button
               type="button"
-              onClick={() => setActivePanel("wellness")}
+              // onClick={() => setActivePanel("wellness")}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Wellness Check-in
@@ -249,9 +249,7 @@ export default function PatientDetails() {
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
-      {showOasisSocModal && (
-        <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />
-      )}
+      {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
     </div>
   );
 }
