@@ -16,6 +16,7 @@ export const FEATURE_ROLES = {
   createCarePlan: ["caregiver"],
   wellnessCheckIn: ["patient"],
   bookAppointment: ["patient"],
+  wellnessCheckInReport: ["caregiver"],
 };
 
 export const canUseFeature = (role, key) => (FEATURE_ROLES[key] || ALL_ROLES).includes(role);

@@ -10,7 +10,7 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
   const auth = useSelector((state) => state.auth?.value) || {};
   const headerItem = useSelector((state) => state.auth?.item) || {};
 
-  const facilityName = auth.hospital_name || auth.facility_name || "Care Care";
+  const facilityName = auth.hospital_name || auth.facility_name || ": WeCare";
   const bedsAvailable = auth.beds_available ?? "—";
   const firstName = auth.first_name || "";
   const lastName = auth.last_name || "";
@@ -49,9 +49,13 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
           <span className="text-gray-500">
             {role === "patient" ? "Provider" : "FACILITY NAME"} <span className="font-semibold text-gray-800">{facilityName}</span>
           </span>
-          <span className="h-4 w-px bg-gray-300" />
+          {role !== "patient" && <span className="h-4 w-px bg-gray-300" />}
           <span className="text-gray-500">
-            BEDS AVAILABLE <span className="font-semibold text-emerald-600">{bedsAvailable}</span>
+            {role !== "patient" && (
+              <>
+                BEDS AVAILABLE <span className="font-semibold text-emerald-600">{bedsAvailable}</span>
+              </>
+            )}
           </span>
         </div>
 

@@ -13,6 +13,7 @@ import OasisSocModal from "./OasisSocModal";
 import EditTemplate from "../../components/EditTemplate";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
+import WellnessCheckInReportModal from "../wellness/WellnessCheckInReportModal";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
 
 let DOCUMENT_ITEMS = [];
@@ -67,6 +68,7 @@ export default function PatientDetails() {
   const [uploadModalMode, setUploadModalMode] = useState(null);
   const [showOasisSocModal, setShowOasisSocModal] = useState(false);
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
+  const [showWellnessReportModal, setShowWellnessReportModal] = useState(false);
   // Wellness Check-in renders inline in place of the routed Outlet content —
   // same "swap the content area" pattern the Medication button already uses
   // (see setMode below), not a new route.
@@ -98,6 +100,7 @@ export default function PatientDetails() {
   const canCreateCarePlan = useCan("createCarePlan");
   const canWellnessCheckIn = useCan("wellnessCheckIn");
   const canBookAppointment = useCan("bookAppointment");
+  const canWellnessCheckInReport = useCan("wellnessCheckInReport");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -299,6 +302,16 @@ export default function PatientDetails() {
               Book Physician Visit
             </button>
           )}
+
+          {canWellnessCheckInReport && (
+            <button
+              type="button"
+              onClick={() => setShowWellnessReportModal(true)}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Wellness Check-in Report
+            </button>
+          )}
         </div>
       </div>
 
@@ -309,6 +322,7 @@ export default function PatientDetails() {
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
+      {showWellnessReportModal && <WellnessCheckInReportModal onClose={() => setShowWellnessReportModal(false)} />}
     </div>
   );
 }
