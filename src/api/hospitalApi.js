@@ -68,6 +68,27 @@ export const wellnessAlertAction = (alertId, data) =>
   http.post(`/hf-wellness/alerts/${alertId}/action`, data, { withAuth: true }).then((res) => res.data);
 export const getWellnessVoiceToken = () => http.post('/hf-wellness/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
 
+// Physician Appointment Booking (patient/POA side) — same {success, data}
+// envelope as hf-wellness above, except /clear which returns
+// {success, message, session_id} with no `data` key (verified against
+// routes.py) — unwrapped to `res.data` for all but that one.
+export const appointmentChat = (data) => http.post('/physician-appointment/chat', data, { withAuth: true }).then((res) => res.data);
+export const appointmentHistory = ({ session_id } = {}) =>
+  http.get(`/physician-appointment/history${session_id ? `?session_id=${encodeURIComponent(session_id)}` : ''}`, { withAuth: true }).then((res) => res.data);
+export const appointmentClear = ({ session_id } = {}) => http.post('/physician-appointment/clear', { session_id }, { withAuth: true });
+export const appointmentConfirm = ({ session_id } = {}) => http.post('/physician-appointment/confirm', { session_id }, { withAuth: true }).then((res) => res.data);
+export const getAppointmentPhysicians = () => http.get('/physician-appointment/physicians', { withAuth: true }).then((res) => res.data);
+export const getAppointmentAvailability = (physicianUserId, { limit, includeEpic = true } = {}) =>
+  http.get(
+    `/physician-appointment/availability?physician_user_id=${encodeURIComponent(physicianUserId)}${limit ? `&limit=${limit}` : ''}&include_epic=${includeEpic}`,
+    { withAuth: true }
+  ).then((res) => res.data);
+export const getAppointmentRequests = (status) =>
+  http.get(`/physician-appointment/requests${status ? `?status=${status}` : ''}`, { withAuth: true }).then((res) => res.data);
+export const cancelAppointmentRequest = (appointmentId) =>
+  http.post(`/physician-appointment/requests/${appointmentId}/cancel`, {}, { withAuth: true }).then((res) => res.data);
+export const getAppointmentVoiceToken = () => http.post('/physician-appointment/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
+
 // Caregiver Ambient AI (voice-first visit notes) — separate backend/session
 // model from /discharge_plan_agent, same {success, data} envelope as
 // hf-wellness above, unwrapped to res.data for every route (all error cases

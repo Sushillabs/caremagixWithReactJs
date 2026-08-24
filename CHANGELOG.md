@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Book Appointment (patient-side, chat-driven)
+
+New `features/appointments/` (`AppointmentsPanel.jsx`, `MyAppointmentsTab.jsx`), reusing Wellness's chat primitives against the existing `/physician-appointment/*` backend — no backend changes. Wired into `PatientDetails.jsx`'s "Book Physician Visit" button.
+
+Also pulled the tap-to-start mic gate + header mic toggle out of `VisitNotesAI.jsx` into shared `components/chat/VoiceStartGate.jsx` / `VoiceToggleButton.jsx`, applied to Wellness Check-in and Book Appointment too.
+
 #### In progress — Edit Visit Template popup (per new Figma)
 
 Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST

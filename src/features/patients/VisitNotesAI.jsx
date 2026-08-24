@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
+import VoiceStartGate from "../../components/chat/VoiceStartGate";
+import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import { getAmbientAiVoiceToken, ambientAiSave } from "../../api/hospitalApi";
 
 const TABS = [
@@ -12,17 +14,6 @@ const TABS = [
 ];
 
 const isValidEmailFormate = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-function WaveformBars() {
-  const heights = [6, 12, 18, 12, 6];
-  return (
-    <div className="flex items-center gap-0.5">
-      {heights.map((h, i) => (
-        <span key={i} className="w-0.5 rounded-full bg-emerald-400" style={{ height: h }} />
-      ))}
-    </div>
-  );
-}
 
 function ReviewSaveTab({ lastResponse, sessionId }) {
   const [noteText, setNoteText] = useState(lastResponse?.note_text || "");
@@ -166,24 +157,7 @@ export default function VisitNotesAI() {
   };
 
   if (!started) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-gray-200 bg-white">
-        <button
-          type="button"
-          onClick={handleStart}
-          className="flex flex-col items-center gap-2 rounded-2xl bg-emerald-50 px-10 py-6 hover:bg-emerald-100"
-        >
-          <div className="flex items-center gap-3">
-            <WaveformBars />
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white">
-              <Mic size={26} />
-            </span>
-            <WaveformBars />
-          </div>
-          <span className="text-sm font-semibold text-emerald-700">Talk to Ai Care Assistant</span>
-        </button>
-      </div>
-    );
+    return <VoiceStartGate label="Talk to Ai Care Assistant" onStart={handleStart} />;
   }
 
   return (
@@ -201,16 +175,7 @@ export default function VisitNotesAI() {
               {tab.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={voice.toggle}
-            className={`flex items-center gap-1 rounded-full px-2 py-1 text-white ${
-              voice.isActive ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"
-            }`}
-          >
-            {voice.isActive ? <Mic size={14} /> : <MicOff size={14} />}
-            {voice.isActive ? "Stop Mic" : "Start Mic"}
-          </button>
+          <VoiceToggleButton voice={voice} />
           <button
             type="button"
             onClick={handleStartOver}

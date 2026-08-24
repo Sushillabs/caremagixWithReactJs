@@ -13,6 +13,7 @@ import OasisSocModal from "./OasisSocModal";
 import EditTemplate from "../../components/EditTemplate";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
+import AppointmentsPanel from "../appointments/AppointmentsPanel";
 
 let DOCUMENT_ITEMS = [];
 
@@ -241,14 +242,18 @@ export default function PatientDetails() {
           )}
 
           {canBookAppointment && (
-            <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setActivePanel("appointments")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
               Book Physician Visit
             </button>
           )}
         </div>
       </div>
 
-      {activePanel === "wellness" ? <WellnessCheckInPanel /> : <Outlet />}
+      {activePanel === "wellness" ? <WellnessCheckInPanel /> : activePanel === "appointments" ? <AppointmentsPanel /> : <Outlet />}
 
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}

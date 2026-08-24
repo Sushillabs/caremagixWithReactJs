@@ -5,6 +5,8 @@ import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
+import VoiceStartGate from "../../components/chat/VoiceStartGate";
+import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import WellnessTrendsTab from "./WellnessTrendsTab";
 import WellnessPlanTab from "./WellnessPlanTab";
 import {
@@ -73,6 +75,10 @@ function HandoffPanel({ alert, onAction }) {
 
 export default function WellnessCheckInPanel() {
   const [activeTab, setActiveTab] = useState("checkin");
+  // Gates the checkin tab's chat behind a tap-to-start mic screen, same
+  // pattern as VisitNotesAI — Trends/Baseline stay independent, fed by their
+  // own dashboard fetch below, not blocked by this.
+  const [started, setStarted] = useState(false);
   const { setAssistantHidden } = useOutletContext() || {};
 
   // This panel has its own composer (below) instead of the shared
@@ -112,12 +118,15 @@ export default function WellnessCheckInPanel() {
   });
 
   useEffect(() => {
-    hydrateHistory().then((res) => {
-      if (!res?.chat_history?.length) send(KICKOFF_MESSAGE);
-    });
     refreshDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleStart = async () => {
+    setStarted(true);
+    const res = await hydrateHistory();
+    if (!res?.chat_history?.length) send(KICKOFF_MESSAGE);
+  };
 
   // Play back the assistant's spoken reply when the turn came from voice input.
   // Quietly refresh My Trends/My Plan data whenever a turn records a check-in,
@@ -171,36 +180,42 @@ export default function WellnessCheckInPanel() {
                 {tab.label}
               </button>
             ))}
-            {activeTab === "checkin" && (
-              <button
-                type="button"
-                onClick={handleStartOver}
-                disabled={pending}
-                title="Clear this conversation and start a new check-in"
-                className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <RotateCcw size={12} />
-                Start New Session
-              </button>
+            {activeTab === "checkin" && started && (
+              <>
+                <VoiceToggleButton voice={voice} />
+                <button
+                  type="button"
+                  onClick={handleStartOver}
+                  disabled={pending}
+                  title="Clear this conversation and start a new check-in"
+                  className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <RotateCcw size={12} />
+                  Start New Session
+                </button>
+              </>
             )}
           </div>
         </div>
 
-        {activeTab === "checkin" && (
-          <>
-            <ZoneBanner zone={lastResponse?.zone} />
-            <AgentChatThread
-              bare
-              turns={turns}
-              pending={pending || !historyLoaded}
-              error={error}
-              quickReplies={lastResponse?.follow_up_question?.options}
-              onQuickReply={(option) => send(option)}
-              emptyState="Loading your check-in..."
-              renderExtra={(meta) => <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />}
-            />
-          </>
-        )}
+        {activeTab === "checkin" &&
+          (started ? (
+            <>
+              <ZoneBanner zone={lastResponse?.zone} />
+              <AgentChatThread
+                bare
+                turns={turns}
+                pending={pending || !historyLoaded}
+                error={error}
+                quickReplies={lastResponse?.follow_up_question?.options}
+                onQuickReply={(option) => send(option)}
+                emptyState="Loading your check-in..."
+                renderExtra={(meta) => <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />}
+              />
+            </>
+          ) : (
+            <VoiceStartGate label="Talk to your Wellness Check-in" onStart={handleStart} />
+          ))}
 
         {activeTab === "trends" && (
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -215,7 +230,7 @@ export default function WellnessCheckInPanel() {
         )}
       </div>
 
-      {activeTab === "checkin" && (
+      {activeTab === "checkin" && started && (
         <AgentChatComposer
           onSubmit={(text) => send(text)}
           disabled={pending}

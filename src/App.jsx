@@ -71,7 +71,6 @@ function App() {
             <Route path="/care-giver" element={<CareGiver />} />
           </Route>
 
-          {/* New Figma app shell (Phase 1). Old routes above stay as fallback. */}
           <Route
             element={
               <RequireAuth roles={roles}>
