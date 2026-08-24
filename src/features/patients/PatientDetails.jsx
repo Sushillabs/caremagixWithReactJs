@@ -25,13 +25,14 @@ const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH
 
 const UPLOAD_ITEMS = ["Upload PDF", "Upload Scan PDF"];
 
-function DropdownButton({ label, items, onItemClick }) {
-  const [open, setOpen] = useState(false);
+// Open/close state is controlled by the parent (keyed by `label`) instead of
+// local state, so opening one dropdown collapses whichever other one was open.
+function DropdownButton({ label, items, onItemClick, open, onToggle, onClose }) {
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onToggle}
         className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
       >
         {label}
@@ -43,7 +44,7 @@ function DropdownButton({ label, items, onItemClick }) {
             <li
               key={item}
               onClick={() => {
-                setOpen(false);
+                onClose();
                 onItemClick?.(item);
               }}
               className="cursor-pointer px-3 py-1.5 text-gray-600 hover:bg-gray-50"
@@ -70,6 +71,10 @@ export default function PatientDetails() {
   // same "swap the content area" pattern the Medication button already uses
   // (see setMode below), not a new route.
   const [activePanel, setActivePanel] = useState(null);
+  // Which header dropdown (Documents/Notes/Plan/Forms/Upload) is open, keyed
+  // by its label — only one can be open at a time.
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
   const singleData = useSelector((state) => state.patientsingledata?.value);
   const patient = singleData?.patient;
   const type = patient?.type;
@@ -167,11 +172,55 @@ export default function PatientDetails() {
         </div>
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
-          {canDocuments && <DropdownButton label="Documents" items={DOCUMENT_ITEMS} onItemClick={handleDocumentClick} />}
-          {canNotes && <DropdownButton label="Notes" items={NOTES_ITEMS} onItemClick={handleNotesItemClick} />}
-          {canPlan && <DropdownButton label="Plan" items={PLAN_ITEMS} />}
-          {canForms && <DropdownButton label="Forms" items={FORMS_ITEMS} onItemClick={handleFormsItemClick} />}
-          {canUpload && <DropdownButton label="Upload" items={UPLOAD_ITEMS} onItemClick={handleUploadItemClick} />}
+          {canDocuments && (
+            <DropdownButton
+              label="Documents"
+              items={DOCUMENT_ITEMS}
+              onItemClick={handleDocumentClick}
+              open={openDropdown === "Documents"}
+              onToggle={() => toggleDropdown("Documents")}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
+          {canNotes && (
+            <DropdownButton
+              label="Notes"
+              items={NOTES_ITEMS}
+              onItemClick={handleNotesItemClick}
+              open={openDropdown === "Notes"}
+              onToggle={() => toggleDropdown("Notes")}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
+          {canPlan && (
+            <DropdownButton
+              label="Plan"
+              items={PLAN_ITEMS}
+              open={openDropdown === "Plan"}
+              onToggle={() => toggleDropdown("Plan")}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
+          {canForms && (
+            <DropdownButton
+              label="Forms"
+              items={FORMS_ITEMS}
+              onItemClick={handleFormsItemClick}
+              open={openDropdown === "Forms"}
+              onToggle={() => toggleDropdown("Forms")}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
+          {canUpload && (
+            <DropdownButton
+              label="Upload"
+              items={UPLOAD_ITEMS}
+              onItemClick={handleUploadItemClick}
+              open={openDropdown === "Upload"}
+              onToggle={() => toggleDropdown("Upload")}
+              onClose={() => setOpenDropdown(null)}
+            />
+          )}
           {canMmta && (
             <button
               type="button"

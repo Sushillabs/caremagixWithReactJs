@@ -13,6 +13,10 @@ Also pulled the tap-to-start mic gate + header mic toggle out of `VisitNotesAI.j
 
 **Fixes:** Start New Session no longer gets stuck on "Thinking" (Wellness + Appointments) or leaks the prior session's `physician_user_id` into the fresh kickoff (Appointments). Also dropped `hydrateHistory`/`GET /physician-appointment/history` from booking entirely — legacy's booking flow never resumes a prior session, only Wellness does.
 
+#### Fixed — Patient header dropdowns no longer stay open together
+
+`PatientDetails.jsx`'s Documents/Notes/Plan/Forms/Upload dropdowns each had their own local `open` state, so opening one didn't close another. Lifted to one `openDropdown` state on the parent, keyed by label — only one can be open at a time.
+
 #### In progress — Edit Visit Template popup (per new Figma)
 
 Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST
