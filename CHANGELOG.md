@@ -11,6 +11,8 @@ New `features/appointments/` (`AppointmentsPanel.jsx`, `MyAppointmentsTab.jsx`),
 
 Also pulled the tap-to-start mic gate + header mic toggle out of `VisitNotesAI.jsx` into shared `components/chat/VoiceStartGate.jsx` / `VoiceToggleButton.jsx`, applied to Wellness Check-in and Book Appointment too.
 
+**Fixes:** Start New Session no longer gets stuck on "Thinking" (Wellness + Appointments) or leaks the prior session's `physician_user_id` into the fresh kickoff (Appointments). Also dropped `hydrateHistory`/`GET /physician-appointment/history` from booking entirely — legacy's booking flow never resumes a prior session, only Wellness does.
+
 #### In progress — Edit Visit Template popup (per new Figma)
 
 Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST

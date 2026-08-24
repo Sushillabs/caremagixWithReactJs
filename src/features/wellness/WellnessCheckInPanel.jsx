@@ -150,6 +150,12 @@ export default function WellnessCheckInPanel() {
     if (pending) return;
     if (voice.isActive) voice.stop();
     await reset();
+    // reset() clears historyLoaded back to false, and AgentChatThread's
+    // pending indicator is `pending || !historyLoaded` — without
+    // re-hydrating here it stays stuck showing "Thinking" forever, even
+    // after the kickoff response lands (matches VisitNotesAI's
+    // handleStartOver, which does the same reset -> hydrateHistory -> send).
+    await hydrateHistory();
     send(KICKOFF_MESSAGE);
   };
 

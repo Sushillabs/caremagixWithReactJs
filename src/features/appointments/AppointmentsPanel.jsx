@@ -84,7 +84,11 @@ export default function AppointmentsPanel() {
     return () => setAssistantHidden?.(false);
   }, [setAssistantHidden]);
 
-  const { sessionId, turns, lastResponse, pending, error, send, runAction, hydrateHistory, historyLoaded, reset } = useAgentChat({
+  // No hydrateHistory/historyLoaded here — unlike Wellness, legacy's booking
+  // flow (patient_appointment.js) never calls GET /physician-appointment/history
+  // at all. Every open/"New chat" is always a clean slate (resetChatSession()
+  // + sendChatMessage() directly), so there's no prior session to resume.
+  const { sessionId, turns, lastResponse, pending, error, send, runAction, reset } = useAgentChat({
     sendMessage: appointmentChat,
     loadHistory: appointmentHistory,
     clearSession: appointmentClear,
@@ -152,10 +156,9 @@ export default function AppointmentsPanel() {
     onUtterance: (text) => sendMessage(text, { source: "voice", include_audio: true }),
   });
 
-  const handleStart = async () => {
+  const handleStart = () => {
     setStarted(true);
-    const res = await hydrateHistory();
-    if (!res?.chat_history?.length) sendMessage(KICKOFF_MESSAGE);
+    sendMessage(KICKOFF_MESSAGE);
   };
 
   // Play back the assistant's spoken reply when the turn came from voice input.
@@ -182,7 +185,7 @@ export default function AppointmentsPanel() {
     await reset();
     setBookingConfirmed(false);
     setSelectedPhysicianId(null);
-    sendMessage(KICKOFF_MESSAGE);
+    sendMessage(KICKOFF_MESSAGE, { physician_user_id: undefined });
   };
 
   const suggestedSlots = lastResponse?.suggested_slots || [];
@@ -259,7 +262,7 @@ export default function AppointmentsPanel() {
             <AgentChatThread
               bare
               turns={turns}
-              pending={pending || !historyLoaded}
+              pending={pending}
               error={error}
               quickReplies={quickReplies}
               onQuickReply={handleQuickReply}
