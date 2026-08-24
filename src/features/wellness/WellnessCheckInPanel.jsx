@@ -158,7 +158,7 @@ export default function WellnessCheckInPanel() {
         <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
             <HeartPulse size={14} className="text-emerald-600" />
-            Heart Wellness Check-in
+            Wellness Check-in
           </h3>
           <div className="flex items-center gap-3 text-sm text-gray-500">
             {TABS.map((tab) => (

@@ -239,7 +239,7 @@ export default function PatientDetails() {
               Wellness Check-in
             </button>
           )}
-          {/* Book Physician Visit — placeholder, no page/API wired up yet */}
+
           {canBookAppointment && (
             <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
               Book Physician Visit

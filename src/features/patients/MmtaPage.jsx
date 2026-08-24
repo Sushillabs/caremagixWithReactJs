@@ -30,21 +30,17 @@ export default function MmtaPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {!question && (
-          <p className="text-sm text-gray-400">No question available yet — open the patient's Conversation tab first.</p>
-        )}
+        {!question && <p className="text-sm text-gray-400">No question available yet — open the patient's Conversation tab first.</p>}
 
-        {question && (
+        {/* {question && (
           <p className="mb-3 text-sm text-gray-700">
             <span className="font-medium">Q:</span> {question}
           </p>
-        )}
+        )} */}
 
         {isPending && <p className="text-sm text-gray-400">Thinking...</p>}
 
-        {error && (
-          <p className="text-sm text-red-600">{error?.response?.data?.error || error?.response?.data?.message || "Something went wrong."}</p>
-        )}
+        {error && <p className="text-sm text-red-600">{error?.response?.data?.error || error?.response?.data?.message || "Something went wrong."}</p>}
 
         {data?.response && (
           <div className="text-sm text-gray-700">

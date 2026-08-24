@@ -47,7 +47,7 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
       <div className="ml-auto flex items-center gap-4 relative">
         <div className="hidden items-center gap-3 rounded-md bg-gray-50 px-3 py-1.5 text-xs sm:flex">
           <span className="text-gray-500">
-            FACILITY NAME <span className="font-semibold text-gray-800">{facilityName}</span>
+            {role === "patient" ? "Provider" : "FACILITY NAME"} <span className="font-semibold text-gray-800">{facilityName}</span>
           </span>
           <span className="h-4 w-px bg-gray-300" />
           <span className="text-gray-500">

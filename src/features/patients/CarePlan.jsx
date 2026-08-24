@@ -91,8 +91,8 @@ export default function CarePlan() {
       </div>
 
       {effectiveStatus === "done" && dashboardData ? (
-        // <CarePlanDashboard data={dashboardData} /> // temporarily off, showing placeholder below
-        <div>Care Plan Dashboard</div>
+        <CarePlanDashboard data={dashboardData} /> // temporarily off, showing placeholder below
+        // <div>Care Plan Dashboard</div>
       ) : (
         <div className="flex flex-1 items-center justify-center p-4 text-sm text-gray-400">
           {effectiveStatus === "running"

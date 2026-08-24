@@ -15,11 +15,16 @@ const TABS = [
   { key: "history", label: "Chat History" },
 ];
 
+const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
+  patient: ["progress notes for last 7 days", "h & p", "h&p", "hhrg", "icd"],
+};
+
 export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
   const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
   const patientType = useSelector((state) => state.patientsingledata?.value?.patient?.type);
+  const role = useSelector((state) => state.auth?.value?.role) || "caregiver";
   const isMedication = mode === "medication";
   const { askQuestion } = useAskQuestion();
   const [docRefQuestionId, setDocRefQuestionId] = useState(null);
@@ -31,7 +36,11 @@ export default function ConversationCard() {
   }, [conversation, askPending]);
   const summaryTable = isMedication ? null : chatData?.[0];
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
-  const defaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
+  const rawDefaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
+  const hiddenKeywords = HIDDEN_QUESTION_KEYWORDS_BY_ROLE[role] || [];
+  const defaultQuestions = hiddenKeywords.length
+    ? rawDefaultQuestions.filter((q) => !hiddenKeywords.some((kw) => q.toLowerCase().includes(kw)))
+    : rawDefaultQuestions;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
@@ -90,7 +99,8 @@ export default function ConversationCard() {
                         className="flex items-start gap-2 text-left text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
                       >
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                        {q}
+                        {/* Backend's own "N. " numbering is stripped — per-role hiding leaves gaps otherwise, and the bullet dot already marks each item. */}
+                        {q.replace(/^\d+\.\s*/, "")}
                       </button>
                     </li>
                   ))}
@@ -100,8 +110,11 @@ export default function ConversationCard() {
 
             {conversation.length > 0 && (
               <div className="space-y-3 border-t border-gray-100 pt-3">
-                {conversation.map((msg, i) =>
-                  msg.role === "user" ? (
+                {conversation.map((msg, i) => {
+                  // Medication's first message is always the fixed canned question
+                  if (isMedication && i === 0 && msg.role === "user") return null;
+
+                  return msg.role === "user" ? (
                     <div key={i} className="flex items-start justify-end gap-2 text-right">
                       <span className="text-gray-700">{msg.content}</span>
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
@@ -131,8 +144,8 @@ export default function ConversationCard() {
                         Quich Questions
                       </button>
                     </div>
-                  )
-                )}
+                  );
+                })}
                 {askPending && <ChatLoader />}
                 <div ref={chatEndRef} />
               </div>
@@ -149,9 +162,7 @@ export default function ConversationCard() {
         )}
       </div>
 
-      {docRefQuestionId && (
-        <DocReferenceModal questionId={docRefQuestionId} sourceType={patientType} onClose={() => setDocRefQuestionId(null)} />
-      )}
+      {docRefQuestionId && <DocReferenceModal questionId={docRefQuestionId} sourceType={patientType} onClose={() => setDocRefQuestionId(null)} />}
     </div>
   );
 }
