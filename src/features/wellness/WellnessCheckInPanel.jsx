@@ -225,14 +225,12 @@ export default function WellnessCheckInPanel() {
 
         {activeTab === "trends" && (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <WellnessTrendsTab dashboard={dashboard} loading={dashboardLoading} error={dashboardError} />
+            {/* <WellnessTrendsTab dashboard={dashboard} loading={dashboardLoading} error={dashboardError} /> */}
           </div>
         )}
 
         {activeTab === "plan" && (
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <WellnessPlanTab profile={dashboard?.profile} onSave={handleSaveProfile} />
-          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">{/* <WellnessPlanTab profile={dashboard?.profile} onSave={handleSaveProfile} /> */}</div>
         )}
       </div>
 
