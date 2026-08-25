@@ -18,9 +18,9 @@ import AppointmentsPanel from "../appointments/AppointmentsPanel";
 
 let DOCUMENT_ITEMS = [];
 
-const NOTES_ITEMS = ["Create Visit Notes AI", "Edit Visit Template"]; //"Create Visit Notes"
+const NOTES_ITEMS = ["Create Visit Notes AI"]; //"Create Visit Notes"
 
-const PLAN_ITEMS = ["Discharge Plan", "Create Discharge Plan", "Nursing Plan", "Transition-Care Plan"];
+const PLAN_ITEMS = ["Nursing Plan", "Transition-Care Plan"];
 
 const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH", "OASIS-TRN"];
 
@@ -280,7 +280,7 @@ export default function PatientDetails() {
               }}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
-              Create Care Plan
+              Care Plan
             </button>
           )}
           {canWellnessCheckIn && (

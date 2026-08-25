@@ -21,38 +21,25 @@ export default function CarePlan() {
   const { status, progress, carePlanId } = useCarePlanStatus(patientKey);
   const { generate, isStarting } = useCarePlan();
 
-  // On page load: check the backend directly for an existing plan. This is
-  // separate from useCarePlanStatus, which only knows about jobs tracked in
-  // THIS browser session — a plan generated earlier (or by someone else)
-  // would still show as "idle" without this check.
   const backendCheck = useQuery({
     queryKey: ["care-plan-dashboard-by-patient", patientKey],
-    queryFn: () =>
-      getCarePlanDashboardByPatient(
-        getCarePlanLookupName(singleData?.patient_name, singleData?.patient_type),
-        singleData?.patient_type
-      ),
+    queryFn: () => getCarePlanDashboardByPatient(getCarePlanLookupName(singleData?.patient_name, singleData?.patient_type), singleData?.patient_type),
     enabled: !!singleData?.patient_name && status === "idle",
     retry: false,
   });
   const backendHasPlan = !backendCheck.isError && !!backendCheck.data;
 
-  // Right after a fresh generation finishes this session, we already know
-  // the exact care_plan_id from the job — fetch that one precisely instead
-  // of searching by name again.
   const freshFetch = useQuery({
     queryKey: ["care-plan-dashboard-by-id", carePlanId],
     queryFn: () => getCarePlanDashboard(carePlanId),
     enabled: status === "done" && !!carePlanId,
   });
 
-  // Redux status wins when it has an opinion (running/done/failed this
-  // session); otherwise fall back to what the backend check found.
   const effectiveStatus = status !== "idle" ? status : backendHasPlan ? "done" : "idle";
   const dashboardData = status === "done" ? freshFetch.data : backendCheck.data;
 
   const handleClick = async () => {
-    if (effectiveStatus === "idle") {
+    if (status === "idle") {
       await generate({
         patient_name: singleData?.patient_name,
         patient_type: singleData?.patient_type,
@@ -92,8 +79,8 @@ export default function CarePlan() {
 
       {effectiveStatus === "done" && dashboardData ? (
         <CarePlanDashboard data={dashboardData} /> // temporarily off, showing placeholder below
-        // <div>Care Plan Dashboard</div>
       ) : (
+        // <div>Care Plan Dashboard</div>
         <div className="flex flex-1 items-center justify-center p-4 text-sm text-gray-400">
           {effectiveStatus === "running"
             ? "Dashboard will be available once generation finishes."
