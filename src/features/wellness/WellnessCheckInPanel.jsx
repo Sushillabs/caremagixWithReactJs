@@ -8,14 +8,7 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import WellnessTrendsTab from "./WellnessTrendsTab";
-import {
-  wellnessChat,
-  wellnessHistory,
-  wellnessClear,
-  wellnessAlertAction,
-  wellnessDashboard,
-  getWellnessVoiceToken,
-} from "../../api/hospitalApi";
+import { wellnessChat, wellnessHistory, wellnessClear, wellnessAlertAction, wellnessDashboard, getWellnessVoiceToken } from "../../api/hospitalApi";
 
 const KICKOFF_MESSAGE = "I would like to do my heart failure wellness check-in.";
 
@@ -38,6 +31,40 @@ function ZoneBanner({ zone }) {
       <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/25">✓</span>
       <span className="font-semibold">{style.label}</span>
       <span className="font-normal opacity-90">— {style.detail}</span>
+    </div>
+  );
+}
+
+const PROGRESS_FIELDS = [
+  { key: "weight_lb", label: "Weight" },
+  { key: "breathlessness", label: "Breathing" },
+  { key: "swelling", label: "Swelling" },
+];
+
+function ProgressChecklist({ checkIn }) {
+  return (
+    <div className="mx-2 mt-2 flex shrink-0 flex-wrap items-center gap-3 text-[11px]">
+      {PROGRESS_FIELDS.map((field) => {
+        const done = checkIn?.[field.key] != null && checkIn?.[field.key] !== "";
+        return (
+          <span key={field.key} className={`flex items-center gap-1 ${done ? "text-emerald-600" : "text-gray-400"}`}>
+            <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] ${done ? "bg-emerald-100" : "bg-gray-100"}`}>
+              {done ? "✓" : "○"}
+            </span>
+            {field.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function CompletionBanner() {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-800">
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">✓</span>
+      <span className="font-medium">Check-in complete for today.</span>
+      <span className="text-emerald-600">You can keep chatting if you'd like to add anything else.</span>
     </div>
   );
 }
@@ -199,6 +226,7 @@ export default function WellnessCheckInPanel() {
           (started ? (
             <>
               <ZoneBanner zone={lastResponse?.zone} />
+              <ProgressChecklist checkIn={lastResponse?.check_in} />
               <AgentChatThread
                 bare
                 turns={turns}
@@ -207,7 +235,12 @@ export default function WellnessCheckInPanel() {
                 quickReplies={lastResponse?.follow_up_question?.options}
                 onQuickReply={(option) => send(option)}
                 emptyState="Loading your check-in..."
-                renderExtra={(meta) => <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />}
+                renderExtra={(meta) => (
+                  <>
+                    <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />
+                    {meta?.status === "check_in_complete" && <CompletionBanner />}
+                  </>
+                )}
               />
             </>
           ) : (

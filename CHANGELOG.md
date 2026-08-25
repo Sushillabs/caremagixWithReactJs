@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Live check-in progress + completion signal (Wellness Check-in)
+
+`WellnessCheckInPanel.jsx`: `ProgressChecklist` (Weight/Breathing/Swelling, live from cumulative `lastResponse.check_in`) and `CompletionBanner` (shown when `status === "check_in_complete"`) — user now sees completion status during the chat, not just buried in reply text. No backend changes.
+
 #### Fixed — Notes dropdown didn't leave Wellness/Appointments panels
 
 `PatientDetails.jsx`'s `handleNotesItemClick` ("Create Visit Notes" / "Create
