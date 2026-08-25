@@ -67,6 +67,11 @@ export const getWellnessAlerts = (status) =>
 export const wellnessAlertAction = (alertId, data) =>
   http.post(`/hf-wellness/alerts/${alertId}/action`, data, { withAuth: true }).then((res) => res.data);
 export const getWellnessVoiceToken = () => http.post('/hf-wellness/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
+// Caregiver read-only view of one facility patient — accepts patient_key
+// and/or patient_name (backend OR-matches), but the frontend only ever has
+// patient_name available (no patient_key anywhere in this app's data model).
+export const getWellnessCaregiverDashboard = (patientName) =>
+  http.get(`/hf-wellness/caregiver/dashboard?patient_name=${encodeURIComponent(patientName)}`, { withAuth: true }).then((res) => res.data);
 
 // Physician Appointment Booking (patient/POA side) — same {success, data}
 // envelope as hf-wellness above, except /clear which returns

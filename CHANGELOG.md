@@ -17,6 +17,10 @@ Also pulled the tap-to-start mic gate + header mic toggle out of `VisitNotesAI.j
 
 `PatientDetails.jsx`'s Documents/Notes/Plan/Forms/Upload dropdowns each had their own local `open` state, so opening one didn't close another. Lifted to one `openDropdown` state on the parent, keyed by label — only one can be open at a time.
 
+#### Added — Wellness Check-in Report (caregiver-side)
+
+New `WellnessCaregiverPanel.jsx`, inline in `PatientDetails.jsx` (same `activePanel` pattern as Wellness/Appointments — no modal, no new route). Reuses `WellnessTrendsTab`/`WellnessPlanTab` as-is, fed by `GET /hf-wellness/caregiver/dashboard?patient_name=`. Plan editing moved here from the patient side (`WellnessCheckInPanel.jsx`'s "My Baseline" tab removed); Save is stubbed until a caregiver profile-update backend route exists.
+
 #### In progress — Edit Visit Template popup (per new Figma)
 
 Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST

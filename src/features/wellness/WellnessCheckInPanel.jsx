@@ -8,14 +8,12 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import WellnessTrendsTab from "./WellnessTrendsTab";
-import WellnessPlanTab from "./WellnessPlanTab";
 import {
   wellnessChat,
   wellnessHistory,
   wellnessClear,
   wellnessAlertAction,
   wellnessDashboard,
-  updateWellnessProfile,
   getWellnessVoiceToken,
 } from "../../api/hospitalApi";
 
@@ -30,7 +28,6 @@ const ZONE_STYLES = {
 const TABS = [
   { key: "checkin", label: "Today's check-in" },
   { key: "trends", label: "My Progress" },
-  { key: "plan", label: "My Baseline" },
 ];
 
 function ZoneBanner({ zone }) {
@@ -94,9 +91,8 @@ export default function WellnessCheckInPanel() {
     clearSession: wellnessClear,
   });
 
-  // Feeds both My Progress (stats/chart/check-in list) and My Baseline's
-  // prefill (dashboard.profile) — one GET /dashboard call, same as legacy's
-  // loadDashboard(), which also calls fillPlanForm(currentProfile) from it.
+  // Feeds My Progress (stats/chart/check-in list) — plan editing moved to
+  // the caregiver side, so dashboard.profile is no longer used here.
   const [dashboard, setDashboard] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState(null);
@@ -129,8 +125,8 @@ export default function WellnessCheckInPanel() {
   };
 
   // Play back the assistant's spoken reply when the turn came from voice input.
-  // Quietly refresh My Trends/My Plan data whenever a turn records a check-in,
-  // matching legacy's "reloads dashboard quietly if check_in was recorded".
+  // Quietly refresh My Progress whenever a turn records a check-in, matching
+  // legacy's "reloads dashboard quietly if check_in was recorded".
   useEffect(() => {
     if (lastResponse?.audio_base64) {
       voice.playReply(lastResponse.audio_base64, lastResponse.audio_content_type).then(() => voice.resumeAfterTurn());
@@ -157,11 +153,6 @@ export default function WellnessCheckInPanel() {
     // handleStartOver, which does the same reset -> hydrateHistory -> send).
     await hydrateHistory();
     send(KICKOFF_MESSAGE);
-  };
-
-  const handleSaveProfile = async (form) => {
-    await updateWellnessProfile(form);
-    refreshDashboard();
   };
 
   return (
@@ -225,12 +216,8 @@ export default function WellnessCheckInPanel() {
 
         {activeTab === "trends" && (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {/* <WellnessTrendsTab dashboard={dashboard} loading={dashboardLoading} error={dashboardError} /> */}
+            <WellnessTrendsTab dashboard={dashboard} loading={dashboardLoading} error={dashboardError} />
           </div>
-        )}
-
-        {activeTab === "plan" && (
-          <div className="min-h-0 flex-1 overflow-y-auto">{/* <WellnessPlanTab profile={dashboard?.profile} onSave={handleSaveProfile} /> */}</div>
         )}
       </div>
 
