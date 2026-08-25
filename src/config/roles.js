@@ -15,7 +15,6 @@ export const ROLE_NAV = {
       "reports",
       "editVisitTemplate",
       "jobs",
-      "transitionCareServices",
       "configuration",
     ],
     secondary: ["dischargePlan", "nursingPlan", "transitionCarePlan", "icdCodes", "cptCodes", "medications", "uploadedPlan"],

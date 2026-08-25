@@ -4,21 +4,15 @@ import StatCard from "./StatCard";
 import usePatientRecords from "../../hooks/usePatientRecords";
 import useOpenPatientDetail from "../../hooks/useOpenPatientDetail";
 
-// Facility-level overview for caregiver/physician. Stats are placeholders
-// until wired to real counts in a later phase (getPatients, alerts SSE,
-// uploads, etc.).
 const STATS = [
-  { icon: Users, value: 42, label: "Patients", accent: "text-emerald-600", iconBg: "bg-emerald-50" },
+  { icon: Users, value: 19, label: "Patients", accent: "text-emerald-600", iconBg: "bg-emerald-50" },
   { icon: ClipboardList, value: 42, label: "Pending Plans", accent: "text-teal-600", iconBg: "bg-teal-50" },
   { icon: AlertOctagon, value: 14, label: "Critical Alerts", accent: "text-red-600", iconBg: "bg-red-50" },
   { icon: AlertTriangle, value: 3, label: "Alerts", accent: "text-pink-600", iconBg: "bg-pink-50" },
-  { icon: BedDouble, value: 40, label: "Beds Available", accent: "text-indigo-600", iconBg: "bg-indigo-50" },
-  { icon: FileUp, value: 12, label: "Uploads", accent: "text-amber-600", iconBg: "bg-amber-50" },
+  { icon: BedDouble, value: 148, label: "Beds Available", accent: "text-indigo-600", iconBg: "bg-indigo-50" },
+  { icon: FileUp, value: 10, label: "Uploads", accent: "text-amber-600", iconBg: "bg-amber-50" },
 ];
 
-// Patient-facing cards. Static placeholders until per-patient APIs (care
-// plan status, appointment count, alerts) exist — same StatCard shell, just
-// role-relevant labels instead of facility-wide counts.
 const PATIENT_STATS = [
   { icon: ClipboardList, value: 1, label: "Your Plan", accent: "text-emerald-600", iconBg: "bg-emerald-50" },
   { icon: CalendarCheck, value: 2, label: "Your Appointments", accent: "text-teal-600", iconBg: "bg-teal-50" },

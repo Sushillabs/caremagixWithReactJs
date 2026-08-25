@@ -42,7 +42,7 @@ function SignIn() {
       dispatch(setAuth(res));
       reset();
     } catch (error) {
-      alert(error.message);
+      alert(error?.response?.data?.error || error.message);
     }
   };
 
@@ -54,10 +54,10 @@ function SignIn() {
     console.log("resetEmail", resetEmail);
 
     try {
-      const res = forgotPasswordAPI(resetEmail);
+      const res = await forgotPasswordAPI(resetEmail);
       console.log("reset email res", res);
     } catch (error) {
-      alert(error.message);
+      alert(error?.response?.data?.error || error.message);
     }
     reset();
   };

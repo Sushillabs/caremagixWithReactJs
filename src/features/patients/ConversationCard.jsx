@@ -81,7 +81,7 @@ export default function ConversationCard() {
             <p className="mt-3 px-2 text-sm text-gray-400">No summary available yet.</p>
           )
         ) : activeTab === "history" ? (
-          <p className="mt-3 px-2 text-sm text-gray-400">Chat History will be built in a later phase.</p>
+          <p className="mt-3 px-2 text-sm text-gray-400"></p>
         ) : defaultQuestions.length > 0 || conversation.length > 0 || askPending ? (
           <div className="mt-3 space-y-3 px-2 text-sm">
             {defaultQuestions.length > 0 && (
@@ -123,26 +123,26 @@ export default function ConversationCard() {
                     </div>
                   ) : (
                     <div key={i} className="text-gray-700 space-x-2">
-                      {typeof msg.content === "string" && (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
-                          {msg.content}
-                        </ReactMarkdown>
-                      )}
                       <button
                         type="button"
                         onClick={() => setDocRefQuestionId(msg.id)}
                         disabled={!msg.id}
-                        className="mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="mb-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Doc Reference
                       </button>
                       <button
                         type="button"
-                        className="mt-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
+                        className="mb-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
                         onClick={scrollToQuestions}
                       >
-                        Quich Questions
+                        Quick Questions
                       </button>
+                      {typeof msg.content === "string" && (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   );
                 })}

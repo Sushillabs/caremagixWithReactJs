@@ -11,12 +11,12 @@ const TABS = [
 // Static tab row per Figma — no behavior wired yet.
 export default function TransitionCareServicesPage() {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-1.5">
       {TABS.map((tab) => (
         <button
           key={tab}
           type="button"
-          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+          className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
         >
           {tab}
         </button>

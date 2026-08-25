@@ -5,6 +5,56 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — Notes dropdown didn't leave Wellness/Appointments panels
+
+`PatientDetails.jsx`'s `handleNotesItemClick` ("Create Visit Notes" / "Create
+Visit Notes AI") navigated to a routed page but never reset `activePanel` —
+only `activePanel === null` renders the routed `<Outlet/>`, so if Wellness
+Check-in, Book Appointment, or Wellness Check-in Report was open, the URL
+changed but the screen stayed on that panel. Added `setActivePanel(null)` to
+both branches, matching the Documents/Care Plan buttons, which already did
+this correctly. Checked every other toolbar action for the same gap — modals
+and the MMTA route (outside `PatientDetails`'s `Outlet` entirely) don't need
+it; nothing else was missing it.
+
+#### Fixed — SignIn showed generic Axios errors instead of the backend's message
+
+`SignIn.jsx`'s catch blocks used `alert(error.message)` — Axios's generic
+"Request failed with status code ..." text, not the backend's actual
+`{error: "..."}` body (e.g. "Invalid credentials. Incorrect password."). Now
+reads `error?.response?.data?.error` first, falling back to `error.message`.
+Also fixed `onSignInReset` missing `await` on `forgotPasswordAPI(...)`,
+which meant a failed request there could never actually reach its own catch
+block.
+
+#### Added — Transition-Care Plan modal (Plan dropdown), replacing the sidebar page
+
+Removed "Transition care services" from the sidebar (`config/roles.js`).
+New `TransitionCarePlanModal.jsx`, opened from the existing "Transition-Care
+Plan" item in `PatientDetails.jsx`'s Plan dropdown (previously unwired).
+Modal has a Transition Care / Services tab switch: Services reuses
+`TransitionCareServicesPage.jsx`'s static list (restyled — left-aligned
+vertical rows, tighter padding/text size, instead of wrapped pill buttons);
+Transition Care is intentionally blank for now. Both tabs share a fixed
+min-height so switching tabs doesn't resize the modal.
+
+#### Fixed — "View Care Plan" opened a blank edit page for already-generated plans
+
+`CarePlan.jsx`'s `handleClick` was checking `effectiveStatus` (which folds
+in the backend existence-check added for the dashboard work above) instead
+of raw session `status` to decide whether to call `generate()`. When a plan
+already existed but wasn't generated in this session, `effectiveStatus` was
+already `"done"`, so `handleClick` skipped `generate()` and navigated
+straight to `CarePlanDetailPage.jsx` — which only reads from Redux, so it
+showed "No care plan generated yet" and offered a regenerate that would
+have created a duplicate plan. Fixed by reverting the condition to `status`,
+so `generate({regenerate: false})` still runs and populates Redux before
+navigating — restores the behavior from before this regression was
+introduced. (The matching gap on `CarePlanDetailPage.jsx` itself — no
+backend fallback of its own, so a hard refresh on that page has the same
+problem — is deliberately deferred to the planned reload-handling work, not
+fixed here.)
+
 #### Added — Book Appointment (patient-side, chat-driven)
 
 New `features/appointments/` (`AppointmentsPanel.jsx`, `MyAppointmentsTab.jsx`), reusing Wellness's chat primitives against the existing `/physician-appointment/*` backend — no backend changes. Wired into `PatientDetails.jsx`'s "Book Physician Visit" button.

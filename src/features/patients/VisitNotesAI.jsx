@@ -71,7 +71,11 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
             To generate the PDF, save your changes below first.
           </span>
         </div>
-        <textarea readOnly value={lastResponse.transcript || ""} className="mt-1 w-full min-h-[100px] border rounded p-2 text-xs text-gray-500 bg-gray-50" />
+        <textarea
+          readOnly
+          value={lastResponse.transcript || ""}
+          className="mt-1 w-full min-h-[100px] border rounded p-2 text-xs text-gray-500 bg-gray-50"
+        />
       </div>
 
       <div>
@@ -157,7 +161,7 @@ export default function VisitNotesAI() {
   };
 
   if (!started) {
-    return <VoiceStartGate label="Talk to Ai Care Assistant" onStart={handleStart} />;
+    return <VoiceStartGate label="Talk to Caremagix AI Assistant" onStart={handleStart} />;
   }
 
   return (
@@ -192,12 +196,7 @@ export default function VisitNotesAI() {
       {activeTab === "chat" && (
         <>
           <AgentChatThread bare turns={turns} pending={pending || !historyLoaded} error={error} emptyState="Starting..." />
-          <AgentChatComposer
-            onSubmit={(text) => send(text)}
-            disabled={pending}
-            voice={voice}
-            placeholder="Talk or type your visit note answers..."
-          />
+          <AgentChatComposer onSubmit={(text) => send(text)} disabled={pending} voice={voice} placeholder="Talk or type your visit note answers..." />
           <div className="shrink-0 border-t border-gray-100 p-2 text-right">
             <button
               type="button"

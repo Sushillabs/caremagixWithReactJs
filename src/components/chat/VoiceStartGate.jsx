@@ -11,7 +11,7 @@ function WaveformBars() {
   );
 }
 
-export default function VoiceStartGate({ label = "Talk to AI Care Assistant", onStart }) {
+export default function VoiceStartGate({ label = "Talk to Caremagix AI Assistant", onStart }) {
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-gray-200 bg-white">
       <button type="button" onClick={onStart} className="flex flex-col items-center gap-2 rounded-2xl bg-emerald-50 px-10 py-6 hover:bg-emerald-100">
@@ -22,7 +22,7 @@ export default function VoiceStartGate({ label = "Talk to AI Care Assistant", on
           </span>
           <WaveformBars />
         </div>
-        <span className="text-sm font-semibold text-emerald-700">Talk to Caremagix AI Assistant</span>
+        <span className="text-sm font-semibold text-emerald-700">{label}</span>
       </button>
     </div>
   );

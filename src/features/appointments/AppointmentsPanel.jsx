@@ -240,7 +240,7 @@ export default function AppointmentsPanel() {
           </div>
         </div>
 
-        {activeTab === "book" && !started && <VoiceStartGate label="Talk about your appointment" onStart={handleStart} />}
+        {activeTab === "book" && !started && <VoiceStartGate label="Book via Caremagix AI Assistant" onStart={handleStart} />}
 
         {activeTab === "book" && started && (
           <>

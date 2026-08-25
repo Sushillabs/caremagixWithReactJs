@@ -10,6 +10,7 @@ import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
 import UploadPlanModal from "./UploadPlanModal";
 import OasisSocModal from "./OasisSocModal";
+import TransitionCarePlanModal from "./TransitionCarePlanModal";
 import EditTemplate from "../../components/EditTemplate";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
@@ -26,8 +27,6 @@ const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH
 
 const UPLOAD_ITEMS = ["Upload PDF", "Upload Scan PDF"];
 
-// Open/close state is controlled by the parent (keyed by `label`) instead of
-// local state, so opening one dropdown collapses whichever other one was open.
 function DropdownButton({ label, items, onItemClick, open, onToggle, onClose }) {
   return (
     <div className="relative">
@@ -67,13 +66,11 @@ export default function PatientDetails() {
   const [showUnregisterModal, setShowUnregisterModal] = useState(false);
   const [uploadModalMode, setUploadModalMode] = useState(null);
   const [showOasisSocModal, setShowOasisSocModal] = useState(false);
+  const [showTransitionCareModal, setShowTransitionCareModal] = useState(false);
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
-  // Wellness Check-in renders inline in place of the routed Outlet content —
-  // same "swap the content area" pattern the Medication button already uses
-  // (see setMode below), not a new route.
+
   const [activePanel, setActivePanel] = useState(null);
-  // Which header dropdown (Documents/Notes/Plan/Forms/Upload) is open, keyed
-  // by its label — only one can be open at a time.
+
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
   const singleData = useSelector((state) => state.patientsingledata?.value);
@@ -112,13 +109,17 @@ export default function PatientDetails() {
     if (item === "Upload Scan PDF") setUploadModalMode("scan");
   };
 
+  const handlePlanItemClick = (item) => {
+    if (item === "Transition-Care Plan") setShowTransitionCareModal(true);
+  };
+
   const handleFormsItemClick = (item) => {
     if (item === "OASIS-SOC") setShowOasisSocModal(true);
-    // Other Forms items intentionally left unhandled for now — not built yet
   };
 
   const handleNotesItemClick = (item) => {
     if (item === "Create Visit Notes") {
+      setActivePanel(null);
       dispatch(clearNotes());
       dispatch(
         fetchDischargePlan({
@@ -130,6 +131,7 @@ export default function PatientDetails() {
       navigate("visit-notes");
     }
     if (item === "Create Visit Notes AI") {
+      setActivePanel(null);
       navigate("visit-notes-ai");
     }
     if (item === "Edit Visit Template") {
@@ -155,21 +157,21 @@ export default function PatientDetails() {
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="grid grid-cols-4 items-center justify-between gap-3 ">
-        <div className="col-span-1 flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-2">
+        <div className="col-span-1 flex items-center h-16 gap-2 rounded-lg border border-gray-200 bg-white p-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
             <User size={18} className="text-gray-400" />
           </div>
-          <div>
+          <div className="">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-gray-800">{patient?.name || "Patient"}</h2>
               <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-gray-500">
+            {/* <p className="mt-0.5 text-xs text-gray-500">
               Age: {age} &nbsp;&nbsp; Admission Date: {admissionDate}
             </p>
-            <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p>
+            <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p> */}
           </div>
         </div>
 
@@ -198,6 +200,7 @@ export default function PatientDetails() {
             <DropdownButton
               label="Plan"
               items={PLAN_ITEMS}
+              onItemClick={handlePlanItemClick}
               open={openDropdown === "Plan"}
               onToggle={() => toggleDropdown("Plan")}
               onClose={() => setOpenDropdown(null)}
@@ -328,6 +331,7 @@ export default function PatientDetails() {
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
+      {showTransitionCareModal && <TransitionCarePlanModal onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
     </div>
   );
