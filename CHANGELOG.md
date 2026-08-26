@@ -5,6 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Manage Booking / Manage Calendar (physician role)
+
+New `/app/manage-bookings` route (`ManageBookingPage.jsx`) — a real page, not
+a modal, since this is a growing dashboard (same shape as Jobs/Reports), not
+a one-off popup. Wired into `config/sections.js` + `config/roles.js`
+(`ROLE_NAV.physician`).
+
+Three tabs, all against the existing legacy
+`physician_appointment/physician/calendar/*` backend (no backend changes):
+
+- **Appointments** — list physician's bookings, reschedule (inline datetime
+  edit), confirm (pending → confirmed), cancel.
+- **Settings & Availability** — timezone, slot length, booking window,
+  per-day work hours; shows next open slots, refreshes after save.
+- **Blocked Time** — add/remove manual unavailable blocks (vacation,
+  meetings).
+
+`hospitalApi.js` — 8 new functions for the calendar routes, response shapes
+verified directly against the legacy Flask routes (`physician_routes.py`),
+not guessed. New `appointmentFormat.jsx` — `StatusPill`/
+`APPOINTMENT_TYPE_LABEL`/`formatDateTime` extracted out of
+`MyAppointmentsTab.jsx` so patient- and physician-side appointment views
+share one status-color source instead of duplicating the lookup tables.
+
+Not done yet: Epic sync status indicator, status/date filters on the
+appointments list (API already supports them, just not wired to any UI).
+
 #### Added — Live check-in progress + completion signal (Wellness Check-in)
 
 `WellnessCheckInPanel.jsx`: `ProgressChecklist` (Weight/Breathing/Swelling, live from cumulative `lastResponse.check_in`) and `CompletionBanner` (shown when `status === "check_in_complete"`) — user now sees completion status during the chat, not just buried in reply text. No backend changes.

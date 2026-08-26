@@ -94,6 +94,40 @@ export const cancelAppointmentRequest = (appointmentId) =>
   http.post(`/physician-appointment/requests/${appointmentId}/cancel`, {}, { withAuth: true }).then((res) => res.data);
 export const getAppointmentVoiceToken = () => http.post('/physician-appointment/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
 
+// Physician Appointment Management (physician side calendar) — same
+// {success, data} envelope, verified against physician_routes.py.
+export const getPhysicianCalendarAppointments = ({ status, epic_sync_status, from, to } = {}) => {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (epic_sync_status) params.set('epic_sync_status', epic_sync_status);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const qs = params.toString();
+  return http.get(`/physician-appointment/physician/calendar/appointments${qs ? `?${qs}` : ''}`, { withAuth: true }).then((res) => res.data);
+};
+export const updatePhysicianCalendarAppointment = (appointmentId, payload) =>
+  http.patch(`/physician-appointment/physician/calendar/appointments/${appointmentId}`, payload, { withAuth: true }).then((res) => res.data);
+export const cancelPhysicianCalendarAppointment = (appointmentId) =>
+  http.post(`/physician-appointment/physician/calendar/appointments/${appointmentId}/cancel`, {}, { withAuth: true }).then((res) => res.data);
+export const getPhysicianCalendarSettings = () =>
+  http.get('/physician-appointment/physician/calendar/settings', { withAuth: true }).then((res) => res.data);
+export const updatePhysicianCalendarSettings = (payload) =>
+  http.put('/physician-appointment/physician/calendar/settings', payload, { withAuth: true }).then((res) => res.data);
+export const getPhysicianCalendarAvailability = (limit) =>
+  http.get(`/physician-appointment/physician/calendar/availability${limit ? `?limit=${limit}` : ''}`, { withAuth: true }).then((res) => res.data);
+export const getPhysicianCalendarBlocks = ({ from, to } = {}) => {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const qs = params.toString();
+  return http.get(`/physician-appointment/physician/calendar/blocks${qs ? `?${qs}` : ''}`, { withAuth: true }).then((res) => res.data);
+};
+export const createPhysicianCalendarBlock = (payload) =>
+  http.post('/physician-appointment/physician/calendar/blocks', payload, { withAuth: true }).then((res) => res.data);
+// No .then((res) => res.data) here — DELETE returns {success, message}, no `data` key (same shape as appointmentClear above).
+export const deletePhysicianCalendarBlock = (blockId) =>
+  http.delete(`/physician-appointment/physician/calendar/blocks/${blockId}`, { withAuth: true });
+
 // Caregiver Ambient AI (voice-first visit notes) — separate backend/session
 // model from /discharge_plan_agent, same {success, data} envelope as
 // hf-wellness above, unwrapped to res.data for every route (all error cases

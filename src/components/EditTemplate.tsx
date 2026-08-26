@@ -8,6 +8,7 @@ import { Spinner } from "./Spiner.jsx";
 
 interface EditTemplateProps {
   onClose: () => void;
+  title?: string;
 }
 
 interface TemplateField {
@@ -19,7 +20,7 @@ interface EditTemplateResponse {
   fields: Record<string, TemplateField>;
 }
 
-const EditTemplate = ({ onClose }: EditTemplateProps) => {
+const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemplateProps) => {
   const [fields, setFields] = useState<Record<string, TemplateField>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -77,7 +78,7 @@ const EditTemplate = ({ onClose }: EditTemplateProps) => {
       <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl h-[80vh] flex flex-col relative">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50">
-          <h2 className="text-lg font-semibold text-black">Edit Visit Notes Template</h2>
+          <h2 className="text-lg font-semibold text-black">{title}</h2>
           <button onClick={onClose} className="p-2 rounded-full text-black hover:bg-gray-200">
             <X className="w-5 h-5" />
           </button>

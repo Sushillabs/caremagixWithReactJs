@@ -19,13 +19,21 @@ import AppointmentsPanel from "../appointments/AppointmentsPanel";
 
 let DOCUMENT_ITEMS = [];
 
-const NOTES_ITEMS = ["Create Visit Notes AI"]; //"Create Visit Notes"
+// Omit `roles` to show an item to every role that can see this dropdown.
+// Add `roles: ["caregiver", ...]` to restrict it to specific roles.
+const NOTES_ITEMS = [
+  { label: "Create Visit Notes AI", roles: ["caregiver"] },
+  { label: "Create Discharge Plan AI", roles: ["physician"] },
+  { label: "Create Handoff Note AI", roles: ["physician"] },
+]; //"Create Visit Notes"
 
 const PLAN_ITEMS = ["Nursing Plan", "Transition-Care Plan"];
 
 const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH", "OASIS-TRN"];
 
-const UPLOAD_ITEMS = ["Upload PDF", "Upload Scan PDF"];
+const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Scan PDF" }];
+
+const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
 function DropdownButton({ label, items, onItemClick, open, onToggle, onClose }) {
   return (
@@ -77,6 +85,7 @@ export default function PatientDetails() {
   const patient = singleData?.patient;
   const type = patient?.type;
   const auth = useSelector((state) => state.auth?.value) || {};
+  const role = auth.role || "caregiver";
   const caregiverName = `${auth.first_name || ""} ${auth.last_name || ""}`.trim() || auth.name || auth.username || "";
 
   const age = patient?.raw?.age || patient?.age || "";
@@ -97,6 +106,7 @@ export default function PatientDetails() {
   const canWellnessCheckIn = useCan("wellnessCheckIn");
   const canBookAppointment = useCan("bookAppointment");
   const canWellnessCheckInReport = useCan("wellnessCheckInReport");
+  const canCreateProgressNote = useCan("createProgressNotes");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -130,7 +140,7 @@ export default function PatientDetails() {
       );
       navigate("visit-notes");
     }
-    if (item === "Create Visit Notes AI") {
+    if (["Create Visit Notes AI", "Create Discharge Plan AI", "Create Handoff Note AI"].includes(item)) {
       setActivePanel(null);
       navigate("visit-notes-ai");
     }
@@ -189,7 +199,7 @@ export default function PatientDetails() {
           {canNotes && (
             <DropdownButton
               label="Notes"
-              items={NOTES_ITEMS}
+              items={byRole(NOTES_ITEMS, role)}
               onItemClick={handleNotesItemClick}
               open={openDropdown === "Notes"}
               onToggle={() => toggleDropdown("Notes")}
@@ -219,7 +229,7 @@ export default function PatientDetails() {
           {canUpload && (
             <DropdownButton
               label="Upload"
-              items={UPLOAD_ITEMS}
+              items={byRole(UPLOAD_ITEMS, role)}
               onItemClick={handleUploadItemClick}
               open={openDropdown === "Upload"}
               onToggle={() => toggleDropdown("Upload")}
@@ -312,6 +322,15 @@ export default function PatientDetails() {
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Wellness Check-in Report
+            </button>
+          )}
+          {canCreateProgressNote && (
+            <button
+              type="button"
+              onClick={() => setActivePanel("createProgress")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Create Progress Note
             </button>
           )}
         </div>

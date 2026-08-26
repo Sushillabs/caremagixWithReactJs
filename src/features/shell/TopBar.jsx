@@ -49,9 +49,9 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
           <span className="text-gray-500">
             {role === "patient" ? "Provider" : "FACILITY NAME"} <span className="font-semibold text-gray-800">{facilityName}</span>
           </span>
-          {role !== "patient" && <span className="h-4 w-px bg-gray-300" />}
+          {role === "caregiver" && <span className="h-4 w-px bg-gray-300" />}
           <span className="text-gray-500">
-            {role !== "patient" && (
+            {role === "caregiver" && (
               <>
                 BEDS AVAILABLE <span className="font-semibold text-emerald-600">{bedsAvailable}</span>
               </>

@@ -12,8 +12,12 @@ import ConnectMetriportModal from "../configuration/ConnectMetriportModal";
 import PullMetriportModal from "../configuration/PullMetriportModal";
 import EditTemplate from "../../components/EditTemplate";
 
-// Modal-type children (no `path`) are looked up here by key. Adding a new
-// one is a one-line entry — no more if/else branches to grow.
+// Same component/logic as "Edit Visit Template" — only the modal title differs
+// for this role. Split into its own logic later if the behavior needs to diverge.
+function EditHandoffNoteModal(props) {
+  return <EditTemplate {...props} title="Edit Handoff Note Template" />;
+}
+
 const CHILD_MODALS = {
   pullPcc: PullPccModal,
   connectMetriport: ConnectMetriportModal,
@@ -21,6 +25,7 @@ const CHILD_MODALS = {
   pullEpic: PullEpicModal,
   efaxConfig: EfaxConfigModal,
   editVisitTemplate: EditTemplate,
+  editHandoffNote: EditHandoffNoteModal,
 };
 
 function NavItem({ section }) {
@@ -62,12 +67,15 @@ function ModalNavItem({ section }) {
   );
 }
 
-function NavGroup({ section }) {
+function NavGroup({ section, role }) {
   const location = useLocation();
-  const [open, setOpen] = useState(section.children.some((c) => c.path && location.pathname.startsWith(c.path)));
+  const children = section.children.filter((c) => !c.roles || c.roles.includes(role));
+  const [open, setOpen] = useState(children.some((c) => c.path && location.pathname.startsWith(c.path)));
   const [activeModalKey, setActiveModalKey] = useState(null);
   const Icon = section.icon;
   const ActiveModal = activeModalKey && CHILD_MODALS[activeModalKey];
+
+  if (children.length === 0) return null;
 
   return (
     <div>
@@ -82,7 +90,7 @@ function NavGroup({ section }) {
       </button>
       {open && (
         <div className="ml-4 space-y-1 border-l border-white/10 py-1 pl-3">
-          {section.children.map((child) =>
+          {children.map((child) =>
             child.path ? (
               <NavLink
                 key={child.key}
@@ -136,7 +144,7 @@ export default function Sidebar() {
           {nav.primary.map((key) => {
             const section = SECTIONS[key];
             if (!section) return null;
-            if (section.children) return <NavGroup key={key} section={section} />;
+            if (section.children) return <NavGroup key={key} section={section} role={role} />;
             if (section.path) return <NavItem key={key} section={section} />;
             return <ModalNavItem key={key} section={section} />;
           })}

@@ -14,6 +14,7 @@ import {
   FileCode2,
   Pill,
   Files,
+  CalendarClock,
 } from "lucide-react";
 
 export const SECTIONS = {
@@ -70,6 +71,27 @@ export const SECTIONS = {
     assistant: false,
     requiresPatient: false,
   },
+  editHandoffNote: {
+    key: "editHandoffNote",
+    label: "Edit Handoff Note",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  // Real page, not a modal — this is a growing dashboard (list now, then
+  // reschedule/cancel/settings/blocks), same shape as Jobs/Reports, not a
+  // one-off popup like the Configuration group's modal children.
+  manageCalendar: {
+    key: "manageCalendar",
+    label: "Manage Calendar",
+    icon: CalendarClock,
+    path: "/app/manage-bookings",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
 
   transitionCareServices: {
     key: "transitionCareServices",
@@ -88,12 +110,14 @@ export const SECTIONS = {
     group: "primary",
     assistant: false,
     requiresPatient: false,
+
     children: [
-      { key: "pullPcc", label: "Pull PCC Data" },
-      { key: "connectMetriport", label: "Connect Metriport" },
-      { key: "pullMetriport", label: "Pull Metriport Data" },
-      { key: "pullEpic", label: "Pull Epic Data" },
-      { key: "efaxConfig", label: "Pull eFax Data" },
+      { key: "pullPcc", label: "Pull PCC Data", roles: ["caregiver"] },
+      { key: "connectMetriport", label: "Connect Metriport", roles: ["caregiver"] },
+      { key: "pullMetriport", label: "Pull Metriport Data", roles: ["caregiver"] },
+      { key: "pullEpic", label: "Pull Epic Data", roles: ["caregiver"] },
+      { key: "efaxConfig", label: "Pull eFax Data", roles: ["caregiver"] },
+      { key: "pullEhr", label: "Pull EHR Data", roles: ["physician"] },
     ],
   },
 

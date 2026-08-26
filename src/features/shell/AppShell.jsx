@@ -15,7 +15,7 @@ export default function AppShell() {
 
   const [assistantHidden, setAssistantHidden] = useState(false);
 
-  if (role === "physician") return <div className="h-dvh bg-gray-100" />;
+  // if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
   useJobsTracker();
 
