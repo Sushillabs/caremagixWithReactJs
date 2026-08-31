@@ -16,11 +16,10 @@ import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 import WellnessCaregiverPanel from "../wellness/WellnessCaregiverPanel";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
+import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
 
 let DOCUMENT_ITEMS = [];
 
-// Omit `roles` to show an item to every role that can see this dropdown.
-// Add `roles: ["caregiver", ...]` to restrict it to specific roles.
 const NOTES_ITEMS = [
   { label: "Create Visit Notes AI", roles: ["caregiver"] },
   { label: "Create Discharge Plan AI", roles: ["physician"] },
@@ -107,6 +106,7 @@ export default function PatientDetails() {
   const canBookAppointment = useCan("bookAppointment");
   const canWellnessCheckInReport = useCan("wellnessCheckInReport");
   const canCreateProgressNote = useCan("createProgressNotes");
+  const canTimeline = useCan("timeline");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -315,6 +315,16 @@ export default function PatientDetails() {
             </button>
           )}
 
+          {canTimeline && (
+            <button
+              type="button"
+              onClick={() => setActivePanel("timeline")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Patient Timeline
+            </button>
+          )}
+
           {canWellnessCheckInReport && (
             <button
               type="button"
@@ -342,6 +352,8 @@ export default function PatientDetails() {
         <AppointmentsPanel />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
+      ) : activePanel === "timeline" ? (
+        <PatientTimelinePanel />
       ) : (
         <Outlet />
       )}

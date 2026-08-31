@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Patient Timeline (physician role)
+
+New `PatientTimelinePanel.jsx`, opened via a "Patient Timeline" button on
+`PatientDetails.jsx` (gated by the existing `canTimeline` flag), same
+`activePanel` pattern as Wellness Check-in / Book Appointment. Hits the
+existing `GET /physician-match/encounters` — no backend changes.
+
+Horizontal year-density scrubber (chosen over two other layout options
+after a design pass on real sample data): one bar per year, red dot for
+years with an ER visit, click a year to see its encounters below. Real
+data showed `status`/`location`/`participants` are always empty for this
+patient — shown as muted "Not provided" instead of hidden, so they light
+up on their own once real values exist. Chart section collapses via a
+chevron toggle; summary line shows the full date range with year.
+
 #### In progress — Manage Booking / Manage Calendar (physician role)
 
 New `/app/manage-bookings` route (`ManageBookingPage.jsx`) — a real page, not

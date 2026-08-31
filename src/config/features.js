@@ -3,14 +3,16 @@ export const ALL_ROLES = ["caregiver", "physician", "patient"];
 
 export const FEATURE_ROLES = {
   addPatient: ["caregiver"],
-  notes: ["caregiver", "physician"],
-  documents: ["caregiver", "patient"],
+  // notes: ["caregiver", "physician"],
+  notes: ["caregiver"],
+  documents: ALL_ROLES,
   plan: ["caregiver", "patient"],
   forms: ["caregiver"],
   upload: ["caregiver"],
   mmta: ["caregiver"],
   registerCall: ["caregiver"],
-  medicationAlerts: ["caregiver", "physician"],
+  // medicationAlerts: ["caregiver", "physician"],
+  medicationAlerts: ["caregiver"],
   medication: ["caregiver", "patient"],
   patientJourney: ["caregiver"],
   createCarePlan: ["caregiver"],
@@ -18,6 +20,7 @@ export const FEATURE_ROLES = {
   bookAppointment: ["patient"],
   wellnessCheckInReport: ["caregiver"],
   createProgressNotes: ["physician"],
+  timeline: ["physician"],
 };
 
 export const canUseFeature = (role, key) => (FEATURE_ROLES[key] || ALL_ROLES).includes(role);

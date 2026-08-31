@@ -139,6 +139,17 @@ export const ambientAiStop = (data) => http.post('/caregiver-ambient-ai/session/
 export const ambientAiSave = (data) => http.post('/caregiver-ambient-ai/session/save', data, { withAuth: true }).then((res) => res.data);
 export const getAmbientAiVoiceToken = () => http.post('/caregiver-ambient-ai/voice/live-token', {}, { withAuth: true }).then((res) => res.data);
 
+// Patient Timeline (physician side) — Metriport encounter history for a matched
+// patient. Same {success, data} envelope, verified against physician_match/routes.py.
+export const getPatientEncounterTimeline = ({ patient_name, patient_key, status, mine } = {}) => {
+  const params = new URLSearchParams();
+  if (patient_key) params.set('patient_key', patient_key);
+  if (patient_name) params.set('patient_name', patient_name);
+  if (status) params.set('status', status);
+  if (mine) params.set('mine', 'true');
+  return http.get(`/physician-match/encounters?${params.toString()}`, { withAuth: true }).then((res) => res.data);
+};
+
 
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template
 // {

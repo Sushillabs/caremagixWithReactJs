@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Sparkles, Mic, Send } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 
 export default function AiCareAssistant() {
   const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const { askQuestion, isPending } = useAskQuestion();
   const patient = useSelector((state) => state.patientsingledata?.value);
   // const conversation = useSelector((state) => state.askQ?.value) || [];
@@ -17,6 +19,35 @@ export default function AiCareAssistant() {
     if (!hasPatient || !input.trim() || isPending) return;
     askQuestion(input.trim());
     setInput("");
+  };
+
+  const toggleMic = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
   };
 
   return (
@@ -55,8 +86,9 @@ export default function AiCareAssistant() {
         />
         <button
           type="button"
+          onClick={toggleMic}
           disabled={!hasPatient || isPending}
-          className="text-gray-400 hover:text-gray-600 disabled:opacity-40"
+          className={`hover:text-gray-600 disabled:opacity-40 ${isListening ? "text-red-500 animate-pulse" : "text-gray-400"}`}
           aria-label="Voice input"
         >
           <Mic size={18} />
