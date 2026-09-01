@@ -37,7 +37,7 @@ export const SECTIONS = {
     group: "primary",
     assistant: true,
     requiresPatient: true,
-    noAssistantPaths: ["/care-plan", "/visit-notes"],
+    noAssistantPaths: ["/care-plan", "/visit-notes", "/mmta"],
   },
 
   jobs: {

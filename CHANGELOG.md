@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — MMTA structured answer UI
+
+`/app/patients/:id/mmta` now renders the new structured `mmta` response
+(table with color badge per category, ICD/CPT as code boxes, guidance
+callout, action card, summary) instead of plain markdown. New files:
+`mmta/MmtaAnswer.jsx`, `mmta/mmtaDummyData.js` (fallback if the real API
+errors or hasn't returned structured data yet — clearly labeled on screen
+when shown). Wired to new `POST /v1/mmta` (`mmtaV1()` in `hospitalApi.js`),
+sending `question` + `patient_name` + `patient_type`. Old `/mmta` untouched
+— still used by the legacy `Mmta.jsx`. "Ask anything" box now hidden on
+this page too (`noAssistantPaths`).
+
 #### In progress — Patient Timeline (physician role)
 
 New `PatientTimelinePanel.jsx`, opened via a "Patient Timeline" button on

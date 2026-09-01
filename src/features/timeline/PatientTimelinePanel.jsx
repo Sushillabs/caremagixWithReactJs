@@ -5,9 +5,6 @@ import { useSelector } from "react-redux";
 import { ChevronUp, ChevronDown, Tag, MapPin, Users } from "lucide-react";
 import { getPatientEncounterTimeline } from "../../api/hospitalApi";
 
-// Color-coded by whatever the backend sends in `type` — Ambulatory/Emergency
-// are what this facility's Metriport feed actually populates today, the rest
-// are here so other encounter types don't all fall back to gray by accident.
 const TYPE_STYLE = {
   ambulatory: "bg-emerald-100 text-emerald-700",
   outpatient: "bg-emerald-100 text-emerald-700",
@@ -24,8 +21,6 @@ function formatShortDate(iso) {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-// Used only for the header's date-range summary — per-row dates skip the
-// year since each row already sits under a year section header.
 function formatDateWithYear(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -63,8 +58,6 @@ export default function PatientTimelinePanel() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [chartOpen, setChartOpen] = useState(true);
 
-  // Not a chat surface — hide the docked "Ask anything..." bar while this
-  // panel is open, same as Wellness Check-in / Book Appointment do.
   const { setAssistantHidden } = useOutletContext() || {};
   useEffect(() => {
     setAssistantHidden?.(true);
@@ -180,7 +173,7 @@ export default function PatientTimelinePanel() {
             <div className="mb-2 text-sm font-semibold text-gray-800">
               {activeYear} · {activeYearData?.items.length} {activeYearData?.items.length === 1 ? "encounter" : "encounters"}
             </div>
-            <div className="flex flex-col gap-1">
+            {/* <div className="flex flex-col gap-1">
               {activeYearData?.items.map((row) => (
                 <div key={row.id} className="rounded-lg border border-gray-100 p-1">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -204,7 +197,7 @@ export default function PatientTimelinePanel() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </>
       )}

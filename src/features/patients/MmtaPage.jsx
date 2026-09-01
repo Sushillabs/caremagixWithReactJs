@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useMutation } from "@tanstack/react-query";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { ArrowLeft } from "lucide-react";
-import { mmta } from "../../api/hospitalApi";
+import { mmtaV1 } from "../../api/hospitalApi";
+import MmtaAnswer from "./mmta/MmtaAnswer";
+import { MMTA_DUMMY_RESPONSE } from "./mmta/mmtaDummyData";
 
 export default function MmtaPage() {
   const navigate = useNavigate();
@@ -13,12 +13,21 @@ export default function MmtaPage() {
   const chatData = useSelector((state) => state.askQ?.data) || [];
   const question = chatData.at(-1);
 
-  const { mutate, data, isPending, error } = useMutation({ mutationFn: mmta });
+  const { mutate, data, isPending, error } = useMutation({ mutationFn: mmtaV1 });
 
   useEffect(() => {
-    if (question) mutate({ question });
+    if (question) {
+      mutate({
+        question,
+        patient_name: singleData?.patient_name,
+        patient_type: singleData?.patient_type,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question]);
+
+  const usingDummyFallback = !!question && !isPending && (!!error || (!!data && !data?.mmta));
+  const mmtaData = data?.mmta || (usingDummyFallback ? MMTA_DUMMY_RESPONSE.mmta : null);
 
   return (
     <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
@@ -32,21 +41,17 @@ export default function MmtaPage() {
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {!question && <p className="text-sm text-gray-400">No question available yet — open the patient's Conversation tab first.</p>}
 
-        {/* {question && (
-          <p className="mb-3 text-sm text-gray-700">
-            <span className="font-medium">Q:</span> {question}
+        {question && isPending && <p className="text-sm text-gray-400">Thinking...</p>}
+
+        {/* Only the response is shown — no "Q:" line, matches existing convention. */}
+
+        {question && !isPending && usingDummyFallback && (
+          <p className="mb-3 text-xs font-medium text-amber-600">
+            Showing sample data — {error ? "the request failed." : "the response didn't include structured data yet."}
           </p>
-        )} */}
-
-        {isPending && <p className="text-sm text-gray-400">Thinking...</p>}
-
-        {error && <p className="text-sm text-red-600">{error?.response?.data?.error || error?.response?.data?.message || "Something went wrong."}</p>}
-
-        {data?.response && (
-          <div className="text-sm text-gray-700">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.response}</ReactMarkdown>
-          </div>
         )}
+
+        {question && !isPending && mmtaData && <MmtaAnswer mmta={mmtaData} />}
       </div>
     </div>
   );

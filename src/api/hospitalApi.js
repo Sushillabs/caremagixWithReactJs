@@ -18,6 +18,10 @@ export const getCallDetail = (data) => http.post('/get-details',data,{ withAuth:
 export const registerCall = (data) => http.post('/register-call',data,{ withAuth: true });
 export const unregisterCall = (data) => http.post('/pause_call',data,{ withAuth: true });
 export const mmta = (data) => http.post('/mmta',data,{ withAuth: true });
+// New structured-response version (returns { mmta: {...} }, see MmtaAnswer.jsx).
+// Kept separate from mmta() above — that one is still used by the legacy
+// src/components/Mmta.jsx, don't repoint it.
+export const mmtaV1 = (data) => http.post('/v1/mmta', data, { withAuth: true });
 export const getPccData = () => http.get('/get_pcc_data', { withAuth: true });
 export const getPccDataStatus = (jobId) => http.get(`/get_pcc_data/status/${jobId}`, { withAuth: true });
 export const pullEpicData = () => http.get('/ehr_pull', { withAuth: true });
