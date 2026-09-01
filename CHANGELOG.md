@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Pull EHR modal, Therapy Progress Note, Send Message
+
+- Physician's "Pull EHR Data" now works — reuses the caregiver "Pull Epic"
+  modal/logic, just a different title.
+- New "Create Progress Note" panel — static Therapy Progress Note view,
+  ported from the legacy jQuery page.
+- New "Send Message" (physician + caregiver) — modal looks up phone/email,
+  prefills if found, both editable, shows a hint if not found. Email isn't
+  a real backend field yet — sent anyway, backend ignores it for now.
+
 #### Added — MMTA structured answer UI
 
 `/app/patients/:id/mmta` now renders the new structured `mmta` response

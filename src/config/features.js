@@ -21,6 +21,7 @@ export const FEATURE_ROLES = {
   wellnessCheckInReport: ["caregiver"],
   createProgressNotes: ["physician"],
   timeline: ["physician"],
+  sendMessage: ["caregiver", "physician"],
 };
 
 export const canUseFeature = (role, key) => (FEATURE_ROLES[key] || ALL_ROLES).includes(role);

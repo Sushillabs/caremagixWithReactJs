@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, CheckCircle2, Info } from "lucide-react";
 import useEpicPull from "../../hooks/useEpicPull";
 
-export default function PullEpicModal({ onClose }) {
+export default function PullEpicModal({ onClose, title = "Pull Epic Data" }) {
   const navigate = useNavigate();
   const { start, isRunning, error } = useEpicPull();
   const [started, setStarted] = useState(false);
@@ -29,7 +29,7 @@ export default function PullEpicModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-[380px] rounded-2xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-emerald-700">Pull Epic Data</h2>
+          <h2 className="text-sm font-semibold text-emerald-700">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
             <X size={16} className="text-gray-500" />
           </button>

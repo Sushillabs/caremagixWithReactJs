@@ -18,11 +18,18 @@ function EditHandoffNoteModal(props) {
   return <EditTemplate {...props} title="Edit Handoff Note Template" />;
 }
 
+// Same component/logic as "Pull Epic Data" (physician side just calls it
+// "EHR" instead of "Epic") — only the modal title differs.
+function PullEhrModal(props) {
+  return <PullEpicModal {...props} title="Pull EHR Data" />;
+}
+
 const CHILD_MODALS = {
   pullPcc: PullPccModal,
   connectMetriport: ConnectMetriportModal,
   pullMetriport: PullMetriportModal,
   pullEpic: PullEpicModal,
+  pullEhr: PullEhrModal,
   efaxConfig: EfaxConfigModal,
   editVisitTemplate: EditTemplate,
   editHandoffNote: EditHandoffNoteModal,

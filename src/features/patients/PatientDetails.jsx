@@ -17,6 +17,8 @@ import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 import WellnessCaregiverPanel from "../wellness/WellnessCaregiverPanel";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
 import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
+import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
+import SendMessageModal from "./SendMessageModal";
 
 let DOCUMENT_ITEMS = [];
 
@@ -75,6 +77,7 @@ export default function PatientDetails() {
   const [showOasisSocModal, setShowOasisSocModal] = useState(false);
   const [showTransitionCareModal, setShowTransitionCareModal] = useState(false);
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
+  const [showSendMessageModal, setShowSendMessageModal] = useState(false);
 
   const [activePanel, setActivePanel] = useState(null);
 
@@ -107,6 +110,7 @@ export default function PatientDetails() {
   const canWellnessCheckInReport = useCan("wellnessCheckInReport");
   const canCreateProgressNote = useCan("createProgressNotes");
   const canTimeline = useCan("timeline");
+  const canSendMessage = useCan("sendMessage");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -259,6 +263,15 @@ export default function PatientDetails() {
               Medication Alerts
             </button>
           )}
+          {canSendMessage && (
+            <button
+              type="button"
+              onClick={() => setShowSendMessageModal(true)}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Send Message
+            </button>
+          )}
           {/* <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
           </button> */}
@@ -354,6 +367,8 @@ export default function PatientDetails() {
         <WellnessCaregiverPanel />
       ) : activePanel === "timeline" ? (
         <PatientTimelinePanel />
+      ) : activePanel === "createProgress" ? (
+        <TherapyProgressNotePanel patientName={patient?.name} />
       ) : (
         <Outlet />
       )}
@@ -364,6 +379,7 @@ export default function PatientDetails() {
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
       {showTransitionCareModal && <TransitionCarePlanModal onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
+      {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
     </div>
   );
 }

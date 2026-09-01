@@ -173,7 +173,7 @@ export default function PatientTimelinePanel() {
             <div className="mb-2 text-sm font-semibold text-gray-800">
               {activeYear} · {activeYearData?.items.length} {activeYearData?.items.length === 1 ? "encounter" : "encounters"}
             </div>
-            {/* <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               {activeYearData?.items.map((row) => (
                 <div key={row.id} className="rounded-lg border border-gray-100 p-1">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -197,7 +197,7 @@ export default function PatientTimelinePanel() {
                   </div>
                 </div>
               ))}
-            </div> */}
+            </div>
           </div>
         </>
       )}
