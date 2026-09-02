@@ -75,6 +75,7 @@ export default function PatientTimelinePanel() {
   const years = useMemo(() => {
     const timeline = data?.timeline || [];
     const byYear = {};
+
     timeline.forEach((e) => {
       const y = (e.start || "").slice(0, 4);
       if (!y) return;
@@ -89,7 +90,7 @@ export default function PatientTimelinePanel() {
         items: byYear[year].slice().sort((a, b) => (a.start || "").localeCompare(b.start || "")),
       }));
   }, [data]);
-
+  console.log("byYear", years);
   const maxCount = Math.max(1, ...years.map((y) => y.count));
   const activeYear = selectedYear || years[years.length - 1]?.year;
   const activeYearData = years.find((y) => y.year === activeYear);
@@ -140,14 +141,14 @@ export default function PatientTimelinePanel() {
                 <div className="flex w-max items-end gap-2">
                   {years.map((y) => {
                     const selected = y.year === activeYear;
-                    const barHeight = 10 + Math.round((y.count / maxCount) * 118);
+                    const barHeight = 5 + Math.round((y.count / maxCount) * 80);
                     return (
                       <button
                         type="button"
                         key={y.year}
                         onClick={() => setSelectedYear(y.year)}
                         title={`${y.year} — ${y.count} ${y.count === 1 ? "encounter" : "encounters"}`}
-                        className="flex w-12 shrink-0 flex-col items-center"
+                        className="flex w-10 shrink-0 flex-col items-center"
                       >
                         <div className="flex h-[90px] w-full flex-col items-center justify-end">
                           {y.hasEr && <span className="mb-1 h-1.5 w-1.5 rounded-full bg-red-600" />}

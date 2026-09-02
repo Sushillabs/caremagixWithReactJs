@@ -20,7 +20,7 @@ const BLOCKS_QUERY_KEY = ["physician-calendar-blocks"];
 
 const TABS = [
   { key: "appointments", label: "Appointments" },
-  { key: "settings", label: "Settings & Availability" },
+  { key: "settings", label: "Calendar" },
   { key: "blocks", label: "Blocked Time" },
 ];
 
@@ -520,8 +520,6 @@ function BlockedTimeTab() {
   );
 }
 
-// Phase 4: blocked time (vacation/meetings), alongside Phase 1/2's
-// appointments list and Phase 3's settings/availability.
 export default function ManageBookingPage() {
   const [activeTab, setActiveTab] = useState("appointments");
 

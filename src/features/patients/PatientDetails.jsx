@@ -263,7 +263,7 @@ export default function PatientDetails() {
               Medication Alerts
             </button>
           )}
-          {canSendMessage && (
+          {/* {canSendMessage && (
             <button
               type="button"
               onClick={() => setShowSendMessageModal(true)}
@@ -271,7 +271,7 @@ export default function PatientDetails() {
             >
               Send Message
             </button>
-          )}
+          )} */}
           {/* <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
           </button> */}
@@ -347,7 +347,7 @@ export default function PatientDetails() {
               Wellness Check-in Report
             </button>
           )}
-          {canCreateProgressNote && (
+          {/* {canCreateProgressNote && (
             <button
               type="button"
               onClick={() => setActivePanel("createProgress")}
@@ -355,7 +355,7 @@ export default function PatientDetails() {
             >
               Create Progress Note
             </button>
-          )}
+          )} */}
         </div>
       </div>
 
