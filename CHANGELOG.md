@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### In progress — Physician Ambient AI
+
+New sidebar page `/app/ambient-ai` (`features/ambientAi/PhysicianAmbientAiPage.jsx`,
+physician-only) — passive visit listener, not a chat: pick a patient →
+consent → live recording (pause/stop, live transcript preview) → review
+editable SOAP fields → save. Reuses the existing `/ambient-ai/*` backend
+as-is (new `hospitalApi.js` bindings only). New `usePhysicianAmbientSession`
+hook + `PhysicianAmbientAiPanel.jsx`; deliberately not built on the
+`useAgentChat`/`AgentChatThread` pattern Wellness/Caregiver Ambient AI use,
+since there's no back-and-forth with the AI here. Added real
+`pauseListening`/`resumeListening` to the shared `DeepgramVoiceSession` for
+a manual pause that doesn't drop a half-spoken sentence (additive, other
+voice features unaffected). Not yet run end-to-end against a live physician
+account.
+
 #### In progress — Pull EHR modal, Therapy Progress Note, Send Message
 
 - Physician's "Pull EHR Data" now works — reuses the caregiver "Pull Epic"

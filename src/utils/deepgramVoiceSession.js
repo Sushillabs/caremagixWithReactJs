@@ -165,6 +165,60 @@ export default class DeepgramVoiceSession {
     this._emitTranscript("");
   }
 
+  isPaused() {
+    return !!(this.active && this.paused);
+  }
+
+  // Manual pause for a feature-initiated "Pause" control (distinct from
+  // pauseForTurn's automatic mute while an agent replies) — drains whatever
+  // was mid-utterance first so tapping Pause never silently drops a
+  // half-finished sentence.
+  pauseListening() {
+    if (!this.active || this.paused) return "";
+    const leftover = this.drainPendingTranscript();
+    this.paused = true;
+    this.ignoreTranscripts = true;
+    this._setMicMuted(true);
+    this._sendKeepAlive();
+    this._setState("paused");
+    return leftover;
+  }
+
+  resumeListening() {
+    if (!this.active || !this.paused) return Promise.resolve();
+    this.paused = false;
+    this.ignoreTranscripts = false;
+    this.flushing = false;
+    this.finalPieces = [];
+    this.interimText = "";
+    this._setMicMuted(false);
+    this._emitTranscript("");
+
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this._setState("listening");
+      return Promise.resolve();
+    }
+
+    // The socket may have closed itself while paused (onclose short-circuits
+    // reconnect when this.paused is true) — reopen with a fresh token.
+    this._setState("connecting");
+    return this.options.fetchToken().then((tokenInfo) => {
+      if (!this.active || this.paused) return;
+      return this._openSocket(tokenInfo);
+    });
+  }
+
+  // Returns and clears whatever text has been recognized but not yet flushed
+  // as a finished utterance — used by pauseListening (above) and by a caller
+  // that wants the last few words before stopping outright.
+  drainPendingTranscript() {
+    const text = joinTranscript(this.finalPieces, this.interimText);
+    this.finalPieces = [];
+    this.interimText = "";
+    this._clearUtteranceTimer();
+    return text;
+  }
+
   playBase64Audio(b64, contentType) {
     return new Promise((resolve) => {
       if (!b64) {

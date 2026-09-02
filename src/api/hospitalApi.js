@@ -148,6 +148,15 @@ export const ambientAiStop = (data) => http.post("/caregiver-ambient-ai/session/
 export const ambientAiSave = (data) => http.post("/caregiver-ambient-ai/session/save", data, { withAuth: true }).then((res) => res.data);
 export const getAmbientAiVoiceToken = () => http.post("/caregiver-ambient-ai/voice/live-token", {}, { withAuth: true }).then((res) => res.data);
 
+// Physician Ambient AI (passive visit listener) — separate backend module and
+// UX shape from caregiver-ambient-ai above: no conversational turns, just
+// start -> (live transcript, client-side only) -> stop -> review -> save.
+// Same {success, data} envelope, unwrapped to res.data for every route.
+export const getPhysicianAmbientVoiceToken = () => http.post("/ambient-ai/voice/live-token", {}, { withAuth: true }).then((res) => res.data);
+export const physicianAmbientStart = (data) => http.post("/ambient-ai/session/start", data, { withAuth: true }).then((res) => res.data);
+export const physicianAmbientStop = (data) => http.post("/ambient-ai/session/stop", data, { withAuth: true }).then((res) => res.data);
+export const physicianAmbientSave = (data) => http.post("/ambient-ai/session/save", data, { withAuth: true }).then((res) => res.data);
+
 // Patient Timeline (physician side) — Metriport encounter history for a matched
 // patient. Same {success, data} envelope, verified against physician_match/routes.py.
 export const getPatientEncounterTimeline = ({ patient_name, patient_key, status, mine } = {}) => {
