@@ -12,10 +12,13 @@ import ConnectMetriportModal from "../configuration/ConnectMetriportModal";
 import PullMetriportModal from "../configuration/PullMetriportModal";
 import EditTemplate from "../../components/EditTemplate";
 
-// Same component/logic as "Edit Visit Template" — only the modal title differs
-// for this role. Split into its own logic later if the behavior needs to diverge.
+// Same component as "Edit Visit Template" — only title + note_kind differ per role.
 function EditHandoffNoteModal(props) {
-  return <EditTemplate {...props} title="Edit Handoff Note Template" />;
+  return <EditTemplate {...props} noteKind="handoff" title="Edit Handoff Note Template" />;
+}
+
+function EditDischargePlanTemplateModal(props) {
+  return <EditTemplate {...props} noteKind="discharge" title="Edit Discharge Plan Template" />;
 }
 
 // Same component/logic as "Pull Epic Data" (physician side just calls it
@@ -33,6 +36,7 @@ const CHILD_MODALS = {
   efaxConfig: EfaxConfigModal,
   editVisitTemplate: EditTemplate,
   editHandoffNote: EditHandoffNoteModal,
+  editDischargePlanTemplate: EditDischargePlanTemplateModal,
 };
 
 function NavItem({ section }) {

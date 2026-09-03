@@ -79,6 +79,14 @@ export const SECTIONS = {
     assistant: false,
     requiresPatient: false,
   },
+  editDischargePlanTemplate: {
+    key: "editDischargePlanTemplate",
+    label: "Edit Discharge Template",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
 
   // Real page, not a modal — this is a growing dashboard (list now, then
   // reschedule/cancel/settings/blocks), same shape as Jobs/Reports, not a

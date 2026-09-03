@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
@@ -6,16 +7,18 @@ import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
-import { getAmbientAiVoiceToken, ambientAiSave } from "../../api/hospitalApi";
 
 const TABS = [
   { key: "chat", label: "Chat" },
   { key: "review", label: "Review & Save" },
 ];
 
+// ?kind=discharge|handoff -> physician flow; absent -> caregiver visit note
+const LABELS = { discharge: "Discharge Plan", handoff: "Handoff Note" };
+
 const isValidEmailFormate = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-function ReviewSaveTab({ lastResponse, sessionId }) {
+function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   const [noteText, setNoteText] = useState(lastResponse?.note_text || "");
   const [sendEmail, setSendEmail] = useState(false);
   const [email, setEmail] = useState("");
@@ -35,7 +38,7 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
   const handleSave = async () => {
     setSaveError(null);
     if (!noteText.trim()) {
-      setSaveError("Visit note cannot be empty.");
+      setSaveError(`${label} cannot be empty.`);
       return;
     }
     if (sendEmail && !isValidEmailFormate(email)) {
@@ -44,7 +47,7 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
     }
     setIsSaving(true);
     try {
-      const result = await ambientAiSave({
+      const result = await saveNote({
         session_id: sessionId,
         note_text: noteText,
         send_email: sendEmail,
@@ -52,14 +55,18 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
       });
       setSaveResult(result);
     } catch (err) {
-      setSaveError(err?.message || "Could not save visit note");
+      setSaveError(err?.message || `Could not save ${label.toLowerCase()}`);
     } finally {
       setIsSaving(false);
     }
   };
 
   if (!lastResponse || lastResponse.status !== "generated") {
-    return <p className="mt-3 px-3 text-sm text-gray-400">Finish the conversation and tap "Generate Visit Note" to review it here.</p>;
+    return (
+      <p className="mt-3 px-3 text-sm text-gray-400">
+        Finish the conversation and tap "Generate {label}" to review it here.
+      </p>
+    );
   }
 
   return (
@@ -79,13 +86,13 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-gray-600">Visit Note</label>
+        <label className="text-xs font-semibold text-gray-600">{label}</label>
         <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} className="mt-1 w-full min-h-[200px] border rounded p-2 text-sm" />
       </div>
 
       <label className="flex items-center gap-2 text-sm text-gray-700">
         <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
-        Email this visit note
+        Email this {label.toLowerCase()}
       </label>
       {sendEmail && (
         <input
@@ -110,7 +117,7 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
 
       {saveResult && (
         <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
-          Visit note saved to the patient record.{saveResult.email_status ? ` ${saveResult.email_status}` : ""}
+          {label} saved to the patient record.{saveResult.email_status ? ` ${saveResult.email_status}` : ""}
           {saveResult.pdf_path && (
             <button type="button" onClick={() => window.open(saveResult.pdf_path, "_blank")} className="ml-2 underline">
               Download
@@ -124,13 +131,19 @@ function ReviewSaveTab({ lastResponse, sessionId }) {
 }
 
 export default function VisitNotesAI() {
+  const [searchParams] = useSearchParams();
+  const kindParam = searchParams.get("kind");
+  const noteKind = kindParam === "discharge" || kindParam === "handoff" ? kindParam : null;
+  const label = LABELS[noteKind] || "Visit Note";
+
   const [started, setStarted] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
 
-  const { turns, lastResponse, pending, error, send, stopAndGenerate, hydrateHistory, historyLoaded, sessionId, reset } = useAmbientVisitNotes();
+  const { turns, lastResponse, pending, error, send, stopAndGenerate, hydrateHistory, historyLoaded, sessionId, reset, saveNote, fetchVoiceToken } =
+    useAmbientVisitNotes({ noteKind });
 
   const voice = useDeepgramVoice({
-    fetchToken: getAmbientAiVoiceToken,
+    fetchToken: fetchVoiceToken,
     onUtterance: (text) => send(text, { include_audio: true }),
   });
 
@@ -167,7 +180,7 @@ export default function VisitNotesAI() {
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-[#F0FDF4] p-2 text-xs">
-        <h3 className="text-xs font-bold text-gray-800">Create Visit Notes AI</h3>
+        <h3 className="text-xs font-bold text-gray-800">Create {label} AI</h3>
         <div className="flex items-center gap-3 text-sm text-gray-500">
           {TABS.map((tab) => (
             <button
@@ -184,7 +197,7 @@ export default function VisitNotesAI() {
             type="button"
             onClick={handleStartOver}
             disabled={pending}
-            title="Clear this conversation and start a new visit note"
+            title={`Clear this conversation and start a new ${label.toLowerCase()}`}
             className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <RotateCcw size={12} />
@@ -196,7 +209,7 @@ export default function VisitNotesAI() {
       {activeTab === "chat" && (
         <>
           <AgentChatThread bare turns={turns} pending={pending || !historyLoaded} error={error} emptyState="Starting..." />
-          <AgentChatComposer onSubmit={(text) => send(text)} disabled={pending} voice={voice} placeholder="Talk or type your visit note answers..." />
+          <AgentChatComposer onSubmit={(text) => send(text)} disabled={pending} voice={voice} placeholder={`Talk or type your ${label.toLowerCase()} answers...`} />
           <div className="shrink-0 border-t border-gray-100 p-2 text-right">
             <button
               type="button"
@@ -204,13 +217,13 @@ export default function VisitNotesAI() {
               disabled={pending || !historyLoaded}
               className="rounded-md bg-emerald-800 px-3 py-1.5 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
             >
-              Generate Visit Note
+              Generate {label}
             </button>
           </div>
         </>
       )}
 
-      {activeTab === "review" && <ReviewSaveTab lastResponse={lastResponse} sessionId={sessionId} />}
+      {activeTab === "review" && <ReviewSaveTab lastResponse={lastResponse} sessionId={sessionId} saveNote={saveNote} label={label} />}
     </div>
   );
 }

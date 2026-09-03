@@ -3,8 +3,7 @@ export const ALL_ROLES = ["caregiver", "physician", "patient"];
 
 export const FEATURE_ROLES = {
   addPatient: ["caregiver"],
-  // notes: ["caregiver", "physician"],
-  notes: ["caregiver"],
+  notes: ["caregiver", "physician"],
   documents: ALL_ROLES,
   plan: ["caregiver", "patient"],
   forms: ["caregiver"],

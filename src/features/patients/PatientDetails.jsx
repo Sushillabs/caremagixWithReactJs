@@ -26,8 +26,14 @@ let DOCUMENT_ITEMS = [];
 const NOTES_ITEMS = [
   { label: "Create Visit Notes AI", roles: ["caregiver"] },
   { label: "Create Discharge Plan AI", roles: ["physician"] },
-  { label: "Create Handoff Note AI", roles: ["physician"] },
+  // { label: "Create Handoff Note AI", roles: ["physician"] },
 ]; //"Create Visit Notes"
+
+// AI (ambient) note menu label -> ?kind= for the visit-notes-ai route
+const AI_NOTE_KINDS = {
+  "Create Discharge Plan AI": "discharge",
+  "Create Handoff Note AI": "handoff",
+};
 
 const PLAN_ITEMS = ["Nursing Plan", "Transition-Care Plan"];
 
@@ -146,9 +152,10 @@ export default function PatientDetails() {
       );
       navigate("visit-notes");
     }
-    if (["Create Visit Notes AI", "Create Discharge Plan AI", "Create Handoff Note AI"].includes(item)) {
+    if (item === "Create Visit Notes AI" || item in AI_NOTE_KINDS) {
       setActivePanel(null);
-      navigate("visit-notes-ai");
+      const kind = AI_NOTE_KINDS[item];
+      navigate(kind ? { pathname: "visit-notes-ai", search: `?kind=${kind}` } : "visit-notes-ai");
     }
     if (item === "Edit Visit Template") {
       setShowEditTemplateModal(true);

@@ -46,6 +46,10 @@ export const generateCallReport = (data) => http.post("/generate_report", data, 
 export const dischargePlan = (data) => http.post("/discharge_plan_agent", data, { withAuth: true });
 export const edit_visit_template = () => http.get("/discharge_plan_agent/edit_template", { withAuth: true });
 export const update_visit_template = (data) => http.post("/discharge_plan_agent/edit_template", data, { withAuth: true });
+// note_kind-aware: caregiver passes none (backend picks by role); physician passes "discharge"/"handoff".
+export const editNoteTemplate = (noteKind) => () =>
+  http.get("/discharge_plan_agent/edit_template", { params: noteKind ? { note_kind: noteKind } : {}, withAuth: true });
+export const updateNoteTemplate = (data) => http.post("/discharge_plan_agent/edit_template", data, { withAuth: true });
 export const generateCarePlan = (data) => http.post("/generate_care_plan", data, { withAuth: true });
 export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, { withAuth: true });
 export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
@@ -148,16 +152,26 @@ export const createPhysicianCalendarBlock = (payload) =>
 export const deletePhysicianCalendarBlock = (blockId) =>
   http.delete(`/physician-appointment/physician/calendar/blocks/${blockId}`, { withAuth: true });
 
-// Caregiver Ambient AI (voice-first visit notes) — separate backend/session
-// model from /discharge_plan_agent, same {success, data} envelope as
-// hf-wellness above, unwrapped to res.data for every route (all error cases
-// return a non-2xx status, so they reject before reaching .then, same as
-// the rest of this file).
-export const ambientAiStart = (data) => http.post("/caregiver-ambient-ai/session/start", data, { withAuth: true }).then((res) => res.data);
-export const ambientAiTurn = (data) => http.post("/caregiver-ambient-ai/session/turn", data, { withAuth: true }).then((res) => res.data);
-export const ambientAiStop = (data) => http.post("/caregiver-ambient-ai/session/stop", data, { withAuth: true }).then((res) => res.data);
-export const ambientAiSave = (data) => http.post("/caregiver-ambient-ai/session/save", data, { withAuth: true }).then((res) => res.data);
-export const getAmbientAiVoiceToken = () => http.post("/caregiver-ambient-ai/voice/live-token", {}, { withAuth: true }).then((res) => res.data);
+// Ambient ("Deepgram") note sessions. Caregiver visit note and physician
+// discharge/handoff note share one backend contract; only the URL prefix and
+// the note_kind sent at session start differ. One factory, one instance per role.
+const makeAmbientNoteApi = (base) => ({
+  liveToken: () => http.post(`${base}/voice/live-token`, {}, { withAuth: true }).then((res) => res.data),
+  start: (data) => http.post(`${base}/session/start`, data, { withAuth: true }).then((res) => res.data),
+  turn: (data) => http.post(`${base}/session/turn`, data, { withAuth: true }).then((res) => res.data),
+  stop: (data) => http.post(`${base}/session/stop`, data, { withAuth: true }).then((res) => res.data),
+  save: (data) => http.post(`${base}/session/save`, data, { withAuth: true }).then((res) => res.data),
+});
+
+export const caregiverAmbientNoteApi = makeAmbientNoteApi("/caregiver-ambient-ai");
+export const physicianAmbientNoteApi = makeAmbientNoteApi("/physician-ambient-note");
+
+// Back-compat aliases (existing callers). Same functions, via the factory above.
+export const ambientAiStart = caregiverAmbientNoteApi.start;
+export const ambientAiTurn = caregiverAmbientNoteApi.turn;
+export const ambientAiStop = caregiverAmbientNoteApi.stop;
+export const ambientAiSave = caregiverAmbientNoteApi.save;
+export const getAmbientAiVoiceToken = caregiverAmbientNoteApi.liveToken;
 
 // Physician Ambient AI (passive visit listener) — separate backend module and
 // UX shape from caregiver-ambient-ai above: no conversational turns, just

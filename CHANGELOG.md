@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Physician ambient discharge/handoff notes
+
+"Create Discharge Plan AI" / "Create Handoff Note AI" now run the Deepgram
+session flow (`VisitNotesAI` + `useAmbientVisitNotes`, one API factory) against
+`/physician-ambient-note/*` with `note_kind`; route carries `?kind=`.
+
+#### Added — Edit Discharge Plan / Handoff Note templates
+
+`EditTemplate` reused with a `noteKind` prop → `GET/POST
+/discharge_plan_agent/edit_template?note_kind=…`; new physician sidebar entries.
+
+#### Added — Editable section keys in Edit Template
+
+Section key (the `fields` key) is now an input; renamed keys are trimmed
+(spaces → `_`) and sent in `updated_fields` on save. Rename only; blocks
+empty/duplicate keys.
+
 #### Fixed — Care Plan dashboard refetching on every tab focus
 
 `CarePlan.jsx`'s two dashboard queries (`backendCheck`, `freshFetch`) had no

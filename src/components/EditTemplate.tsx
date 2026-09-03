@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Save } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { edit_visit_template, update_visit_template } from "../api/hospitalApi.js";
+import { editNoteTemplate, updateNoteTemplate } from "../api/hospitalApi.js";
 import useMyQuery from "../hooks/useMyQuery.js";
 import useMyMutation from "../hooks/useMyMutation.js";
 import { Spinner } from "./Spiner.jsx";
@@ -9,6 +9,8 @@ import { Spinner } from "./Spiner.jsx";
 interface EditTemplateProps {
   onClose: () => void;
   title?: string;
+  // undefined -> caregiver visit template (backend picks by role); "discharge"/"handoff" -> physician
+  noteKind?: "discharge" | "handoff";
 }
 
 interface TemplateField {
@@ -16,17 +18,25 @@ interface TemplateField {
   check_prompt: string;
 }
 
+interface TemplateSection extends TemplateField {
+  key: string;
+}
+
 interface EditTemplateResponse {
   fields: Record<string, TemplateField>;
 }
 
-const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemplateProps) => {
-  const [fields, setFields] = useState<Record<string, TemplateField>>({});
+// trim + spaces -> underscores; no other normalisation
+const normalizeKey = (k: string) => k.trim().replace(/\s+/g, "_");
+
+const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }: EditTemplateProps) => {
+  const [sections, setSections] = useState<TemplateSection[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [keyError, setKeyError] = useState<string | null>(null);
 
   const { data, error, isSuccess, isError, isPending, isFetching } = useMyQuery<EditTemplateResponse>({
-    api: edit_visit_template,
-    id: "edit-template",
+    api: editNoteTemplate(noteKind),
+    id: ["edit-template", noteKind ?? "visit"],
     toastId: "get-template",
     enabled: true,
   });
@@ -39,33 +49,48 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemp
     error: saveError,
     data: saveData,
   } = useMyMutation({
-    api: update_visit_template,
+    api: updateNoteTemplate,
     toastId: "save-template",
   });
 
   useEffect(() => {
     if (data?.fields) {
-      setFields(data.fields);
+      setSections(
+        Object.entries(data.fields).map(([key, value]) => ({
+          key,
+          question: value?.question ?? "",
+          check_prompt: value?.check_prompt ?? "",
+        }))
+      );
     }
   }, [data]);
 
-  const keys = Object.keys(fields);
-  const currentKey = keys[currentIndex];
-  const currentField = fields[currentKey] ?? { question: "", check_prompt: "" };
+  const current = sections[currentIndex] ?? { key: "", question: "", check_prompt: "" };
 
-  const handleFieldChange = (prop: keyof TemplateField, value: string) => {
-    setFields((prev) => ({
-      ...prev,
-      [currentKey]: {
-        ...(prev[currentKey] ?? { question: "", check_prompt: "" }),
-        [prop]: value,
-      },
-    }));
+  const updateCurrent = (prop: keyof TemplateSection, value: string) => {
+    setKeyError(null);
+    setSections((prev) => prev.map((s, i) => (i === currentIndex ? { ...s, [prop]: value } : s)));
   };
 
   const handleSave = async () => {
+    const updated_fields: Record<string, TemplateField> = {};
+    const seen = new Set<string>();
+    for (const s of sections) {
+      const key = normalizeKey(s.key);
+      if (!key) {
+        setKeyError("Section key cannot be empty.");
+        return;
+      }
+      if (seen.has(key)) {
+        setKeyError(`Duplicate section key: "${key}".`);
+        return;
+      }
+      seen.add(key);
+      updated_fields[key] = { question: s.question, check_prompt: s.check_prompt };
+    }
+    setKeyError(null);
     try {
-      await mutateAsync({ updated_fields: fields });
+      await mutateAsync({ updated_fields, note_kind: noteKind });
     } catch (err) {
       console.error("Error saving template", err);
     }
@@ -90,28 +115,42 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemp
 
           {isError && <p className="text-red-600 text-center mt-4">{error?.message || "Failed to load template"}</p>}
 
-          {isSuccess && keys.length > 0 && (
+          {isSuccess && sections.length > 0 && (
             <>
               <div className="flex flex-wrap gap-x-3 gap-y-1 rounded-lg bg-emerald-50 p-3 mb-4 text-xs sm:text-sm">
-                {keys.map((key, idx) => (
+                {sections.map((s, idx) => (
                   <button
-                    key={key}
+                    key={idx}
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
                     className={`whitespace-nowrap hover:cursor-pointer ${
                       idx === currentIndex ? "font-semibold text-emerald-800 underline" : "text-emerald-600 hover:text-emerald-800"
                     }`}
                   >
-                    {idx + 1}. {key.replaceAll("_", " ")}
+                    {idx + 1}. {s.key.trim() ? s.key.replaceAll("_", " ") : "(unnamed)"}
                   </button>
                 ))}
+              </div>
+
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-700">Section Key</label>
+                <input
+                  type="text"
+                  value={current.key}
+                  onChange={(e) => updateCurrent("key", e.target.value)}
+                  disabled={isSaving}
+                  className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Saved as <span className="font-mono">{normalizeKey(current.key) || "—"}</span>
+                </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700">Question</label>
                 <textarea
-                  value={currentField.question}
-                  onChange={(e) => handleFieldChange("question", e.target.value)}
+                  value={current.question}
+                  onChange={(e) => updateCurrent("question", e.target.value)}
                   rows={3}
                   disabled={isSaving}
                   className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none disabled:opacity-50"
@@ -121,8 +160,8 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemp
               <div className="mt-4">
                 <label className="text-sm font-medium text-gray-700">Check Prompt</label>
                 <textarea
-                  value={currentField.check_prompt}
-                  onChange={(e) => handleFieldChange("check_prompt", e.target.value)}
+                  value={current.check_prompt}
+                  onChange={(e) => updateCurrent("check_prompt", e.target.value)}
                   rows={2}
                   disabled={isSaving}
                   className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none disabled:opacity-50"
@@ -134,17 +173,19 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template" }: EditTemp
 
         {/* Footer */}
         <div className="border-t px-6 py-4 flex justify-end items-center gap-3 bg-white">
-          {isSaveError && (
+          {keyError && <p className="text-red-600 text-sm mr-auto">{keyError}</p>}
+
+          {!keyError && isSaveError && (
             <p className="text-red-600 text-sm mr-auto">{saveError?.response?.data?.error || saveError?.message || "Failed to save template"}</p>
           )}
 
-          {isSaveSuccess && !isSaveError && (
+          {!keyError && isSaveSuccess && !isSaveError && (
             <p className="text-emerald-700 text-sm mr-auto">{saveData?.message || "Template updated successfully."}</p>
           )}
 
           <button
             onClick={handleSave}
-            disabled={isLoading || isError || !isSuccess || isSaving}
+            disabled={isLoading || isError || !isSuccess || isSaving || sections.length === 0}
             className="flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-800 text-white hover:bg-emerald-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-4 h-4" />
