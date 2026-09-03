@@ -55,6 +55,17 @@ export const getCarePlanDashboardByPatient = (patientName, patientType) =>
   http.get(`/care_plan/dashboard?patient_name=${encodeURIComponent(patientName)}&patient_type=${encodeURIComponent(patientType)}`, {
     withAuth: true,
   });
+// A patient can hold many plans (versions) — this lists all of them, newest
+// first, with the headline dashboard numbers per plan already computed.
+export const getCarePlans = (patientName, patientType) =>
+  http.get(
+    `/care_plans?patient_name=${encodeURIComponent(patientName)}${patientType ? `&patient_type=${encodeURIComponent(patientType)}` : ""}`,
+    { withAuth: true }
+  );
+// Regenerates from a specific existing plan — the new plan becomes active,
+// the one passed here stays as read-only history.
+export const regenerateCarePlan = (carePlanId, data = {}) =>
+  http.post(`/care_plan/${carePlanId}/regenerate`, data, { withAuth: true });
 
 export const wellnessChat = (data) => http.post("/hf-wellness/chat", data, { withAuth: true }).then((res) => res.data);
 export const wellnessHistory = ({ session_id } = {}) =>

@@ -5,6 +5,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Fixed — Care Plan dashboard refetching on every tab focus
+
+`CarePlan.jsx`'s two dashboard queries (`backendCheck`, `freshFetch`) had no
+`refetchOnWindowFocus: false`, so React Query's app-wide default refired them
+every time the browser tab regained focus — including `backendCheck`, whose
+`enabled` condition never actually turns off for the rest of the session.
+Added `refetchOnWindowFocus: false` to both; global default left untouched
+for the rest of the app.
+
+#### Added — Care Plan: multi-plan backend integration (History + Regenerate)
+
+Backend now supports many plans per patient (version, `is_active`,
+`regenerated_from_id`) instead of one. Frontend catches up:
+
+- New `CarePlanHistory.jsx` (`/care-plan/history`) — lists every version via
+  `GET /care_plans`, badges the active one, "View" opens any of them.
+- `CarePlan.jsx` — new "Plan History" link and a "Regenerate" button
+  (inline confirm, warns progress won't carry over) calling the new
+  `POST /care_plan/<id>/regenerate`.
+- `CarePlanDetailPage.jsx` — now reads `?care_plan_id=` from the URL to open
+  any specific plan (old or active) from history, independent of the
+  session's own active-plan tracking; shows an amber banner when viewing a
+  non-active version. Saving a pinned old plan no longer overwrites the
+  session's "active plan" state.
+- `useCarePlan.js` — new `regenerate()`, same job-tracking dispatch as
+  `generate()`, so existing polling/Redux plumbing picks up the new plan
+  automatically once the job completes.
+- Fixed a relative-navigation bug found right after: History's "View"
+  button used `navigate("../view?...")`, which popped up past `care-plan`
+  entirely since `care-plan/history` is a flat route, not nested under a
+  `care-plan` parent route — landed on `/patients/:id/view` (no match).
+  Switched to an absolute path built from `useParams()`.
+
 #### In progress — Physician Ambient AI
 
 New sidebar page `/app/ambient-ai` (`features/ambientAi/PhysicianAmbientAiPage.jsx`,
