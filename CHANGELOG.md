@@ -40,12 +40,16 @@ Backend now supports many plans per patient (version, `is_active`,
 
 #### In progress — Physician Ambient AI
 
-New sidebar page `/app/ambient-ai` (`features/ambientAi/PhysicianAmbientAiPage.jsx`,
-physician-only) — passive visit listener, not a chat: pick a patient →
-consent → live recording (pause/stop, live transcript preview) → review
-editable SOAP fields → save. Reuses the existing `/ambient-ai/*` backend
-as-is (new `hospitalApi.js` bindings only). New `usePhysicianAmbientSession`
-hook + `PhysicianAmbientAiPanel.jsx`; deliberately not built on the
+New "Ambient AI" button on `PatientDetails.jsx` (gated by new
+`ambientVisitNotes` flag, physician role, same `activePanel` pattern as
+Wellness Check-in / Patient Timeline) — patient-specific, same as every
+other panel on that page: passive visit listener, not a chat. Pick-a-patient
+step considered and dropped — the patient the note is for is always whoever's
+detail page the physician is already on. Flow: consent → live recording
+(pause/stop, live transcript preview) → review editable SOAP fields → save.
+Reuses the existing `/ambient-ai/*` backend as-is (new `hospitalApi.js`
+bindings only). New `usePhysicianAmbientSession` hook +
+`PhysicianAmbientAiPanel.jsx`; deliberately not built on the
 `useAgentChat`/`AgentChatThread` pattern Wellness/Caregiver Ambient AI use,
 since there's no back-and-forth with the AI here. Added real
 `pauseListening`/`resumeListening` to the shared `DeepgramVoiceSession` for

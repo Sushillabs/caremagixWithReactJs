@@ -15,7 +15,6 @@ import {
   Pill,
   Files,
   CalendarClock,
-  Mic,
 } from "lucide-react";
 
 export const SECTIONS = {
@@ -89,19 +88,6 @@ export const SECTIONS = {
     label: "Manage Calendar",
     icon: CalendarClock,
     path: "/app/manage-bookings",
-    group: "primary",
-    assistant: false,
-    requiresPatient: false,
-  },
-
-  // Real page, patient picked here rather than arrived-at via a patient's
-  // own detail route — same shape as manageCalendar (grows on its own, not
-  // nested under /app/patients/:id).
-  ambientVisitNotes: {
-    key: "ambientVisitNotes",
-    label: "Ambient AI",
-    icon: Mic,
-    path: "/app/ambient-ai",
     group: "primary",
     assistant: false,
     requiresPatient: false,

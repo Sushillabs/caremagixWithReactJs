@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Mic, Pause, Play, Square, X, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { Mic, Pause, Play, Square, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import usePhysicianAmbientSession from "../../hooks/usePhysicianAmbientSession";
 
 const FIELDS = [
@@ -17,45 +18,13 @@ function formatElapsed(ms) {
   return `${mm}:${ss}`;
 }
 
-function ConsentModal({ patientName, onCancel, onConfirm }) {
-  return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-slate-900/45 p-4">
-      <div className="w-full max-w-xs rounded-lg bg-white p-5 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[15px] font-bold text-gray-800">Start Ambient AI</h3>
-          <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-600">
-            <X size={16} />
-          </button>
-        </div>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-gray-600">
-          This will listen to your conversation with <strong className="text-gray-800">{patientName || "this patient"}</strong> to draft a visit
-          note.
-        </p>
-        <p className="mt-1 text-xs text-gray-500">
-          The transcript is only used to write the note — it isn't saved to the chart. You can pause or stop at any time.
-        </p>
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-          >
-            Start Recording
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IdleBody({ onStart }) {
+// Consent lives inline here rather than behind a separate modal+click: the
+// physician already made a deliberate choice to open this panel (the
+// "Ambient AI" button on PatientDetails), so a second "are you sure you want
+// to start" step before this one just repeated the same text for an extra
+// click. The disclosure text stays — it's read before the one button that
+// both starts recording and stands in as consent.
+function IdleBody({ patientName, onStart }) {
   return (
     <div className="flex flex-col items-center gap-2 px-8 py-10 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
@@ -63,8 +32,11 @@ function IdleBody({ onStart }) {
       </div>
       <h4 className="mt-1 text-sm font-semibold text-gray-800">Ready when you are</h4>
       <p className="max-w-xs text-[13px] leading-relaxed text-gray-500">
-        Start Ambient AI to record this visit. It listens quietly in the background and drafts a SOAP note when you're done — nothing is saved
-        until you review it.
+        Start Ambient AI to record your conversation with <strong className="text-gray-700">{patientName || "this patient"}</strong>. It listens
+        quietly in the background and drafts a SOAP note when you're done.
+      </p>
+      <p className="max-w-xs text-[11.5px] text-gray-400">
+        The transcript is only used to write the note — it isn't saved to the chart. You can pause or stop at any time.
       </p>
       <button
         type="button"
@@ -176,9 +148,19 @@ function ReviewBody({ session, fields, setFields }) {
 
 export default function PhysicianAmbientAiPanel() {
   const session = usePhysicianAmbientSession();
-  const [showConsent, setShowConsent] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [fields, setFields] = useState({ chief_complaint: "", subjective: "", objective: "", assessment: "", plan: "" });
+  const { setAssistantHidden } = useOutletContext() || {};
+
+  // This panel is its own thing (a passive listener, not a chat) — hide the
+  // shared "Ask anything" assistant bar while it's mounted, same as every
+  // other activePanel-switched panel on this page (Wellness, Appointments,
+  // Timeline). Matters even more here: the mic is already committed to
+  // Ambient AI's own purpose.
+  useEffect(() => {
+    setAssistantHidden?.(true);
+    return () => setAssistantHidden?.(false);
+  }, [setAssistantHidden]);
 
   useEffect(() => {
     if (session.soap) setFields(session.soap);
@@ -196,11 +178,6 @@ export default function PhysicianAmbientAiPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.phase, session.voice.isPaused]);
 
-  const handleConfirmConsent = () => {
-    setShowConsent(false);
-    session.beginSession();
-  };
-
   const handleDiscardReview = () => {
     if (window.confirm("Discard this visit note without saving?")) session.reset();
   };
@@ -213,10 +190,7 @@ export default function PhysicianAmbientAiPanel() {
             <span className="text-xs font-bold text-gray-800">Ambient AI — Visit Notes</span>
           </div>
           {session.error && <p className="px-3 pt-2 text-xs text-red-600">{session.error}</p>}
-          <IdleBody onStart={() => setShowConsent(true)} />
-          {showConsent && (
-            <ConsentModal patientName={session.patientName} onCancel={() => setShowConsent(false)} onConfirm={handleConfirmConsent} />
-          )}
+          <IdleBody patientName={session.patientName} onStart={session.beginSession} />
         </>
       )}
 

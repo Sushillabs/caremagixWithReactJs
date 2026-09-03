@@ -47,7 +47,7 @@ export default function ConversationCard() {
       <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
         <div>
           <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : "Discharged Plan"}</h3>
-          <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p>
+          {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500 ">
           {TABS.map((tab) => (

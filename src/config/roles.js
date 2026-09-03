@@ -18,7 +18,7 @@ export const ROLE_NAV = {
   },
   physician: {
     // primary: ["dashboard", "patients", "manageCalendar", "configuration"],
-    primary: ["dashboard", "patients", "manageCalendar", "ambientVisitNotes"],
+    primary: ["dashboard", "patients", "manageCalendar"],
     secondary: ["dischargePlan", "icdCodes", "cptCodes", "medications"],
   },
   patient: {

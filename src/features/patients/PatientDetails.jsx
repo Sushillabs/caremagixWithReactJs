@@ -17,6 +17,7 @@ import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 import WellnessCaregiverPanel from "../wellness/WellnessCaregiverPanel";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
 import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
+import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
 import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
 
@@ -111,6 +112,7 @@ export default function PatientDetails() {
   const canCreateProgressNote = useCan("createProgressNotes");
   const canTimeline = useCan("timeline");
   const canSendMessage = useCan("sendMessage");
+  const canAmbientVisitNotes = useCan("ambientVisitNotes");
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -338,6 +340,16 @@ export default function PatientDetails() {
             </button>
           )}
 
+          {canAmbientVisitNotes && (
+            <button
+              type="button"
+              onClick={() => setActivePanel("ambientAi")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Ambient AI
+            </button>
+          )}
+
           {canWellnessCheckInReport && (
             <button
               type="button"
@@ -367,6 +379,8 @@ export default function PatientDetails() {
         <WellnessCaregiverPanel />
       ) : activePanel === "timeline" ? (
         <PatientTimelinePanel />
+      ) : activePanel === "ambientAi" ? (
+        <PhysicianAmbientAiPanel />
       ) : activePanel === "createProgress" ? (
         <TherapyProgressNotePanel patientName={patient?.name} />
       ) : (

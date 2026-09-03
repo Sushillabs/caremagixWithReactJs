@@ -22,7 +22,6 @@ import ComingSoon from "./features/common/ComingSoon";
 import JobsPage from "./features/jobs/JobsPage";
 import CallReportsPage from "./features/reports/CallReportsPage";
 import ManageBookingPage from "./features/appointments/ManageBookingPage";
-import PhysicianAmbientAiPage from "./features/ambientAi/PhysicianAmbientAiPage";
 import TransitionCareServicesPage from "./features/services/TransitionCareServicesPage";
 import { SECTIONS } from "./config/sections";
 
@@ -109,8 +108,6 @@ function App() {
                       <CallReportsPage />
                     ) : section.key === "manageCalendar" ? (
                       <ManageBookingPage />
-                    ) : section.key === "ambientVisitNotes" ? (
-                      <PhysicianAmbientAiPage />
                     ) : section.key === "transitionCareServices" ? (
                       <TransitionCareServicesPage />
                     ) : (

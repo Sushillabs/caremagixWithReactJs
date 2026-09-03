@@ -21,6 +21,7 @@ export const FEATURE_ROLES = {
   wellnessCheckInReport: ["caregiver"],
   createProgressNotes: ["physician"],
   timeline: ["physician"],
+  ambientVisitNotes: ["physician"],
   sendMessage: ["caregiver", "physician"],
 };
 
