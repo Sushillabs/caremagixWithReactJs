@@ -50,26 +50,24 @@ export const update_visit_template = (data) => http.post("/discharge_plan_agent/
 export const editNoteTemplate = (noteKind) => () =>
   http.get("/discharge_plan_agent/edit_template", { params: noteKind ? { note_kind: noteKind } : {}, withAuth: true });
 export const updateNoteTemplate = (data) => http.post("/discharge_plan_agent/edit_template", data, { withAuth: true });
-export const generateCarePlan = (data) => http.post("/generate_care_plan", data, { withAuth: true });
-export const getCarePlan = (carePlanId) => http.get(`/care_plan/${carePlanId}`, { withAuth: true });
-export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
-export const exportCarePlanPdf = (carePlanId) => http.post("/export_care_plan_pdf", { care_plan_id: carePlanId }, { withAuth: true });
-export const getCarePlanDashboard = (carePlanId) => http.get(`/care_plan/${carePlanId}/dashboard`, { withAuth: true });
+export const generateCarePlan = (data) => http.post("/v1/generate_care_plan", data, { withAuth: true });
+export const getCarePlan = (carePlanId) => http.get(`/v1/care_plan/${carePlanId}`, { withAuth: true });
+export const updateCarePlan = (carePlanId, care_plan_data) => http.put(`/v1/care_plan/${carePlanId}`, { care_plan_data }, { withAuth: true });
+export const exportCarePlanPdf = (carePlanId) => http.post("/v1/export_care_plan_pdf", { care_plan_id: carePlanId }, { withAuth: true });
+export const getCarePlanDashboard = (carePlanId) => http.get(`/v1/care_plan/${carePlanId}/dashboard`, { withAuth: true });
 export const getCarePlanDashboardByPatient = (patientName, patientType) =>
-  http.get(`/care_plan/dashboard?patient_name=${encodeURIComponent(patientName)}&patient_type=${encodeURIComponent(patientType)}`, {
+  http.get(`/v1/care_plan/dashboard?patient_name=${encodeURIComponent(patientName)}&patient_type=${encodeURIComponent(patientType)}`, {
     withAuth: true,
   });
 // A patient can hold many plans (versions) — this lists all of them, newest
 // first, with the headline dashboard numbers per plan already computed.
 export const getCarePlans = (patientName, patientType) =>
-  http.get(
-    `/care_plans?patient_name=${encodeURIComponent(patientName)}${patientType ? `&patient_type=${encodeURIComponent(patientType)}` : ""}`,
-    { withAuth: true }
-  );
+  http.get(`/v1/care_plans?patient_name=${encodeURIComponent(patientName)}${patientType ? `&patient_type=${encodeURIComponent(patientType)}` : ""}`, {
+    withAuth: true,
+  });
 // Regenerates from a specific existing plan — the new plan becomes active,
 // the one passed here stays as read-only history.
-export const regenerateCarePlan = (carePlanId, data = {}) =>
-  http.post(`/care_plan/${carePlanId}/regenerate`, data, { withAuth: true });
+export const regenerateCarePlan = (carePlanId, data = {}) => http.post(`/v1/care_plan/${carePlanId}/regenerate`, data, { withAuth: true });
 
 export const wellnessChat = (data) => http.post("/hf-wellness/chat", data, { withAuth: true }).then((res) => res.data);
 export const wellnessHistory = ({ session_id } = {}) =>
