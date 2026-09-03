@@ -294,6 +294,7 @@ export default function PatientDetails() {
                 askQuestion(
                   "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
                 );
+                navigate(".");
               }}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
