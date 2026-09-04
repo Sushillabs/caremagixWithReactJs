@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
 import { useState } from "react";
 import { logout } from "../../redux/authSlice";
+import useNotifications from "../../hooks/useNotifications";
+import NotificationDropdown from "./NotificationDropdown";
 
 export default function TopBar({ search, onSearchChange, showSearch }) {
   const dispatch = useDispatch();
@@ -17,9 +19,16 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
   const displayName = `${firstName} ${lastName}`.trim() || headerItem.name || auth.name || auth.username || "User";
   const role = auth.role || "";
   const [logoutShow, setLogoutShow] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { notifications, unreadCount, markAllRead, dismiss } = useNotifications();
 
   const handleNameClick = () => {
     setLogoutShow(!logoutShow);
+  };
+
+  const handleBellClick = () => {
+    if (!notifOpen) markAllRead();
+    setNotifOpen(!notifOpen);
   };
 
   const handleLogout = () => {
@@ -59,9 +68,19 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
           </span>
         </div>
 
-        <button className="relative text-gray-500 hover:text-gray-700" aria-label="Notifications">
-          <Bell size={20} />
-        </button>
+        {role === "caregiver" && (
+          <div className="relative">
+            <button className="relative text-gray-500 hover:text-gray-700" aria-label="Notifications" onClick={handleBellClick}>
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+            {notifOpen && <NotificationDropdown notifications={notifications} onDismiss={dismiss} onClose={() => setNotifOpen(false)} />}
+          </div>
+        )}
 
         <button className="flex items-center gap-2 text-sm hover:cursor-pointer" onClick={handleNameClick}>
           <UserCircle2 size={26} className="text-emerald-600" />

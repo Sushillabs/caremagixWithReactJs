@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Notifications (caregiver only)
+
+Live SSE feed (`useNotifications.js`) into the header bell — unread badge, grouped dropdown (Call Alerts / Discharge Alerts / Appointments / System), dismiss, mark-all-read on open, click to open the patient, "View Report" for call alerts. Mirrors legacy caremagix-fe's `NotificationManager`, ported to React (`NotificationDropdown.jsx`).
+
 #### Added — Voice parity with legacy jQuery (streaming, interrupt, live transcript)
 
 Applied to all 4 voice chats: Create Visit Note AI, Create Discharge Plan/Handoff Note AI, Wellness Check-in, Book Appointment.

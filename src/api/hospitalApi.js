@@ -215,6 +215,12 @@ export const getPatientEncounterTimeline = ({ patient_name, patient_key, status,
   return http.get(`/physician-match/encounters?${params.toString()}`, { withAuth: true }).then((res) => res.data);
 };
 
+// SSE has no Authorization header, so the backend trusts the id in the URL.
+export const getNotificationsStreamUrl = (userId) => `${API_BASE}/notifications/stream/${encodeURIComponent(userId)}`;
+export const markAllNotificationsRead = () => http.patch("/notifications/read-all", {}, { withAuth: true }).then((res) => res.data);
+export const deleteNotificationApi = (msgId) =>
+  http.delete(`/notifications/delete?msg_id=${encodeURIComponent(msgId)}`, { withAuth: true }).then((res) => res.data);
+
 // http://127.0.0.1:5000/discharge_plan_agent/edit_template
 // {
 //     "fields": {
