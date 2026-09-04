@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Layers, AlertTriangle } from "lucide-react";
 import { getCarePlans } from "../../api/hospitalApi";
 import { getPatientKey, getCarePlanLookupName } from "../../utils/buildPatientPayload";
 
@@ -44,32 +44,58 @@ export default function CarePlanHistory() {
         ) : plans.length === 0 ? (
           <p className="p-4 text-sm text-gray-400">No care plans generated yet.</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
             {plans.map((plan) => (
-              <li key={plan.care_plan_id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                <div>
-                  <p className="font-medium text-gray-800">
-                    {plan.label || formatDate(plan.generated_at)}
-                    {plan.is_active && (
-                      <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
-                        Active
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Version {plan.version} &nbsp;·&nbsp; {plan.overall_percent}% complete
-                  </p>
+              <div
+                key={plan.care_plan_id}
+                className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-gray-800">{plan.label || formatDate(plan.generated_at)}</p>
+                    <p className="text-xs text-gray-400">Version {plan.version}</p>
+                  </div>
+                  {plan.is_active && (
+                    <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">Active</span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/app/patients/${id}/care-plan/view?care_plan_id=${plan.care_plan_id}`)}
-                  className="rounded-md border border-emerald-200 px-2 py-1 text-xs text-emerald-600 hover:bg-emerald-50"
-                >
-                  View
-                </button>
-              </li>
+
+                {plan.diagnosis && <p className="line-clamp-2 text-xs text-gray-500">{plan.diagnosis}</p>}
+
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px] text-gray-500">
+                    <span>Progress</span>
+                    <span className="font-medium text-gray-700">{plan.overall_percent}%</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-full rounded-full bg-emerald-500" style={{ width: `${plan.overall_percent}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Layers size={12} className="text-gray-400" /> {plan.section_count} sections
+                  </span>
+                  {plan.high_risk_count > 0 && (
+                    <span className="flex items-center gap-1 text-red-500">
+                      <AlertTriangle size={12} /> {plan.high_risk_count} high risk
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3">
+                  <span className="text-[11px] text-gray-400">Updated {formatDate(plan.updated_at)}</span>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/app/patients/${id}/care-plan/view?care_plan_id=${plan.care_plan_id}`)}
+                    className="rounded-md border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

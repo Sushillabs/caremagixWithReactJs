@@ -12,7 +12,8 @@ import DocReferenceModal from "./DocReferenceModal";
 const TABS = [
   { key: "conversation", label: "Conversation" },
   { key: "summary", label: "Summary" },
-  { key: "history", label: "Chat History" },
+  // Shown but not clickable — no content wired up yet (was rendering blank).
+  { key: "history", label: "Chat History", disabled: true },
 ];
 
 const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
@@ -26,6 +27,8 @@ export default function ConversationCard() {
   const patientType = useSelector((state) => state.patientsingledata?.value?.patient?.type);
   const role = useSelector((state) => state.auth?.value?.role) || "caregiver";
   const isMedication = mode === "medication";
+  // Medication has no summary table for any role — drop that tab entirely.
+  const visibleTabs = isMedication ? TABS.filter((tab) => tab.key !== "summary") : TABS;
   const { askQuestion } = useAskQuestion();
   const [docRefQuestionId, setDocRefQuestionId] = useState(null);
   const questionsRef = useRef(null);
@@ -34,6 +37,10 @@ export default function ConversationCard() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation, askPending]);
+  // If medication mode hides the Summary tab while it's active, fall back to Conversation.
+  useEffect(() => {
+    if (isMedication && activeTab === "summary") setActiveTab("conversation");
+  }, [isMedication, activeTab]);
   const summaryTable = isMedication ? null : chatData?.[0];
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
   const rawDefaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
@@ -50,12 +57,19 @@ export default function ConversationCard() {
           {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500 ">
-          {TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setActiveTab(tab.key)}
+              className={
+                tab.disabled
+                  ? "cursor-not-allowed text-gray-300"
+                  : activeTab === tab.key
+                  ? "font-medium text-emerald-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }
             >
               {tab.label}
             </button>

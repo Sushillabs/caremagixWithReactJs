@@ -23,6 +23,9 @@ export const signUpAPI = (data) => http.post("/register_category", data);
 export const signInAPI = (data) => http.post("/login", data);
 export const forgotPasswordAPI = (data) => http.post("/forgot_password", data);
 export const getPatients = () => http.get("/retrieve-patient-name", { withAuth: true });
+// Role-aware home dashboard counts — payload shape (which fields exist)
+// depends on the logged-in user's role. See caremagix-be/dashboard/service.py.
+export const getDashboardStats = () => http.get("/dashboard/stats", { withAuth: true }).then((res) => res.data);
 export const getPatientChat = (data) => http.post("/generate_questions", data, { withAuth: true });
 export const askAPI = (data) => http.post("/ask", data, { withAuth: true });
 export const getDocRef = (data) => http.post("/doc-ref", data, { withAuth: true });

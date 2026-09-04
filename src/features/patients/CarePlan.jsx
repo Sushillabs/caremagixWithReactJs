@@ -110,7 +110,7 @@ export default function CarePlan() {
                   disabled={isStarting}
                   className="rounded-md bg-amber-600 px-2 py-1 text-white hover:bg-amber-700 disabled:opacity-70"
                 >
-                  Yes, Regenerate
+                  Yes, Create New
                 </button>
               </span>
             ) : (
@@ -120,7 +120,7 @@ export default function CarePlan() {
                 disabled={isStarting}
                 className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-70"
               >
-                Regenerate
+                Create New
               </button>
             ))}
 

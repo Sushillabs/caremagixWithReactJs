@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { Eye, EyeOff } from "lucide-react";
 import { forgotPasswordAPI, signInAPI } from "../api/hospitalApi";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuth } from "../redux/authSlice";
 
 function SignIn() {
   const [isForgot, setIsForgot] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     control,
     register,
@@ -88,10 +90,18 @@ function SignIn() {
               <br />
               <input
                 id="password"
-                type="password"
-                className="border border-gray-300 w-full p-2 rounded "
+                type={showPassword ? "text" : "password"}
+                className="border border-gray-300 w-full p-2 pr-9 rounded "
                 {...register("password", { required: true })}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-9 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
               {errors.password && <p>password is required</p>}
             </div>
             <div className="text-sm text-addhosblue hover:cursor-pointer hover:underline w-fit" onClick={() => setIsForgot(true)}>
