@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { HeartPulse, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
@@ -8,7 +8,16 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import WellnessTrendsTab from "./WellnessTrendsTab";
-import { wellnessChat, wellnessHistory, wellnessClear, wellnessAlertAction, wellnessDashboard, getWellnessVoiceToken } from "../../api/hospitalApi";
+import {
+  wellnessChat,
+  wellnessHistory,
+  wellnessClear,
+  wellnessAlertAction,
+  wellnessDashboard,
+  getWellnessVoiceToken,
+  wellnessSpeakStream,
+  wellnessSpeakBase64,
+} from "../../api/hospitalApi";
 
 const KICKOFF_MESSAGE = "I would like to do my heart failure wellness check-in.";
 
@@ -137,8 +146,39 @@ export default function WellnessCheckInPanel() {
 
   const voice = useDeepgramVoice({
     fetchToken: getWellnessVoiceToken,
-    onUtterance: (text) => send(text, { source: "voice", include_audio: true }),
+    onUtterance: (text) => send(text, { source: "voice" }),
   });
+
+  // Streams the reply's audio as it's generated, falling back to a plain
+  // base64 clip on genuine failure (not on a user-triggered interrupt).
+  const speakAbortRef = useRef(null);
+  const speak = async (text) => {
+    if (!text) return;
+    const controller = new AbortController();
+    speakAbortRef.current = controller;
+    try {
+      const res = await wellnessSpeakStream(text, controller.signal);
+      if (!res.ok || !res.body) throw new Error("stream failed");
+      await voice.playStream(res);
+    } catch (err) {
+      if (err?.name !== "AbortError") {
+        try {
+          const data = await wellnessSpeakBase64(text);
+          if (data?.audio_base64) await voice.playReply(data.audio_base64, data.audio_content_type);
+        } catch {
+          /* text is already shown either way — give up on audio silently */
+        }
+      }
+    } finally {
+      if (speakAbortRef.current === controller) speakAbortRef.current = null;
+      voice.resumeAfterTurn();
+    }
+  };
+
+  const handleTalkNow = () => {
+    speakAbortRef.current?.abort();
+    voice.interruptSpeech();
+  };
 
   useEffect(() => {
     refreshDashboard();
@@ -151,13 +191,11 @@ export default function WellnessCheckInPanel() {
     if (!res?.chat_history?.length) send(KICKOFF_MESSAGE);
   };
 
-  // Play back the assistant's spoken reply when the turn came from voice input.
+  // Speak the assistant's reply when the turn came from voice input.
   // Quietly refresh My Progress whenever a turn records a check-in, matching
   // legacy's "reloads dashboard quietly if check_in was recorded".
   useEffect(() => {
-    if (lastResponse?.audio_base64) {
-      voice.playReply(lastResponse.audio_base64, lastResponse.audio_content_type).then(() => voice.resumeAfterTurn());
-    }
+    if (lastResponse?.message) speak(lastResponse.message);
     if (lastResponse?.check_in) refreshDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
@@ -235,6 +273,7 @@ export default function WellnessCheckInPanel() {
                 quickReplies={lastResponse?.follow_up_question?.options}
                 onQuickReply={(option) => send(option)}
                 emptyState="Loading your check-in..."
+                liveText={voice.transcript}
                 renderExtra={(meta) => (
                   <>
                     <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />
@@ -253,6 +292,19 @@ export default function WellnessCheckInPanel() {
           </div>
         )}
       </div>
+
+      {activeTab === "checkin" && started && voice.state === "speaking" && (
+        <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+          <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+          <button
+            type="button"
+            onClick={handleTalkNow}
+            className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+          >
+            Talk now
+          </button>
+        </div>
+      )}
 
       {activeTab === "checkin" && started && (
         <AgentChatComposer

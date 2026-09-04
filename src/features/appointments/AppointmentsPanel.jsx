@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { CalendarPlus, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
@@ -15,6 +15,8 @@ import {
   appointmentConfirm,
   getAppointmentPhysicians,
   getAppointmentVoiceToken,
+  appointmentSpeakStream,
+  appointmentSpeakBase64,
 } from "../../api/hospitalApi";
 
 const KICKOFF_MESSAGE = "I would like to schedule a physician appointment.";
@@ -153,19 +155,48 @@ export default function AppointmentsPanel() {
 
   const voice = useDeepgramVoice({
     fetchToken: getAppointmentVoiceToken,
-    onUtterance: (text) => sendMessage(text, { source: "voice", include_audio: true }),
+    onUtterance: (text) => sendMessage(text, { source: "voice" }),
   });
+
+  // Streams the reply's audio as it's generated, falling back to a plain
+  // base64 clip on genuine failure (not on a user-triggered interrupt).
+  const speakAbortRef = useRef(null);
+  const speak = async (text) => {
+    if (!text) return;
+    const controller = new AbortController();
+    speakAbortRef.current = controller;
+    try {
+      const res = await appointmentSpeakStream(text, controller.signal);
+      if (!res.ok || !res.body) throw new Error("stream failed");
+      await voice.playStream(res);
+    } catch (err) {
+      if (err?.name !== "AbortError") {
+        try {
+          const data = await appointmentSpeakBase64(text);
+          if (data?.audio_base64) await voice.playReply(data.audio_base64, data.audio_content_type);
+        } catch {
+          /* text is already shown either way — give up on audio silently */
+        }
+      }
+    } finally {
+      if (speakAbortRef.current === controller) speakAbortRef.current = null;
+      voice.resumeAfterTurn();
+    }
+  };
+
+  const handleTalkNow = () => {
+    speakAbortRef.current?.abort();
+    voice.interruptSpeech();
+  };
 
   const handleStart = () => {
     setStarted(true);
     sendMessage(KICKOFF_MESSAGE);
   };
 
-  // Play back the assistant's spoken reply when the turn came from voice input.
+  // Speak the assistant's reply when a new turn lands.
   useEffect(() => {
-    if (lastResponse?.audio_base64) {
-      voice.playReply(lastResponse.audio_base64, lastResponse.audio_content_type).then(() => voice.resumeAfterTurn());
-    }
+    if (lastResponse?.message) speak(lastResponse.message);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
@@ -267,6 +298,7 @@ export default function AppointmentsPanel() {
               quickReplies={quickReplies}
               onQuickReply={handleQuickReply}
               emptyState="Starting your appointment request..."
+              liveText={voice.transcript}
               renderExtra={(meta) =>
                 meta?.status === "ready_to_book" && !bookingConfirmed ? (
                   <ConfirmBookingPanel booking={meta.proposed_booking} pending={pending} onConfirm={handleConfirmBooking} />
@@ -282,6 +314,19 @@ export default function AppointmentsPanel() {
           </div>
         )}
       </div>
+
+      {activeTab === "book" && started && voice.state === "speaking" && (
+        <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+          <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+          <button
+            type="button"
+            onClick={handleTalkNow}
+            className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+          >
+            Talk now
+          </button>
+        </div>
+      )}
 
       {activeTab === "book" && started && (
         <AgentChatComposer

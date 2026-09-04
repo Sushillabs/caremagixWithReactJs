@@ -39,7 +39,10 @@ export default function useDeepgramVoice({ fetchToken, onUtterance, continuous =
   const resumeListening = useCallback(() => sessionRef.current?.resumeListening(), []);
   const drainPendingTranscript = useCallback(() => sessionRef.current?.drainPendingTranscript() || "", []);
   const playReply = useCallback((base64Audio, contentType) => sessionRef.current?.playBase64Audio(base64Audio, contentType), []);
+  const playStream = useCallback((response) => sessionRef.current?.playPcmStream(response), []);
   const stopPlayback = useCallback(() => sessionRef.current?.stopPlayback(), []);
+  // "Talk now" — cuts off whatever's playing and hands the mic back immediately.
+  const interruptSpeech = useCallback(() => sessionRef.current?.interruptSpeech(), []);
 
   return {
     state,
@@ -56,6 +59,8 @@ export default function useDeepgramVoice({ fetchToken, onUtterance, continuous =
     drainPendingTranscript,
     isPaused: state === "paused",
     playReply,
+    playStream,
     stopPlayback,
+    interruptSpeech,
   };
 }

@@ -267,12 +267,12 @@ export default function PatientDetails() {
               {isCallRegistered ? "Unregister Call" : "Register a Call"}
             </button>
           )}
-          {canMedicationAlerts && (
+          {/* {canMedicationAlerts && (
             <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
               Medication Alerts
             </button>
-          )}
-          {/* {canSendMessage && (
+          )} */}
+          {canSendMessage && (
             <button
               type="button"
               onClick={() => setShowSendMessageModal(true)}
@@ -280,7 +280,7 @@ export default function PatientDetails() {
             >
               Send Message
             </button>
-          )} */}
+          )}
           {/* <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
             Call Reports
           </button> */}
@@ -301,11 +301,11 @@ export default function PatientDetails() {
               Medication
             </button>
           )}
-          {canPatientJourney && (
+          {/* {canPatientJourney && (
             <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
               Patient Journey
             </button>
-          )}
+          )} */}
           {canCreateCarePlan && (
             <button
               type="button"

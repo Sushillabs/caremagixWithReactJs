@@ -11,14 +11,29 @@ import { markdownTableComponents } from "../../utils/markdownComponents";
 // Appointment, ...) pass their own header content and turns from
 // useAgentChat — this component only knows how to render a conversation, not
 // which backend it came from.
-export default function AgentChatThread({ header, turns = [], pending, error, quickReplies, onQuickReply, emptyState, renderExtra, bare = false }) {
+export default function AgentChatThread({
+  header,
+  turns = [],
+  pending,
+  error,
+  quickReplies,
+  onQuickReply,
+  emptyState,
+  renderExtra,
+  bare = false,
+  // Live, word-by-word interim transcript (voice.transcript) — shown as one
+  // extra "in progress" user bubble below the real turns while speaking, same
+  // idea as legacy's upsertLiveTranscript. Optional — omit to leave a chat
+  // surface unchanged.
+  liveText,
+}) {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [turns, pending]);
+  }, [turns, pending, liveText]);
 
-  const hasContent = turns.length > 0 || pending;
+  const hasContent = turns.length > 0 || pending || !!liveText;
 
   const body = (
     <div className="min-h-0 flex-1 overflow-y-auto pb-4">
@@ -49,6 +64,14 @@ export default function AgentChatThread({ header, turns = [], pending, error, qu
                 </div>
               </div>
             )
+          )}
+          {liveText && (
+            <div className="flex items-start justify-end gap-2 text-right opacity-70">
+              <span className="italic text-gray-500">{liveText}</span>
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
+                A
+              </div>
+            </div>
           )}
           {pending && <ChatLoader />}
           <div ref={chatEndRef} />

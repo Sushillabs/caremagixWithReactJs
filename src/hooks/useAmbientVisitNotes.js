@@ -19,11 +19,12 @@ export default function useAmbientVisitNotes({ noteKind } = {}) {
     return {
       session_id: data.session_id,
       chat_history: [{ role: "assistant", content: data.next_question }],
+      message: data.next_question,
     };
   };
 
-  const sendMessage = async ({ message, session_id, include_audio }) => {
-    const data = await api.turn({ session_id, message, include_audio: !!include_audio });
+  const sendMessage = async ({ message, session_id }) => {
+    const data = await api.turn({ session_id, message });
     return {
       ...data,
       message: data.status === "generated" ? readyMessage(data) : data.next_question,
@@ -41,5 +42,13 @@ export default function useAmbientVisitNotes({ noteKind } = {}) {
       };
     });
 
-  return { ...chat, stopAndGenerate, noteKind: noteKind || null, saveNote: api.save, fetchVoiceToken: api.liveToken };
+  return {
+    ...chat,
+    stopAndGenerate,
+    noteKind: noteKind || null,
+    saveNote: api.save,
+    fetchVoiceToken: api.liveToken,
+    speakStream: api.speakStream,
+    speakBase64: api.speakBase64,
+  };
 }

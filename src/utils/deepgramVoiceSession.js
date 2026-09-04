@@ -69,6 +69,9 @@ export default class DeepgramVoiceSession {
     this.flushing = false;
     this.audioEl = null;
     this.reconnectAttempts = 0;
+    this.speakToken = 0;
+    this.pcmPlayback = null;
+    this._speakDone = null;
   }
 
   _setState(state) {
@@ -220,6 +223,7 @@ export default class DeepgramVoiceSession {
   }
 
   playBase64Audio(b64, contentType) {
+    const token = ++this.speakToken;
     return new Promise((resolve) => {
       if (!b64) {
         resolve();
@@ -232,9 +236,11 @@ export default class DeepgramVoiceSession {
       }
       const audio = new Audio(`data:${contentType || "audio/mpeg"};base64,${b64}`);
       this.audioEl = audio;
+      this._speakDone = resolve;
       const done = () => {
         if (this.audioEl === audio) this.audioEl = null;
-        resolve();
+        if (this._speakDone === resolve) this._speakDone = null;
+        if (token === this.speakToken) resolve();
       };
       audio.onended = done;
       audio.onerror = done;
@@ -242,14 +248,133 @@ export default class DeepgramVoiceSession {
     });
   }
 
-  stopPlayback() {
-    if (!this.audioEl) return;
-    try {
-      this.audioEl.pause();
-    } catch {
-      /* already stopped */
+  // Chunked PCM playback for the streaming /voice/speak response — starts
+  // speaking as audio arrives instead of waiting for the whole clip like
+  // playBase64Audio. `response` is a fetch() Response with a readable body.
+  playPcmStream(response) {
+    const token = ++this.speakToken;
+    if (!response?.body || typeof response.body.getReader !== "function") {
+      return Promise.reject(new Error("streaming not supported"));
     }
-    this.audioEl = null;
+    const sampleRate = parseInt(response.headers.get("X-Audio-Sample-Rate") || "24000", 10) || 24000;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return Promise.reject(new Error("Web Audio is not available"));
+
+    this.stopPlayback();
+    if (this.active) {
+      this._setMicMuted(true);
+      this._setState("speaking");
+    }
+
+    const ctx = new AudioCtx();
+    const playback = { ctx, sources: [] };
+    this.pcmPlayback = playback;
+
+    return new Promise((resolve) => {
+      this._speakDone = resolve;
+      const finish = () => {
+        if (this.pcmPlayback === playback) this.pcmPlayback = null;
+        if (this._speakDone === resolve) this._speakDone = null;
+        if (token === this.speakToken) resolve();
+      };
+
+      Promise.resolve(ctx.state === "suspended" ? ctx.resume() : null)
+        .then(() => {
+          const reader = response.body.getReader();
+          let leftover = new Uint8Array(0);
+          let nextTime = ctx.currentTime + 0.04;
+
+          const schedulePcm = (u8) => {
+            const even = u8.length - (u8.length % 2);
+            if (even < 2) return u8;
+            const samples = new Int16Array(u8.buffer.slice(u8.byteOffset, u8.byteOffset + even));
+            const f32 = new Float32Array(samples.length);
+            for (let i = 0; i < samples.length; i++) f32[i] = samples[i] / 32768;
+            const buffer = ctx.createBuffer(1, f32.length, sampleRate);
+            buffer.getChannelData(0).set(f32);
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(ctx.destination);
+            const startAt = Math.max(nextTime, ctx.currentTime);
+            src.start(startAt);
+            nextTime = startAt + buffer.duration;
+            playback.sources.push(src);
+            return u8.subarray(even);
+          };
+
+          const readChunk = () => {
+            if (token !== this.speakToken || this.pcmPlayback !== playback) {
+              try {
+                reader.cancel();
+              } catch {
+                /* already done */
+              }
+              return Promise.resolve();
+            }
+            return reader.read().then((result) => {
+              if (token !== this.speakToken || this.pcmPlayback !== playback) return;
+              if (result.done) {
+                if (leftover.length) schedulePcm(leftover);
+                const remainingMs = Math.max(0, (nextTime - ctx.currentTime) * 1000);
+                return new Promise((r) => setTimeout(r, remainingMs + 40));
+              }
+              const chunk = result.value || new Uint8Array(0);
+              const combined = new Uint8Array(leftover.length + chunk.length);
+              combined.set(leftover, 0);
+              combined.set(chunk, leftover.length);
+              leftover = schedulePcm(combined);
+              return readChunk();
+            });
+          };
+
+          return readChunk();
+        })
+        .then(finish)
+        .catch(finish);
+    });
+  }
+
+  _stopPcmPlayback() {
+    if (!this.pcmPlayback) return;
+    const playback = this.pcmPlayback;
+    this.pcmPlayback = null;
+    playback.sources.forEach((src) => {
+      try {
+        src.stop();
+      } catch {
+        /* already stopped */
+      }
+    });
+    try {
+      playback.ctx.close();
+    } catch {
+      /* already closed */
+    }
+  }
+
+  stopPlayback() {
+    this._stopPcmPlayback();
+    if (this.audioEl) {
+      try {
+        this.audioEl.pause();
+      } catch {
+        /* already stopped */
+      }
+      this.audioEl = null;
+    }
+    if (this._speakDone) {
+      const done = this._speakDone;
+      this._speakDone = null;
+      done();
+    }
+  }
+
+  // Cuts off whatever's currently playing (stream or base64) and hands the
+  // mic straight back — the "Talk now" interrupt.
+  interruptSpeech() {
+    this.speakToken += 1;
+    this.stopPlayback();
+    if (this.active) this.resumeAfterTurn();
   }
 
   _listenUrl(tokenInfo) {
@@ -504,6 +629,10 @@ export default class DeepgramVoiceSession {
     if (this.continuous) {
       this._emitTranscript(text);
       this.options.onUtterance?.(text);
+      // Clear right away — once handed off, this sentence becomes a real
+      // turn/committed line elsewhere; leaving it here would show it a
+      // second time as a stale "live" bubble until the next utterance.
+      this._emitTranscript("");
       return;
     }
 

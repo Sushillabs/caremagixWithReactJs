@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Voice parity with legacy jQuery (streaming, interrupt, live transcript)
+
+Applied to all 4 voice chats: Create Visit Note AI, Create Discharge Plan/Handoff Note AI, Wellness Check-in, Book Appointment.
+
+- Streamed TTS playback (`/voice/speak` with `stream: true`) instead of waiting for a full base64 clip — falls back to base64 on failure.
+- New "Talk now" button + row (above the composer) to interrupt the assistant mid-sentence and answer immediately.
+- Live, word-by-word transcript bubble while speaking (previously only appeared after you stopped talking) — new `AgentChatThread` `liveText` prop.
+- Bugfixes found along the way: `stopPlayback()` could hang forever if interrupted mid-clip; continuous-mode transcript wasn't cleared after handoff, which would've shown a stale duplicate bubble.
+
 #### Added — Physician ambient discharge/handoff notes
 
 "Create Discharge Plan AI" / "Create Handoff Note AI" now run the Deepgram

@@ -8,7 +8,7 @@ import { getWellnessCaregiverDashboard } from "../../api/hospitalApi";
 
 const TABS = [
   { key: "trends", label: "Progress" },
-  { key: "plan", label: "Plan" },
+  // { key: "plan", label: "Plan" },
 ];
 
 // Plan editing lives here instead of on the patient side now — but there's

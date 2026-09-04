@@ -1,5 +1,21 @@
 import http from "./httpClient";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
+// Streaming TTS uses raw fetch (not the axios `http` instance) — axios can't
+// hand back a readable stream body, needed for chunked PCM playback. Shared
+// by every voice-enabled feature (hf-wellness, physician-appointment,
+// caregiver-ambient-ai, physician-ambient-note) — same endpoint shape on all.
+function fetchVoiceSpeakStream(base, text, signal) {
+  const token = localStorage.getItem("token");
+  return fetch(`${API_BASE}${base}/voice/speak`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ text, stream: true }),
+    signal,
+  });
+}
+
 export const registerHospital = (data) => http.post("/org_register/hospital_verify", data);
 export const getHospitals = () => http.get("/get_details?type=hospital");
 export const verifyEmail = (data) => http.put("/org_register/hospital_edit", data);
@@ -82,6 +98,9 @@ export const getWellnessAlerts = (status) =>
 export const wellnessAlertAction = (alertId, data) =>
   http.post(`/hf-wellness/alerts/${alertId}/action`, data, { withAuth: true }).then((res) => res.data);
 export const getWellnessVoiceToken = () => http.post("/hf-wellness/voice/live-token", {}, { withAuth: true }).then((res) => res.data);
+export const wellnessSpeakStream = (text, signal) => fetchVoiceSpeakStream("/hf-wellness", text, signal);
+export const wellnessSpeakBase64 = (text) =>
+  http.post("/hf-wellness/voice/speak", { text, as_base64: true }, { withAuth: true }).then((res) => res.data);
 // Caregiver read-only view of one facility patient — accepts patient_key
 // and/or patient_name (backend OR-matches), but the frontend only ever has
 // patient_name available (no patient_key anywhere in this app's data model).
@@ -115,6 +134,9 @@ export const getAppointmentRequests = (status) =>
 export const cancelAppointmentRequest = (appointmentId) =>
   http.post(`/physician-appointment/requests/${appointmentId}/cancel`, {}, { withAuth: true }).then((res) => res.data);
 export const getAppointmentVoiceToken = () => http.post("/physician-appointment/voice/live-token", {}, { withAuth: true }).then((res) => res.data);
+export const appointmentSpeakStream = (text, signal) => fetchVoiceSpeakStream("/physician-appointment", text, signal);
+export const appointmentSpeakBase64 = (text) =>
+  http.post("/physician-appointment/voice/speak", { text, as_base64: true }, { withAuth: true }).then((res) => res.data);
 
 // Physician Appointment Management (physician side calendar) — same
 // {success, data} envelope, verified against physician_routes.py.
@@ -159,6 +181,8 @@ const makeAmbientNoteApi = (base) => ({
   turn: (data) => http.post(`${base}/session/turn`, data, { withAuth: true }).then((res) => res.data),
   stop: (data) => http.post(`${base}/session/stop`, data, { withAuth: true }).then((res) => res.data),
   save: (data) => http.post(`${base}/session/save`, data, { withAuth: true }).then((res) => res.data),
+  speakStream: (text, signal) => fetchVoiceSpeakStream(base, text, signal),
+  speakBase64: (text) => http.post(`${base}/voice/speak`, { text, as_base64: true }, { withAuth: true }).then((res) => res.data),
 });
 
 export const caregiverAmbientNoteApi = makeAmbientNoteApi("/caregiver-ambient-ai");

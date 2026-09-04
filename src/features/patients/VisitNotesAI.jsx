@@ -139,18 +139,63 @@ export default function VisitNotesAI() {
   const [started, setStarted] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
 
-  const { turns, lastResponse, pending, error, send, stopAndGenerate, hydrateHistory, historyLoaded, sessionId, reset, saveNote, fetchVoiceToken } =
-    useAmbientVisitNotes({ noteKind });
+  const {
+    turns,
+    lastResponse,
+    pending,
+    error,
+    send,
+    stopAndGenerate,
+    hydrateHistory,
+    historyLoaded,
+    sessionId,
+    reset,
+    saveNote,
+    fetchVoiceToken,
+    speakStream,
+    speakBase64,
+  } = useAmbientVisitNotes({ noteKind });
 
   const voice = useDeepgramVoice({
     fetchToken: fetchVoiceToken,
-    onUtterance: (text) => send(text, { include_audio: true }),
+    onUtterance: (text) => send(text),
   });
 
-  useEffect(() => {
-    if (lastResponse?.audio_base64) {
-      voice.playReply(lastResponse.audio_base64, lastResponse.audio_content_type).then(() => voice.resumeAfterTurn());
+  // Streams the question's audio as it's generated (falls back to a plain
+  // base64 clip if streaming fails or is aborted for any other reason), then
+  // hands the mic back. speakAbortRef lets "Talk now" cut the fetch itself,
+  // not just the playback.
+  const speakAbortRef = useRef(null);
+  const speak = async (text) => {
+    if (!text) return;
+    const controller = new AbortController();
+    speakAbortRef.current = controller;
+    try {
+      const res = await speakStream(text, controller.signal);
+      if (!res.ok || !res.body) throw new Error("stream failed");
+      await voice.playStream(res);
+    } catch (err) {
+      if (err?.name !== "AbortError") {
+        try {
+          const data = await speakBase64(text);
+          if (data?.audio_base64) await voice.playReply(data.audio_base64, data.audio_content_type);
+        } catch {
+          /* text is already shown either way — give up on audio silently */
+        }
+      }
+    } finally {
+      if (speakAbortRef.current === controller) speakAbortRef.current = null;
+      voice.resumeAfterTurn();
     }
+  };
+
+  const handleTalkNow = () => {
+    speakAbortRef.current?.abort();
+    voice.interruptSpeech();
+  };
+
+  useEffect(() => {
+    if (lastResponse?.message) speak(lastResponse.message);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
@@ -160,7 +205,8 @@ export default function VisitNotesAI() {
 
   const handleStart = async () => {
     setStarted(true);
-    await hydrateHistory();
+    const res = await hydrateHistory();
+    if (res?.message) await speak(res.message);
     voice.start();
   };
 
@@ -168,7 +214,8 @@ export default function VisitNotesAI() {
     if (pending) return;
     if (voice.isActive) voice.stop();
     await reset();
-    await hydrateHistory();
+    const res = await hydrateHistory();
+    if (res?.message) await speak(res.message);
     voice.start();
     setActiveTab("chat");
   };
@@ -208,7 +255,26 @@ export default function VisitNotesAI() {
 
       {activeTab === "chat" && (
         <>
-          <AgentChatThread bare turns={turns} pending={pending || !historyLoaded} error={error} emptyState="Starting..." />
+          <AgentChatThread
+            bare
+            turns={turns}
+            pending={pending || !historyLoaded}
+            error={error}
+            emptyState="Starting..."
+            liveText={voice.transcript}
+          />
+          {voice.state === "speaking" && (
+            <div className="shrink-0 flex items-center justify-between gap-2 border-t border-gray-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+              <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+              <button
+                type="button"
+                onClick={handleTalkNow}
+                className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+              >
+                Talk now
+              </button>
+            </div>
+          )}
           <AgentChatComposer onSubmit={(text) => send(text)} disabled={pending} voice={voice} placeholder={`Talk or type your ${label.toLowerCase()} answers...`} />
           <div className="shrink-0 border-t border-gray-100 p-2 text-right">
             <button
