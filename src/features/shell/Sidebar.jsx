@@ -1,6 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 import { SECTIONS } from "../../config/sections";
 import { getRoleNav } from "../../config/roles";
@@ -135,12 +136,15 @@ function NavGroup({ section, role }) {
 export default function Sidebar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const role = useSelector((state) => state.auth?.value?.role) || "caregiver";
   const nav = getRoleNav(role);
 
   const handleLogout = () => {
     dispatch(logout());
     localStorage.clear();
+    // See TopBar.jsx's handleLogout — same account-switch cache leak.
+    queryClient.clear();
     navigate("/");
   };
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, User } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
@@ -91,7 +91,13 @@ export default function PatientDetails() {
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
   const [showSendMessageModal, setShowSendMessageModal] = useState(false);
 
-  const [activePanel, setActivePanel] = useState(null);
+  // ?panel=/&tab= (set by useOpenPatientDetail, e.g. a dashboard card) picks
+  // which panel opens on load instead of always landing on the default
+  // record tab. Read once on mount — same "search param decides the initial
+  // view" idiom VisitNotesAI already uses for ?kind=.
+  const [searchParams] = useSearchParams();
+  const [activePanel, setActivePanel] = useState(() => searchParams.get("panel"));
+  const initialPanelTab = searchParams.get("tab");
 
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
@@ -386,9 +392,9 @@ export default function PatientDetails() {
       </div>
 
       {activePanel === "wellness" ? (
-        <WellnessCheckInPanel />
+        <WellnessCheckInPanel initialTab={initialPanelTab} />
       ) : activePanel === "appointments" ? (
-        <AppointmentsPanel />
+        <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
       ) : activePanel === "timeline" ? (

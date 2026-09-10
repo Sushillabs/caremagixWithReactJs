@@ -73,8 +73,11 @@ function ConfirmBookingPanel({ booking, pending, onConfirm }) {
   );
 }
 
-export default function AppointmentsPanel() {
-  const [activeTab, setActiveTab] = useState("book");
+// initialTab: which TABS key to land on — set by PatientDetails from ?tab=
+// (e.g. the dashboard's Your Appointments card links straight to "myAppointments"
+// instead of the booking chat). Falls back to the default "book" tab otherwise.
+export default function AppointmentsPanel({ initialTab }) {
+  const [activeTab, setActiveTab] = useState(TABS.some((t) => t.key === initialTab) ? initialTab : "book");
   // Gates the Book Appointment tab's chat behind a tap-to-start mic screen,
   // same pattern as VisitNotesAI/Wellness — My Appointments stays
   // independent, not blocked by this.

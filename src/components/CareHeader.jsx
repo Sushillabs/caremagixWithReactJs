@@ -4,6 +4,7 @@ import { TbUserExclamation } from "react-icons/tb";
 import { useSelector, useDispatch } from "react-redux";
 import { logout, setHederKey } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { getICDCodes, getCPTCodes } from "../api/hospitalApi";
 import useMyQuery from "../hooks/useMyQuery";
 import { addICD, addCPT } from "../redux/codesSlice";
@@ -27,6 +28,7 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
   const patient_data = useSelector((state) => state.patientsingledata.value)
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { askQuestion, isPending, error } = useAskQuestion();
 
   const { data: icd_data, error: icd_Error, isSuccess: icd_isSuccess, isError: icd_isError, isPending: icd_isPending, isFetching: icd_isFetching, refetch: icd_refetch } = useMyQuery({ api: getICDCodes, id: 'icd', enabled: false })
@@ -36,6 +38,8 @@ function CareHeader({ setHandleSidebar, handleSidebar, setRightBar, rightBar }) 
     // localStorage.removeItem("token");
     localStorage.clear();
     dispatch(logout());
+    // See TopBar.jsx's handleLogout — same account-switch cache leak.
+    queryClient.clear();
     navigate('/');
 
     console.log("Logged out");

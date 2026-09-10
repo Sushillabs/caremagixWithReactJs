@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MobileRightBar = ({ setRightBar }) => {
     let plans = [
@@ -18,10 +19,13 @@ const MobileRightBar = ({ setRightBar }) => {
     const user = useSelector((state) => state.auth.value);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         dispatch(logout());
+        // See TopBar.jsx's handleLogout — same account-switch cache leak.
+        queryClient.clear();
         navigate('/');
 
         console.log("Logged out");

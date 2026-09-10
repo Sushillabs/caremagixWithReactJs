@@ -107,8 +107,11 @@ function HandoffPanel({ alert, onAction }) {
   );
 }
 
-export default function WellnessCheckInPanel() {
-  const [activeTab, setActiveTab] = useState("checkin");
+// initialTab: which TABS key to land on — set by PatientDetails from ?tab=
+// (e.g. the dashboard's Wellness Streak card links straight to "trends").
+// Falls back to the default "checkin" tab for anything else, including no prop at all.
+export default function WellnessCheckInPanel({ initialTab }) {
+  const [activeTab, setActiveTab] = useState(TABS.some((t) => t.key === initialTab) ? initialTab : "checkin");
   // Gates the checkin tab's chat behind a tap-to-start mic screen, same
   // pattern as VisitNotesAI — Trends/Baseline stay independent, fed by their
   // own dashboard fetch below, not blocked by this.

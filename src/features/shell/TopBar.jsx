@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
 import { useState } from "react";
 import { logout } from "../../redux/authSlice";
@@ -9,6 +10,7 @@ import NotificationDropdown from "./NotificationDropdown";
 export default function TopBar({ search, onSearchChange, showSearch }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const auth = useSelector((state) => state.auth?.value) || {};
   const headerItem = useSelector((state) => state.auth?.item) || {};
 
@@ -34,6 +36,10 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
   const handleLogout = () => {
     localStorage.clear();
     dispatch(logout());
+    // Otherwise the next account to log in (same tab) can briefly see this
+    // account's cached queries — e.g. /dashboard/stats keyed just
+    // "dashboardStats", not scoped per-user.
+    queryClient.clear();
     navigate("/");
   };
 

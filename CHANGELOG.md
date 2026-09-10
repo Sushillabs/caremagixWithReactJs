@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Dashboard: clickable stat cards
+
+Patients → Patients list; physician's Upcoming Appointments → Manage
+Calendar; patient's Your Appointments / Wellness Streak → own record, deep
+linking straight to that panel's tab (`?panel=&tab=`, new optional args on
+`useOpenPatientDetail`). Cards with no real destination stay plain tiles.
+
+#### Fixed — Logout didn't clear the React Query cache
+
+`queryClient.clear()` added to every `handleLogout` (TopBar, MobileRightBar,
+CareHeader, Sidebar). Without it, a different account logging in in the same
+tab could briefly see the previous user's cached dashboard stats and other
+queries — cache key wasn't scoped per-user.
+
 #### Added — Dashboard: role-aware live stats
 
 `GET /dashboard/stats` wired into `Dashboard.jsx` — cards now come entirely
