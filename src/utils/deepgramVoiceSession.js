@@ -172,10 +172,14 @@ export default class DeepgramVoiceSession {
     return !!(this.active && this.paused);
   }
 
-  // Manual pause for a feature-initiated "Pause" control (distinct from
-  // pauseForTurn's automatic mute while an agent replies) — drains whatever
-  // was mid-utterance first so tapping Pause never silently drops a
-  // half-finished sentence.
+  // Manual "hold" for a feature-driven Pause Now/Start Now control — puts
+  // the whole session on hold, not just the mic: freezes any reply currently
+  // playing (AudioContext.suspend()/<audio>.pause(), same mechanism as
+  // interruptSpeech but resumable instead of discarding) and mutes the mic,
+  // together, in one action. Available the whole time the session is active
+  // (from the first AI response through the last), not gated to any one
+  // state. Also drains whatever was mid-utterance first so tapping Pause
+  // never silently drops a half-finished sentence.
   pauseListening() {
     if (!this.active || this.paused) return "";
     const leftover = this.drainPendingTranscript();
@@ -183,6 +187,20 @@ export default class DeepgramVoiceSession {
     this.ignoreTranscripts = true;
     this._setMicMuted(true);
     this._sendKeepAlive();
+    if (this.pcmPlayback?.ctx?.state === "running") {
+      try {
+        this.pcmPlayback.ctx.suspend();
+      } catch {
+        /* ignore */
+      }
+    }
+    if (this.audioEl && !this.audioEl.paused) {
+      try {
+        this.audioEl.pause();
+      } catch {
+        /* ignore */
+      }
+    }
     this._setState("paused");
     return leftover;
   }
@@ -197,8 +215,25 @@ export default class DeepgramVoiceSession {
     this._setMicMuted(false);
     this._emitTranscript("");
 
+    // Un-freeze whatever reply was mid-playback when Pause Now was tapped.
+    const hadPausedReply = !!(this.pcmPlayback || this.audioEl);
+    if (this.pcmPlayback?.ctx?.state === "suspended") {
+      try {
+        this.pcmPlayback.ctx.resume();
+      } catch {
+        /* ignore */
+      }
+    }
+    if (this.audioEl) {
+      try {
+        this.audioEl.play()?.catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+
     if (this.socket?.readyState === WebSocket.OPEN) {
-      this._setState("listening");
+      this._setState(hadPausedReply ? "speaking" : "listening");
       return Promise.resolve();
     }
 
@@ -207,8 +242,15 @@ export default class DeepgramVoiceSession {
     this._setState("connecting");
     return this.options.fetchToken().then((tokenInfo) => {
       if (!this.active || this.paused) return;
-      return this._openSocket(tokenInfo);
+      return this._openSocket(tokenInfo).then(() => {
+        if (hadPausedReply && this.active && !this.paused) this._setState("speaking");
+      });
     });
+  }
+
+  // Convenience for a single toggle button.
+  toggleListening() {
+    return this.paused ? this.resumeListening() : this.pauseListening();
   }
 
   // Returns and clears whatever text has been recognized but not yet flushed

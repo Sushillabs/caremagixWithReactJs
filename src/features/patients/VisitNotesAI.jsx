@@ -7,6 +7,7 @@ import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
+import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
 
 const TABS = [
   { key: "chat", label: "Chat" },
@@ -205,18 +206,22 @@ export default function VisitNotesAI() {
 
   const handleStart = async () => {
     setStarted(true);
+    // Start the voice session before speaking, not after — playStream/playReply
+    // only flip state to "speaking" (and mute the mic) once the session is
+    // active, so starting late left the very first reply invisible to any
+    // "speaking"-gated UI (Talk now, the Pause/Answer toggle).
+    voice.start();
     const res = await hydrateHistory();
     if (res?.message) await speak(res.message);
-    voice.start();
   };
 
   const handleStartOver = async () => {
     if (pending) return;
     if (voice.isActive) voice.stop();
     await reset();
+    voice.start();
     const res = await hydrateHistory();
     if (res?.message) await speak(res.message);
-    voice.start();
     setActiveTab("chat");
   };
 
@@ -240,6 +245,7 @@ export default function VisitNotesAI() {
             </button>
           ))}
           <VoiceToggleButton voice={voice} />
+          <ConversationHoldToggle voice={voice} />
           <button
             type="button"
             onClick={handleStartOver}
@@ -265,13 +271,13 @@ export default function VisitNotesAI() {
           />
           {voice.state === "speaking" && (
             <div className="shrink-0 flex items-center justify-between gap-2 border-t border-gray-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
-              <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+              <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
               <button
                 type="button"
                 onClick={handleTalkNow}
                 className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
               >
-                Talk now
+                Answer now
               </button>
             </div>
           )}

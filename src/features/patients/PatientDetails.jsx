@@ -43,18 +43,23 @@ const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Scan PDF" }];
 
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
-function DropdownButton({ label, items, onItemClick, open, onToggle, onClose }) {
+function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, disabled }) {
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={onToggle}
-        className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+        disabled={disabled}
+        onClick={disabled ? undefined : onToggle}
+        className={
+          disabled
+            ? "flex cursor-not-allowed items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-300"
+            : "flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+        }
       >
         {label}
         <ChevronDown size={14} className="text-gray-400" />
       </button>
-      {open && (
+      {!disabled && open && (
         <ul className="absolute h-60 overflow-y-auto right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
           {items.map((item) => (
             <li
@@ -227,6 +232,7 @@ export default function PatientDetails() {
               open={openDropdown === "Plan"}
               onToggle={() => toggleDropdown("Plan")}
               onClose={() => setOpenDropdown(null)}
+              disabled
             />
           )}
           {canForms && (

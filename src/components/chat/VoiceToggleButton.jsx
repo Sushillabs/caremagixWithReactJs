@@ -1,6 +1,6 @@
 import { Mic, MicOff } from "lucide-react";
 
-// Header pill toggle for a voice session — the same "Start Mic"/"Stop Mic"
+// Header pill toggle for a voice session — the same "Start Conversation"/"Stop Conversation"
 // control VisitNotesAI introduced in its header bar, pulled out so every
 // voice-first feature shares one implementation. Takes the object returned
 // by useDeepgramVoice directly.
@@ -15,7 +15,7 @@ export default function VoiceToggleButton({ voice }) {
       }`}
     >
       {voice.isActive ? <Mic size={14} /> : <MicOff size={14} />}
-      {voice.isActive ? "Stop Mic" : "Start Mic"}
+      {voice.isActive ? "Stop Conversation" : "Start Conversation"}
     </button>
   );
 }

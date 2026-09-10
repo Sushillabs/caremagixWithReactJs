@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Dashboard: role-aware live stats
+
+`GET /dashboard/stats` wired into `Dashboard.jsx` — cards now come entirely
+from whatever fields the backend sends for the logged-in role
+(caregiver/physician/patient), instead of hardcoded numbers.
+
+#### Added — Voice: Pause Now/Start Now hold, "Talk now" → "Answer now"
+
+New hold toggle (Create Visit AI, Wellness Check-in) freezes the AI's reply
+and mutes the mic together, resumable from the same spot. Renamed "Talk now"
+to "Answer now" everywhere. Fixed: voice session wasn't starting until after
+the first reply, hiding these controls on turn 1.
+
 #### Added — Notifications (caregiver only)
 
 Live SSE feed (`useNotifications.js`) into the header bell — unread badge, grouped dropdown (Call Alerts / Discharge Alerts / Appointments / System), dismiss, mark-all-read on open, click to open the patient, "View Report" for call alerts. Mirrors legacy caremagix-fe's `NotificationManager`, ported to React (`NotificationDropdown.jsx`).

@@ -7,6 +7,7 @@ import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
+import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
 import WellnessTrendsTab from "./WellnessTrendsTab";
 import {
   wellnessChat,
@@ -187,6 +188,11 @@ export default function WellnessCheckInPanel() {
 
   const handleStart = async () => {
     setStarted(true);
+    // Start the voice session right away, same as VisitNotesAI — otherwise
+    // the mic never goes active until the user separately taps Start
+    // Conversation, and voice.isActive-gated UI (Answer now, the Pause
+    // Now/Start Now hold toggle) stays hidden by default until then.
+    voice.start();
     const res = await hydrateHistory();
     if (!res?.chat_history?.length) send(KICKOFF_MESSAGE);
   };
@@ -211,6 +217,7 @@ export default function WellnessCheckInPanel() {
     if (pending) return;
     if (voice.isActive) voice.stop();
     await reset();
+    voice.start();
     // reset() clears historyLoaded back to false, and AgentChatThread's
     // pending indicator is `pending || !historyLoaded` — without
     // re-hydrating here it stays stuck showing "Thinking" forever, even
@@ -245,6 +252,7 @@ export default function WellnessCheckInPanel() {
             {activeTab === "checkin" && started && (
               <>
                 <VoiceToggleButton voice={voice} />
+                <ConversationHoldToggle voice={voice} />
                 <button
                   type="button"
                   onClick={handleStartOver}
@@ -295,13 +303,13 @@ export default function WellnessCheckInPanel() {
 
       {activeTab === "checkin" && started && voice.state === "speaking" && (
         <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
-          <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+          <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
           <button
             type="button"
             onClick={handleTalkNow}
             className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
           >
-            Talk now
+            Answer now
           </button>
         </div>
       )}

@@ -32,11 +32,14 @@ export default function useDeepgramVoice({ fetchToken, onUtterance, continuous =
   const toggle = useCallback(() => sessionRef.current?.toggle(), []);
   const pauseForTurn = useCallback(() => sessionRef.current?.pauseForTurn(), []);
   const resumeAfterTurn = useCallback(() => sessionRef.current?.resumeAfterTurn(), []);
-  // Manual pause/resume for a feature-driven "Pause" control (e.g. Ambient AI
-  // during a physical exam) — distinct from pauseForTurn/resumeAfterTurn,
-  // which are the automatic mute/unmute around an agent's turn in a chat flow.
+  // Manual "hold" for a feature-driven Pause Now/Start Now control — pauses
+  // the mic *and* freezes any reply currently playing, together (see
+  // pauseListening in deepgramVoiceSession.js). Distinct from
+  // pauseForTurn/resumeAfterTurn, which are the automatic mute/unmute around
+  // an agent's turn in a chat flow.
   const pauseListening = useCallback(() => sessionRef.current?.pauseListening(), []);
   const resumeListening = useCallback(() => sessionRef.current?.resumeListening(), []);
+  const toggleListening = useCallback(() => sessionRef.current?.toggleListening(), []);
   const drainPendingTranscript = useCallback(() => sessionRef.current?.drainPendingTranscript() || "", []);
   const playReply = useCallback((base64Audio, contentType) => sessionRef.current?.playBase64Audio(base64Audio, contentType), []);
   const playStream = useCallback((response) => sessionRef.current?.playPcmStream(response), []);
@@ -56,6 +59,7 @@ export default function useDeepgramVoice({ fetchToken, onUtterance, continuous =
     resumeAfterTurn,
     pauseListening,
     resumeListening,
+    toggleListening,
     drainPendingTranscript,
     isPaused: state === "paused",
     playReply,

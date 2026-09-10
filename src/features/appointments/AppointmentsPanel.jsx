@@ -317,13 +317,13 @@ export default function AppointmentsPanel() {
 
       {activeTab === "book" && started && voice.state === "speaking" && (
         <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
-          <span>Speaking… tap Talk now or the mic to interrupt and answer.</span>
+          <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
           <button
             type="button"
             onClick={handleTalkNow}
             className="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
           >
-            Talk now
+            Answer now
           </button>
         </div>
       )}
