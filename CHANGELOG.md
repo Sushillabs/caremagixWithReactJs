@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Wellness check-in: caregiver question editor
+
+New "Check-in Questions" tab in the caregiver Wellness panel
+(`WellnessQuestionEditor.jsx`, `/hf-wellness/clinician/*`). Add / edit /
+remove / reorder / reset a patient's questions, grouped by diagnosis.
+Auto-selects the open patient, picker fallback.
+
+#### Changed — Wellness check-in: renamed, diagnosis-driven questions
+
+"Heart Failure Wellness Check-in" → "Wellness check-in" (labels + kickoff
+message). Patient progress strip now reads `dashboard.data.questions`
+instead of a hardcoded HF list; shows "X of N answered".
+
 #### Added — Dashboard: clickable stat cards
 
 Patients → Patients list; physician's Upcoming Appointments → Manage

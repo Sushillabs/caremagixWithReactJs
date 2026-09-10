@@ -110,6 +110,35 @@ export const wellnessSpeakBase64 = (text) =>
 export const getWellnessCaregiverDashboard = (patientName) =>
   http.get(`/hf-wellness/caregiver/dashboard?patient_name=${encodeURIComponent(patientName)}`, { withAuth: true }).then((res) => res.data);
 
+// Wellness Check-in question editor — physician and caregiver share these
+// routes; the backend scopes each list to the caller's own patients (see
+// heart_failure_wellness/routes.py, wellness_clinician_*). patient_key values
+// always come back from getClinicianWellnessPatients() — never built on the client.
+export const getClinicianWellnessPatients = () =>
+  http.get("/hf-wellness/clinician/patients", { withAuth: true }).then((res) => res.data);
+export const getClinicianWellnessQuestions = (patientKey) =>
+  http.get(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions`, { withAuth: true }).then((res) => res.data);
+export const addClinicianWellnessQuestion = (patientKey, body) =>
+  http.post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions`, body, { withAuth: true }).then((res) => res.data);
+export const updateClinicianWellnessQuestion = (patientKey, questionId, body) =>
+  http
+    .patch(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/${questionId}`, body, { withAuth: true })
+    .then((res) => res.data);
+export const deleteClinicianWellnessQuestion = (patientKey, questionId) =>
+  http
+    .delete(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/${questionId}`, { withAuth: true })
+    .then((res) => res.data);
+export const reorderClinicianWellnessQuestions = (patientKey, questionIds) =>
+  http
+    .post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/reorder`, { question_ids: questionIds }, { withAuth: true })
+    .then((res) => res.data);
+export const resetClinicianWellnessQuestions = (patientKey) =>
+  http
+    .post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/reset`, {}, { withAuth: true })
+    .then((res) => res.data);
+export const getWellnessQuestionTemplates = () =>
+  http.get("/hf-wellness/question-templates", { withAuth: true }).then((res) => res.data);
+
 // Physician Appointment Booking (patient/POA side) — same {success, data}
 // envelope as hf-wellness above, except /clear which returns
 // {success, message, session_id} with no `data` key (verified against

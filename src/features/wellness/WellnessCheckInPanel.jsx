@@ -20,7 +20,7 @@ import {
   wellnessSpeakBase64,
 } from "../../api/hospitalApi";
 
-const KICKOFF_MESSAGE = "I would like to do my heart failure wellness check-in.";
+const KICKOFF_MESSAGE = "I would like to do my wellness check-in.";
 
 const ZONE_STYLES = {
   green: { label: "All Clear Zone", detail: "Everything you reported today is in your usual range.", className: "bg-emerald-600" },
@@ -45,26 +45,94 @@ function ZoneBanner({ zone }) {
   );
 }
 
-const PROGRESS_FIELDS = [
-  { key: "weight_lb", label: "Weight" },
-  { key: "breathlessness", label: "Breathing" },
-  { key: "swelling", label: "Swelling" },
-];
+// Friendly short label for a known check-in column; anything else falls back
+// to a humanized field_key or a trimmed prompt (see questionLabel).
+const FIELD_LABELS = {
+  weight_lb: "Weight",
+  systolic_bp: "Systolic BP",
+  diastolic_bp: "Diastolic BP",
+  heart_rate: "Heart rate",
+  spo2: "SpO2",
+  breathlessness: "Breathing",
+  orthopnea_pillows: "Pillows to sleep",
+  swelling: "Swelling",
+  chest_pain: "Chest pain",
+  cough: "Cough",
+  fatigue: "Fatigue",
+  dizziness: "Dizziness",
+  confusion: "Confusion",
+  fainting: "Fainting",
+  appetite_loss: "Appetite",
+  palpitations: "Palpitations",
+  fluid_intake_ml: "Fluid intake",
+  sodium_estimate_mg: "Sodium",
+  activity_minutes: "Activity",
+  sleep_hours: "Sleep",
+  mood: "Mood",
+  medications_taken: "Medications",
+  missed_medications: "Missed meds",
+};
 
-function ProgressChecklist({ checkIn }) {
+function questionLabel(q) {
+  if (q.field_key && FIELD_LABELS[q.field_key]) return FIELD_LABELS[q.field_key];
+  if (q.field_key) {
+    return q.field_key
+      .replace(/_(lb|ml|mg|bp)$/i, "")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  const text = (q.prompt || "").trim();
+  return text.length > 28 ? `${text.slice(0, 27)}…` : text || "Question";
+}
+
+// A question counts as answered when its mapped check-in column has a value,
+// or the agent stored the answer in custom_answers (keyed by id or field_key).
+function isQuestionAnswered(q, checkIn) {
+  if (!checkIn) return false;
+  const filled = (v) => v != null && v !== "";
+  if (q.field_key && filled(checkIn[q.field_key])) return true;
+  const custom = checkIn.custom_answers || {};
+  return filled(custom[q.id]) || (q.field_key ? filled(custom[q.field_key]) : false);
+}
+
+const MAX_PROGRESS_CHIPS = 8;
+
+// Progress strip beside the chat, driven by the patient's diagnosis-based
+// question list (dashboard.questions.questions) — no hard-coded HF fields.
+// Tracks all active questions ("N of M answered"); core questions get a * so
+// the patient knows which the coach chases first.
+function ProgressChecklist({ questions, checkIn }) {
+  const list = Array.isArray(questions)
+    ? [...questions].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    : [];
+  if (!list.length) return null;
+
+  const answeredCount = list.filter((q) => isQuestionAnswered(q, checkIn)).length;
+  const shown = list.slice(0, MAX_PROGRESS_CHIPS);
+  const hidden = list.length - shown.length;
+
   return (
     <div className="mx-2 mt-2 flex shrink-0 flex-wrap items-center gap-3 text-[11px]">
-      {PROGRESS_FIELDS.map((field) => {
-        const done = checkIn?.[field.key] != null && checkIn?.[field.key] !== "";
+      <span className="font-medium text-gray-500">
+        {answeredCount} of {list.length} answered
+      </span>
+      {shown.map((q) => {
+        const done = isQuestionAnswered(q, checkIn);
         return (
-          <span key={field.key} className={`flex items-center gap-1 ${done ? "text-emerald-600" : "text-gray-400"}`}>
+          <span
+            key={q.id}
+            title={`${q.prompt || questionLabel(q)}${q.is_core ? " (core)" : ""}`}
+            className={`flex items-center gap-1 ${done ? "text-emerald-600" : "text-gray-400"}`}
+          >
             <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] ${done ? "bg-emerald-100" : "bg-gray-100"}`}>
               {done ? "✓" : "○"}
             </span>
-            {field.label}
+            {questionLabel(q)}
+            {q.is_core && <span className="text-amber-500">*</span>}
           </span>
         );
       })}
+      {hidden > 0 && <span className="text-gray-400">+{hidden} more</span>}
     </div>
   );
 }
@@ -275,7 +343,10 @@ export default function WellnessCheckInPanel({ initialTab }) {
           (started ? (
             <>
               <ZoneBanner zone={lastResponse?.zone} />
-              <ProgressChecklist checkIn={lastResponse?.check_in} />
+              <ProgressChecklist
+                questions={dashboard?.questions?.questions}
+                checkIn={lastResponse?.check_in || (dashboard?.checked_in_today ? dashboard?.latest_check_in : null)}
+              />
               <AgentChatThread
                 bare
                 turns={turns}

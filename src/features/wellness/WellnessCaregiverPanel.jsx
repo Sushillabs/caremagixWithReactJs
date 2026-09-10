@@ -4,10 +4,12 @@ import { useOutletContext } from "react-router-dom";
 import { HeartPulse } from "lucide-react";
 import WellnessTrendsTab from "./WellnessTrendsTab";
 import WellnessPlanTab from "./WellnessPlanTab";
+import WellnessQuestionEditor from "./WellnessQuestionEditor";
 import { getWellnessCaregiverDashboard } from "../../api/hospitalApi";
 
 const TABS = [
   { key: "trends", label: "Progress" },
+  { key: "questions", label: "Check-in Questions" },
   // { key: "plan", label: "Plan" },
 ];
 
@@ -75,6 +77,12 @@ export default function WellnessCaregiverPanel() {
       {activeTab === "trends" && (
         <div className="min-h-0 flex-1 overflow-y-auto">
           <WellnessTrendsTab dashboard={dashboard} loading={loading} error={error} />
+        </div>
+      )}
+
+      {activeTab === "questions" && (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <WellnessQuestionEditor patientName={patientName} />
         </div>
       )}
 
