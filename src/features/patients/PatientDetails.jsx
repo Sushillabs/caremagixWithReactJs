@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, User } from "lucide-react";
+import { ChevronDown, Home, User } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat, setMode } from "../../redux/chatSlice";
@@ -137,6 +137,11 @@ export default function PatientDetails() {
     DOCUMENT_ITEMS = [...patient?.details];
   }
 
+  const handleHome = () => {
+    setActivePanel(null);
+    navigate(".");
+  };
+
   const handleUploadItemClick = (item) => {
     if (item === "Upload PDF") setUploadModalMode("pdf");
     if (item === "Upload Scan PDF") setUploadModalMode("scan");
@@ -210,6 +215,15 @@ export default function PatientDetails() {
         </div>
 
         <div className="flex flex-wrap gap-2 col-span-3 text-xs">
+          <button
+            type="button"
+            onClick={handleHome}
+            title="Back to default view"
+            className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+          >
+            <Home size={14} />
+            Home
+          </button>
           {canDocuments && (
             <DropdownButton
               label="Documents"
