@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Transitional Care Management (TCM) scheduling
+
+New "Transitional Care" sidebar section (caregiver + physician), listing patients needing 7/14/30-day post-discharge visits with status badges and per-visit chips (`TcmListPage.jsx`, `GET /tcm/patients`). Schedule (`TcmScheduleModal.jsx` — date + distance-sorted physician picker, `POST /tcm/schedule`) and Cancel (`POST /tcm/plans/<id>/cancel`) actions on both the list and the patient chart. Same detail view now fills the patient chart's previously-empty Transition Care tab (`TcmPatientDetail.jsx`).
+
 #### Added — Dashboard: Medication Alerts opens the notification panel
 
 Caregiver's Medication Alerts card now opens the same notification dropdown
