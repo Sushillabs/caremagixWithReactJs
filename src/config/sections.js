@@ -15,6 +15,7 @@ import {
   Pill,
   Files,
   CalendarClock,
+  CalendarCheck,
 } from "lucide-react";
 
 export const SECTIONS = {
@@ -96,6 +97,16 @@ export const SECTIONS = {
     label: "Manage Calendar",
     icon: CalendarClock,
     path: "/app/manage-bookings",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  tcm: {
+    key: "tcm",
+    label: "Transitional Care",
+    icon: CalendarCheck,
+    path: "/app/tcm",
     group: "primary",
     assistant: false,
     requiresPatient: false,
@@ -195,6 +206,6 @@ export const SECTIONS = {
   // },
 };
 
-export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs", "reports"];
+export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs", "reports", "tcm"];
 
 export const getSectionByPath = (pathname) => Object.values(SECTIONS).find((s) => pathname.startsWith(s.path));

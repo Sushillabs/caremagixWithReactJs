@@ -23,6 +23,7 @@ import JobsPage from "./features/jobs/JobsPage";
 import CallReportsPage from "./features/reports/CallReportsPage";
 import ManageBookingPage from "./features/appointments/ManageBookingPage";
 import TransitionCareServicesPage from "./features/services/TransitionCareServicesPage";
+import TcmListPage from "./features/tcm/TcmListPage";
 import { SECTIONS } from "./config/sections";
 
 const isExtension = window.location.protocol === "chrome-extension:";
@@ -110,6 +111,8 @@ function App() {
                       <ManageBookingPage />
                     ) : section.key === "transitionCareServices" ? (
                       <TransitionCareServicesPage />
+                    ) : section.key === "tcm" ? (
+                      <TcmListPage />
                     ) : (
                       <ComingSoon />
                     )

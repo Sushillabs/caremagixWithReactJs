@@ -62,6 +62,12 @@ export const getICDCodes = () => http.get(`/retrieve-patient-name?patient-type=I
 export const getCPTCodes = () => http.get(`/retrieve-patient-name?patient-type=CPT-Codes`, { withAuth: true });
 export const getCallReport = () => http.get(`/reports`, { withAuth: true });
 export const generateCallReport = (data) => http.post("/generate_report", data, { withAuth: true });
+export const getTcmPatients = () => http.get("/tcm/patients", { withAuth: true });
+export const getTcmPatient = (patientKey) => http.get(`/tcm/patients/${encodeURIComponent(patientKey)}`, { withAuth: true });
+export const getTcmPhysicians = (patientKey) =>
+  http.get(`/tcm/physicians?patient_key=${encodeURIComponent(patientKey)}`, { withAuth: true });
+export const scheduleTcmVisits = (data) => http.post("/tcm/schedule", data, { withAuth: true });
+export const cancelTcmPlan = (planId) => http.post(`/tcm/plans/${encodeURIComponent(planId)}/cancel`, {}, { withAuth: true });
 export const dischargePlan = (data) => http.post("/discharge_plan_agent", data, { withAuth: true });
 export const edit_visit_template = () => http.get("/discharge_plan_agent/edit_template", { withAuth: true });
 export const update_visit_template = (data) => http.post("/discharge_plan_agent/edit_template", data, { withAuth: true });

@@ -425,7 +425,9 @@ export default function PatientDetails() {
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
-      {showTransitionCareModal && <TransitionCarePlanModal onClose={() => setShowTransitionCareModal(false)} />}
+      {showTransitionCareModal && (
+        <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />
+      )}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
       {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
     </div>

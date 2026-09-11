@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import TransitionCareServicesPage from "../services/TransitionCareServicesPage";
+import TcmPatientDetail from "../tcm/TcmPatientDetail";
 
 const TABS = [
   { key: "transitionCare", label: "Transition Care" },
   { key: "services", label: "Services" },
 ];
 
-// Static per Figma — no data/behavior wired yet. Services tab reuses the
-// existing static tab row; Transition Care tab is intentionally blank until
-// that content is defined.
-export default function TransitionCarePlanModal({ onClose }) {
-  const [activeTab, setActiveTab] = useState("services");
+export default function TransitionCarePlanModal({ patientName, onClose }) {
+  const [activeTab, setActiveTab] = useState("transitionCare");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -39,7 +37,9 @@ export default function TransitionCarePlanModal({ onClose }) {
             ))}
           </div>
 
-          <div className="min-h-70">{activeTab === "services" ? <TransitionCareServicesPage /> : null}</div>
+          <div className="min-h-70">
+            {activeTab === "services" ? <TransitionCareServicesPage /> : <TcmPatientDetail patientKey={patientName} />}
+          </div>
         </div>
       </div>
     </div>
