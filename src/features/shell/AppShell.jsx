@@ -6,6 +6,7 @@ import TopBar from "./TopBar";
 import DockedAssistant from "./DockedAssistant";
 import { getSectionByPath } from "../../config/sections";
 import useJobsTracker from "../../hooks/useJobsTracker";
+import useNotifications from "../../hooks/useNotifications";
 
 export default function AppShell() {
   const location = useLocation();
@@ -14,6 +15,20 @@ export default function AppShell() {
   const role = useSelector((state) => state.auth?.value?.role);
 
   const [assistantHidden, setAssistantHidden] = useState(false);
+
+  // Owned here (not inside TopBar) so both the bell icon and a page rendered
+  // in the Outlet below (e.g. Dashboard's Medication Alerts card) can open
+  // the exact same notification panel.
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { notifications, unreadCount, markAllRead, dismiss } = useNotifications();
+  const openNotifications = () => {
+    markAllRead();
+    setNotifOpen(true);
+  };
+  const toggleNotifications = () => {
+    if (!notifOpen) markAllRead();
+    setNotifOpen((v) => !v);
+  };
 
   // if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
@@ -29,10 +44,20 @@ export default function AppShell() {
       <Sidebar />
 
       <div className="grid min-h-0 grid-rows-[auto_1fr_auto]">
-        <TopBar search={search} onSearchChange={setSearch} showSearch={showSearch} />
+        <TopBar
+          search={search}
+          onSearchChange={setSearch}
+          showSearch={showSearch}
+          notifOpen={notifOpen}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onToggleNotifications={toggleNotifications}
+          onDismissNotification={dismiss}
+          onCloseNotifications={() => setNotifOpen(false)}
+        />
 
         <main className="min-h-0 overflow-y-auto p-5">
-          <Outlet context={{ search, section, setAssistantHidden }} />
+          <Outlet context={{ search, section, setAssistantHidden, openNotifications }} />
         </main>
 
         <DockedAssistant section={section} isDetail={isSectionDetail} suppressed={assistantSuppressed} />

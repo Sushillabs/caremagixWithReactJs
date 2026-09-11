@@ -4,10 +4,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
 import { useState } from "react";
 import { logout } from "../../redux/authSlice";
-import useNotifications from "../../hooks/useNotifications";
 import NotificationDropdown from "./NotificationDropdown";
 
-export default function TopBar({ search, onSearchChange, showSearch }) {
+// notifOpen/notifications/etc. are owned by AppShell (not here) so a page
+// rendered in its Outlet (e.g. Dashboard's Medication Alerts card) can open
+// this same panel too — see AppShell.jsx.
+export default function TopBar({
+  search,
+  onSearchChange,
+  showSearch,
+  notifOpen,
+  notifications,
+  unreadCount,
+  onToggleNotifications,
+  onDismissNotification,
+  onCloseNotifications,
+}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -21,16 +33,9 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
   const displayName = `${firstName} ${lastName}`.trim() || headerItem.name || auth.name || auth.username || "User";
   const role = auth.role || "";
   const [logoutShow, setLogoutShow] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const { notifications, unreadCount, markAllRead, dismiss } = useNotifications();
 
   const handleNameClick = () => {
     setLogoutShow(!logoutShow);
-  };
-
-  const handleBellClick = () => {
-    if (!notifOpen) markAllRead();
-    setNotifOpen(!notifOpen);
   };
 
   const handleLogout = () => {
@@ -76,7 +81,7 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
 
         {role === "caregiver" && (
           <div className="relative">
-            <button className="relative text-gray-500 hover:text-gray-700" aria-label="Notifications" onClick={handleBellClick}>
+            <button className="relative text-gray-500 hover:text-gray-700" aria-label="Notifications" onClick={onToggleNotifications}>
               <Bell size={20} />
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold text-white">
@@ -84,7 +89,7 @@ export default function TopBar({ search, onSearchChange, showSearch }) {
                 </span>
               )}
             </button>
-            {notifOpen && <NotificationDropdown notifications={notifications} onDismiss={dismiss} onClose={() => setNotifOpen(false)} />}
+            {notifOpen && <NotificationDropdown notifications={notifications} onDismiss={onDismissNotification} onClose={onCloseNotifications} />}
           </div>
         )}
 

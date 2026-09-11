@@ -73,7 +73,12 @@ export default function NotificationDropdown({ notifications, onDismiss, onClose
     <div className="absolute right-0 top-10 z-20 w-96 rounded-lg border border-gray-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <span className="text-sm font-semibold text-gray-800">Notifications</span>
-        {unreadTotal > 0 && <span className="text-xs font-medium text-emerald-600">{unreadTotal} new</span>}
+        <div className="flex items-center gap-2">
+          {unreadTotal > 0 && <span className="text-xs font-medium text-emerald-600">{unreadTotal} new</span>}
+          <button type="button" onClick={onClose} title="Close" aria-label="Close notifications" className="text-gray-300 hover:text-gray-500">
+            <X size={15} />
+          </button>
+        </div>
       </div>
 
       <div className="max-h-[28rem] overflow-y-auto">

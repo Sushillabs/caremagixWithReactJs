@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { Users, ClipboardList, AlertTriangle, BedDouble, FileUp, CalendarCheck, HeartPulse, FileText } from "lucide-react";
 import StatCard from "./StatCard";
 import usePatientRecords from "../../hooks/usePatientRecords";
@@ -50,6 +50,9 @@ function PatientViewDetailsButton() {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  // Set by AppShell — same open-the-notification-panel action the bell icon
+  // in TopBar uses, so Medication Alerts opens that identical panel in place.
+  const { openNotifications } = useOutletContext() || {};
   const { data, isLoading, isError } = useMyQuery({
     api: getDashboardStats,
     id: "dashboardStats",
@@ -71,6 +74,9 @@ export default function Dashboard() {
   const cardActions = {};
   if (data?.view === "caregiver" || data?.view === "physician") {
     cardActions.patient_count = () => navigate("/app/patients");
+  }
+  if (data?.view === "caregiver" && openNotifications) {
+    cardActions.medication_alert_count = () => openNotifications();
   }
   if (data?.view === "physician") {
     cardActions.upcoming_appointment_count = () => navigate("/app/manage-bookings");

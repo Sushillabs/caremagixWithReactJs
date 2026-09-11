@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Dashboard: Medication Alerts opens the notification panel
+
+Caregiver's Medication Alerts card now opens the same notification dropdown
+as the bell icon (state lifted from `TopBar` to `AppShell`, shared via Outlet
+context). Also added a close button to that panel — it had none before.
+
 #### Added — Wellness check-in: caregiver question editor
 
 New "Check-in Questions" tab in the caregiver Wellness panel
