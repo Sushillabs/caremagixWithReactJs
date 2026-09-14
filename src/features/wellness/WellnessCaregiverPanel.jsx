@@ -9,7 +9,7 @@ import { getWellnessCaregiverDashboard } from "../../api/hospitalApi";
 
 const TABS = [
   { key: "trends", label: "Progress" },
-  { key: "questions", label: "Check-in Questions" },
+  // { key: "questions", label: "Check-in Questions" },
   // { key: "plan", label: "Plan" },
 ];
 

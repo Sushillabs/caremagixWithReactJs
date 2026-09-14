@@ -1,15 +1,14 @@
+import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { Users, ClipboardList, AlertTriangle, BedDouble, FileUp, CalendarCheck, HeartPulse, FileText } from "lucide-react";
 import StatCard from "./StatCard";
+import DashboardDocumentsModal from "./DashboardDocumentsModal";
+import DashboardCarePlansModal from "./DashboardCarePlansModal";
 import usePatientRecords from "../../hooks/usePatientRecords";
 import useOpenPatientDetail from "../../hooks/useOpenPatientDetail";
 import useMyQuery from "../../hooks/useMyQuery";
 import { getDashboardStats } from "../../api/hospitalApi";
 
-// Patient/POA cards with a real, specific destination — everything else
-// (Active Care Plans, Documents) has no dedicated view to land on, so it
-// stays a plain non-interactive tile, same rule as the caregiver-side cards.
-// See useOpenPatientDetail's optional {panel, tab}.
 const PATIENT_OWN_RECORD_CARDS = {
   appointment_count: { panel: "appointments", tab: "myAppointments" },
   wellness_check_in_streak_days: { panel: "wellness", tab: "trends" },
@@ -60,26 +59,35 @@ export default function Dashboard() {
   });
 
   const isPatient = data?.view === "patient";
+  const isCaregiver = data?.view === "caregiver";
   const orgName = data?.facility_name || data?.hospital_name;
 
-  // Same "open my own record" action as PatientViewDetailsButton below —
-  // usePatientRecords caches under the same query key, so this doesn't
-  // trigger a second fetch.
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [showCarePlans, setShowCarePlans] = useState(false);
+
   const patients = usePatientRecords();
   const openDetail = useOpenPatientDetail();
   const myRecord = patients?.[0];
 
-  // Only fields with a real destination today get a click handler — the
-  // rest stay plain display tiles (see StatCard's onClick-optional render).
   const cardActions = {};
-  if (data?.view === "caregiver" || data?.view === "physician") {
+  if (isCaregiver || data?.view === "physician") {
     cardActions.patient_count = () => navigate("/app/patients");
+    // GET /dashboard/documents also covers physician (hospital-scoped).
+    cardActions.uploaded_document_count = () => setShowDocuments(true);
   }
-  if (data?.view === "caregiver" && openNotifications) {
+  if (isCaregiver && openNotifications) {
     cardActions.medication_alert_count = () => openNotifications();
   }
   if (data?.view === "physician") {
     cardActions.upcoming_appointment_count = () => navigate("/app/manage-bookings");
+  }
+  // GET /dashboard/active-care-plans: caregiver (facility-wide) + patient
+  // (own plans) only — physician gets 403, and has no such card anyway.
+  if (isCaregiver || isPatient) {
+    cardActions.active_careplan_count = () => setShowCarePlans(true);
+  }
+  if (isPatient) {
+    cardActions.document_count = () => setShowDocuments(true);
   }
   if (isPatient && myRecord) {
     Object.entries(PATIENT_OWN_RECORD_CARDS).forEach(([key, dest]) => {
@@ -109,6 +117,17 @@ export default function Dashboard() {
             <StatCard key={c.key} {...c} />
           ))}
         </div>
+      )}
+
+      {showDocuments && <DashboardDocumentsModal onClose={() => setShowDocuments(false)} />}
+      {showCarePlans && (
+        <DashboardCarePlansModal
+          onClose={() => setShowCarePlans(false)}
+          isCaregiver={isCaregiver}
+          patients={patients}
+          openDetail={openDetail}
+          myRecord={myRecord}
+        />
       )}
     </div>
   );

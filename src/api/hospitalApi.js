@@ -26,6 +26,23 @@ export const getPatients = () => http.get("/retrieve-patient-name", { withAuth: 
 // Role-aware home dashboard counts — payload shape (which fields exist)
 // depends on the logged-in user's role. See caremagix-be/dashboard/service.py.
 export const getDashboardStats = () => http.get("/dashboard/stats", { withAuth: true }).then((res) => res.data);
+
+// Dashboard tile drill-downs — the actual list behind a home-tile count.
+// See caremagix-be/dashboard/{documents,careplans}.py + routes.py.
+export const getDashboardDocuments = (params = {}) =>
+  http.get("/dashboard/documents", { params, withAuth: true }).then((res) => res.data);
+// A document's open_url/download_url need the JWT as a ?token= query param,
+// not an Authorization header — they're opened via window.open(), which
+// can't attach one.
+export const getDashboardDocumentFileUrl = (relativeUrl) => {
+  const token = localStorage.getItem("token");
+  const sep = relativeUrl.includes("?") ? "&" : "?";
+  return `${API_BASE}${relativeUrl}${sep}token=${encodeURIComponent(token || "")}`;
+};
+export const getDashboardActiveCarePlans = (patientName) =>
+  http
+    .get("/dashboard/active-care-plans", { params: patientName ? { patient_name: patientName } : {}, withAuth: true })
+    .then((res) => res.data);
 export const getPatientChat = (data) => http.post("/generate_questions", data, { withAuth: true });
 export const askAPI = (data) => http.post("/ask", data, { withAuth: true });
 export const getDocRef = (data) => http.post("/doc-ref", data, { withAuth: true });

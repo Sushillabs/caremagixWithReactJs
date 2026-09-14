@@ -1,6 +1,3 @@
-// Shared "open a patient's detail page" action — same navigation chain
-// used from the patients list (caregiver/physician) and the dashboard's
-// own-record card (patient role), so both stay wired identically.
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addDischargePatientDate } from "../redux/PatientSingleDateSlice";
@@ -12,15 +9,17 @@ export default function useOpenPatientDetail() {
   const navigate = useNavigate();
   const { user_id } = useSelector((state) => state.auth?.value) || {};
 
-  // `panel`/`tab` are optional — read by PatientDetails (?panel=) and passed
-  // down to that panel (?tab=) to land on a specific view, e.g. from a
-  // dashboard card, instead of always opening on the default record tab.
-  return (p, { panel, tab } = {}) => {
+  return (p, { panel, tab, carePlanId } = {}) => {
     const payload = buildPatientPayload(p, user_id);
 
     dispatch(clearChat());
     dispatch(addDischargePatientDate(payload));
     dispatch(fetchPatientChat(payload));
+
+    if (carePlanId) {
+      navigate(`/app/patients/${p.id}/care-plan/view?care_plan_id=${encodeURIComponent(carePlanId)}`);
+      return;
+    }
 
     const params = new URLSearchParams();
     if (panel) params.set("panel", panel);
