@@ -13,8 +13,17 @@ import PatientsList from "./features/patients/PatientsList";
 import PatientDetails from "./features/patients/PatientDetails";
 import ConversationCard from "./features/patients/ConversationCard";
 import CarePlan from "./features/patients/CarePlan";
+import CarePlanHistory from "./features/patients/CarePlanHistory";
+import VisitNotes from "./features/patients/VisitNotes";
+import VisitNotesAI from "./features/patients/VisitNotesAI";
 import CarePlanDetailPage from "./features/patients/CarePlanDetailPage";
+import MmtaPage from "./features/patients/MmtaPage";
 import ComingSoon from "./features/common/ComingSoon";
+import JobsPage from "./features/jobs/JobsPage";
+import CallReportsPage from "./features/reports/CallReportsPage";
+import ManageBookingPage from "./features/appointments/ManageBookingPage";
+import TransitionCareServicesPage from "./features/services/TransitionCareServicesPage";
+import TcmListPage from "./features/tcm/TcmListPage";
 import { SECTIONS } from "./config/sections";
 import OasisFieldPreview from "./features/oasis/OasisFieldPreview";
 
@@ -23,6 +32,11 @@ console.log("protocol:", window.location.protocol);
 console.log("isExtension:", isExtension);
 
 const Router = isExtension ? MemoryRouter : BrowserRouter;
+// vite.config.js builds this app under base: "/new/" — BrowserRouter needs a
+// matching basename or routing breaks (wrong URLs, hard refresh 404s) once
+// deployed there. MemoryRouter (chrome-extension build) has no real URL bar,
+// so it keeps using initialEntries instead.
+const routerProps = isExtension ? { initialEntries: ["/"] } : { basename: "/new/" };
 
 function App() {
   const roles = ["caregiver", "physician", "patient"];
@@ -43,7 +57,7 @@ function App() {
       }
     >
       <Toaster position="top-right" containerStyle={{ top: 60 }} />
-      <Router initialEntries={["/"]}>
+      <Router {...routerProps}>
         <Routes>
           {/* Phase 0 smoke test only — no auth, remove once Phase 1's real FU page exists */}
           <Route path="/oasis-preview" element={<OasisFieldPreview />} />
@@ -64,7 +78,6 @@ function App() {
             <Route path="/care-giver" element={<CareGiver />} />
           </Route>
 
-          {/* New Figma app shell (Phase 1). Old routes above stay as fallback. */}
           <Route
             element={
               <RequireAuth roles={roles}>
@@ -73,23 +86,43 @@ function App() {
             }
           >
             <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
-            {/* Patient Details is a layout (header + toolbar) with its own nested
-                content: index = conversation, care-plan = the Care Plan dashboard
-                header. The full accordion detail (care-plan/view) is intentionally
-                NOT nested here — it drops the header/toolbar chrome entirely and
-                renders full-width, since it's a dense document, not a quick view. */}
             <Route path="/app/patients/:id" element={<PatientDetails />}>
               <Route index element={<ConversationCard />} />
               <Route path="care-plan" element={<CarePlan />} />
+              <Route path="care-plan/history" element={<CarePlanHistory />} />
+              <Route path="visit-notes" element={<VisitNotes />} />
+              <Route path="visit-notes-ai" element={<VisitNotesAI />} />
             </Route>
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
-            {Object.values(SECTIONS).map((section) => (
-              <Route
-                key={section.key}
-                path={section.path}
-                element={section.key === "dashboard" ? <Dashboard /> : section.key === "patients" ? <PatientsList /> : <ComingSoon />}
-              />
-            ))}
+
+            <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
+            {Object.values(SECTIONS)
+              .filter((section) => !section.children && section.path)
+              .map((section) => (
+                <Route
+                  key={section.key}
+                  path={section.path}
+                  element={
+                    section.key === "dashboard" ? (
+                      <Dashboard />
+                    ) : section.key === "patients" ? (
+                      <PatientsList />
+                    ) : section.key === "jobs" ? (
+                      <JobsPage />
+                    ) : section.key === "reports" ? (
+                      <CallReportsPage />
+                    ) : section.key === "manageCalendar" ? (
+                      <ManageBookingPage />
+                    ) : section.key === "transitionCareServices" ? (
+                      <TransitionCareServicesPage />
+                    ) : section.key === "tcm" ? (
+                      <TcmListPage />
+                    ) : (
+                      <ComingSoon />
+                    )
+                  }
+                />
+              ))}
           </Route>
         </Routes>
       </Router>

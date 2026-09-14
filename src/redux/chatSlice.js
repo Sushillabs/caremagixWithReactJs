@@ -20,11 +20,12 @@ const chatSlice = createSlice({
     value:[],
     loading: false,
     error: null,
-    isAskPending: false, 
+    isAskPending: false,
+    mode: 'discharge',
   },
     reducers: {
         addQconversation: (state, action) => {
-            state.value.push(...action.payload); 
+            state.value.push(...action.payload);
         },
         // addQPayload: (state, action) => {
         //     state.value.push(action.payload);
@@ -34,6 +35,9 @@ const chatSlice = createSlice({
         },
         setAskPending: (state, action) => {
             state.isAskPending = action.payload;
+        },
+        setMode: (state, action) => {
+            state.mode = action.payload;
         }
     },
   extraReducers: (builder) => {
@@ -41,6 +45,7 @@ const chatSlice = createSlice({
       .addCase(fetchPatientChat.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.mode = 'discharge';
       })
       .addCase(fetchPatientChat.fulfilled, (state, action) => {
         state.loading = false;
@@ -52,5 +57,5 @@ const chatSlice = createSlice({
       });
   },
 });
-export const { clearChat,addQconversation, setAskPending } = chatSlice.actions;
+export const { clearChat,addQconversation, setAskPending, setMode } = chatSlice.actions;
 export default chatSlice.reducer;

@@ -1,19 +1,17 @@
-import { useEffect, useMemo } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { getPatients } from "../../api/hospitalApi";
-import { addPatientNames } from "../../redux/patientListSlice";
-import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
-import { clearChat, fetchPatientChat } from "../../redux/chatSlice";
-import { buildPatientPayload } from "../../utils/buildPatientPayload";
-import useMyQuery from "../../hooks/useMyQuery";
+import { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { UserPlus } from "lucide-react";
+import usePatientRecords from "../../hooks/usePatientRecords";
+import useOpenPatientDetail from "../../hooks/useOpenPatientDetail";
+import useCan from "../../hooks/useCan";
+import AddPatientModal from "./AddPatientModal";
 
 export default function PatientsList() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { search } = useOutletContext() || {};
-  const patients = useSelector((state) => state.patientnames.value);
-  const { user_id } = useSelector((state) => state.auth?.value) || {};
+  const patients = usePatientRecords();
+  const handlePatient = useOpenPatientDetail();
+  const [showAddPatient, setShowAddPatient] = useState(false);
+  const canAddPatient = useCan("addPatient");
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").trim().toLowerCase();
@@ -21,54 +19,20 @@ export default function PatientsList() {
     return (patients || []).filter((p) => p.name?.toLowerCase().includes(q));
   }, [patients, search]);
 
-  const { data, isSuccess } = useMyQuery({
-    api: getPatients,
-    id: "patientList",
-    enabled: true,
-    staleTime: 0,
-  });
-
-  const EXTRA_SOURCE_KEYS = ["pcc_data", "epic_data", "metriport_data"];
-
-  useEffect(() => {
-    if (!isSuccess || !data) return;
-
-    const { data: patientsList_api, ...rest } = data;
-    const fromApi = (patientsList_api || []).map((p) => ({
-      id: crypto.randomUUID(),
-      type: "Uploaded",
-      name: p.name,
-      raw: p,
-    }));
-
-    const fromExtraSources = EXTRA_SOURCE_KEYS.flatMap((key) => {
-      const source = rest[key];
-      if (!source?.details) return [];
-      let type = key.replace(/_data$/, ""); // "pcc" | "epic" | "metriport"
-      type = type.charAt(0).toUpperCase() + type.slice(1);
-      return Object.entries(source.details).map(([name, detailsArray]) => ({
-        id: crypto.randomUUID(),
-        type,
-        name,
-        details: detailsArray,
-        raw: { patient_type: source.patient_type || type },
-      }));
-    });
-
-    dispatch(addPatientNames([...fromApi, ...fromExtraSources]));
-  }, [isSuccess, data, dispatch]);
-
-  const handlePatient = (p) => {
-    const payload = buildPatientPayload(p, user_id);
-
-    dispatch(clearChat());
-    dispatch(addDischargePatientDate(payload));
-    dispatch(fetchPatientChat(payload));
-    navigate(`/app/patients/${p.id}`);
-  };
-
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 p-3">
+        <h2 className="text-sm font-semibold text-gray-800">Patients</h2>
+        {canAddPatient && (
+          <button
+            type="button"
+            onClick={() => setShowAddPatient(true)}
+            className="flex items-center gap-1.5 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800"
+          >
+            <UserPlus size={14} /> Add New Patient
+          </button>
+        )}
+      </div>
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
@@ -100,6 +64,8 @@ export default function PatientsList() {
           ))}
         </tbody>
       </table>
+
+      {showAddPatient && <AddPatientModal onClose={() => setShowAddPatient(false)} />}
     </div>
   );
 }

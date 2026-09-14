@@ -5,10 +5,828 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Dashboard: Uploads and Active Care Plans open real lists
+
+New modals (`DashboardDocumentsModal.jsx`, `DashboardCarePlansModal.jsx`) backed
+by `GET /dashboard/documents` and `GET /dashboard/active-care-plans`. Uploads
+opens a file list with Open/Download; Active Care Plans (caregiver +
+patient) opens a plan list, row click reuses the existing care-plan viewer
+via a new `carePlanId` option on `useOpenPatientDetail`.
+
+#### Added — Transitional Care Management (TCM) scheduling
+
+New "Transitional Care" sidebar section (caregiver + physician), listing patients needing 7/14/30-day post-discharge visits with status badges and per-visit chips (`TcmListPage.jsx`, `GET /tcm/patients`). Schedule (`TcmScheduleModal.jsx` — date + distance-sorted physician picker, `POST /tcm/schedule`) and Cancel (`POST /tcm/plans/<id>/cancel`) actions on both the list and the patient chart. Same detail view now fills the patient chart's previously-empty Transition Care tab (`TcmPatientDetail.jsx`).
+
+#### Added — Dashboard: Medication Alerts opens the notification panel
+
+Caregiver's Medication Alerts card now opens the same notification dropdown
+as the bell icon (state lifted from `TopBar` to `AppShell`, shared via Outlet
+context). Also added a close button to that panel — it had none before.
+
+#### Added — Wellness check-in: caregiver question editor
+
+New "Check-in Questions" tab in the caregiver Wellness panel
+(`WellnessQuestionEditor.jsx`, `/hf-wellness/clinician/*`). Add / edit /
+remove / reorder / reset a patient's questions, grouped by diagnosis.
+Auto-selects the open patient, picker fallback.
+
+#### Changed — Wellness check-in: renamed, diagnosis-driven questions
+
+"Heart Failure Wellness Check-in" → "Wellness check-in" (labels + kickoff
+message). Patient progress strip now reads `dashboard.data.questions`
+instead of a hardcoded HF list; shows "X of N answered".
+
+#### Added — Dashboard: clickable stat cards
+
+Patients → Patients list; physician's Upcoming Appointments → Manage
+Calendar; patient's Your Appointments / Wellness Streak → own record, deep
+linking straight to that panel's tab (`?panel=&tab=`, new optional args on
+`useOpenPatientDetail`). Cards with no real destination stay plain tiles.
+
+#### Fixed — Logout didn't clear the React Query cache
+
+`queryClient.clear()` added to every `handleLogout` (TopBar, MobileRightBar,
+CareHeader, Sidebar). Without it, a different account logging in in the same
+tab could briefly see the previous user's cached dashboard stats and other
+queries — cache key wasn't scoped per-user.
+
+#### Added — Dashboard: role-aware live stats
+
+`GET /dashboard/stats` wired into `Dashboard.jsx` — cards now come entirely
+from whatever fields the backend sends for the logged-in role
+(caregiver/physician/patient), instead of hardcoded numbers.
+
+#### Added — Voice: Pause Now/Start Now hold, "Talk now" → "Answer now"
+
+New hold toggle (Create Visit AI, Wellness Check-in) freezes the AI's reply
+and mutes the mic together, resumable from the same spot. Renamed "Talk now"
+to "Answer now" everywhere. Fixed: voice session wasn't starting until after
+the first reply, hiding these controls on turn 1.
+
+#### Added — Notifications (caregiver only)
+
+Live SSE feed (`useNotifications.js`) into the header bell — unread badge, grouped dropdown (Call Alerts / Discharge Alerts / Appointments / System), dismiss, mark-all-read on open, click to open the patient, "View Report" for call alerts. Mirrors legacy caremagix-fe's `NotificationManager`, ported to React (`NotificationDropdown.jsx`).
+
+#### Added — Voice parity with legacy jQuery (streaming, interrupt, live transcript)
+
+Applied to all 4 voice chats: Create Visit Note AI, Create Discharge Plan/Handoff Note AI, Wellness Check-in, Book Appointment.
+
+- Streamed TTS playback (`/voice/speak` with `stream: true`) instead of waiting for a full base64 clip — falls back to base64 on failure.
+- New "Talk now" button + row (above the composer) to interrupt the assistant mid-sentence and answer immediately.
+- Live, word-by-word transcript bubble while speaking (previously only appeared after you stopped talking) — new `AgentChatThread` `liveText` prop.
+- Bugfixes found along the way: `stopPlayback()` could hang forever if interrupted mid-clip; continuous-mode transcript wasn't cleared after handoff, which would've shown a stale duplicate bubble.
+
+#### Added — Physician ambient discharge/handoff notes
+
+"Create Discharge Plan AI" / "Create Handoff Note AI" now run the Deepgram
+session flow (`VisitNotesAI` + `useAmbientVisitNotes`, one API factory) against
+`/physician-ambient-note/*` with `note_kind`; route carries `?kind=`.
+
+#### Added — Edit Discharge Plan / Handoff Note templates
+
+`EditTemplate` reused with a `noteKind` prop → `GET/POST
+/discharge_plan_agent/edit_template?note_kind=…`; new physician sidebar entries.
+
+#### Added — Editable section keys in Edit Template
+
+Section key (the `fields` key) is now an input; renamed keys are trimmed
+(spaces → `_`) and sent in `updated_fields` on save. Rename only; blocks
+empty/duplicate keys.
+
+#### Fixed — Care Plan dashboard refetching on every tab focus
+
+`CarePlan.jsx`'s two dashboard queries (`backendCheck`, `freshFetch`) had no
+`refetchOnWindowFocus: false`, so React Query's app-wide default refired them
+every time the browser tab regained focus — including `backendCheck`, whose
+`enabled` condition never actually turns off for the rest of the session.
+Added `refetchOnWindowFocus: false` to both; global default left untouched
+for the rest of the app.
+
+#### Added — Care Plan: multi-plan backend integration (History + Regenerate)
+
+Backend now supports many plans per patient (version, `is_active`,
+`regenerated_from_id`) instead of one. Frontend catches up:
+
+- New `CarePlanHistory.jsx` (`/care-plan/history`) — lists every version via
+  `GET /care_plans`, badges the active one, "View" opens any of them.
+- `CarePlan.jsx` — new "Plan History" link and a "Regenerate" button
+  (inline confirm, warns progress won't carry over) calling the new
+  `POST /care_plan/<id>/regenerate`.
+- `CarePlanDetailPage.jsx` — now reads `?care_plan_id=` from the URL to open
+  any specific plan (old or active) from history, independent of the
+  session's own active-plan tracking; shows an amber banner when viewing a
+  non-active version. Saving a pinned old plan no longer overwrites the
+  session's "active plan" state.
+- `useCarePlan.js` — new `regenerate()`, same job-tracking dispatch as
+  `generate()`, so existing polling/Redux plumbing picks up the new plan
+  automatically once the job completes.
+- Fixed a relative-navigation bug found right after: History's "View"
+  button used `navigate("../view?...")`, which popped up past `care-plan`
+  entirely since `care-plan/history` is a flat route, not nested under a
+  `care-plan` parent route — landed on `/patients/:id/view` (no match).
+  Switched to an absolute path built from `useParams()`.
+
+#### In progress — Physician Ambient AI
+
+New "Ambient AI" button on `PatientDetails.jsx` (gated by new
+`ambientVisitNotes` flag, physician role, same `activePanel` pattern as
+Wellness Check-in / Patient Timeline) — patient-specific, same as every
+other panel on that page: passive visit listener, not a chat. Pick-a-patient
+step considered and dropped — the patient the note is for is always whoever's
+detail page the physician is already on. Flow: consent → live recording
+(pause/stop, live transcript preview) → review editable SOAP fields → save.
+Reuses the existing `/ambient-ai/*` backend as-is (new `hospitalApi.js`
+bindings only). New `usePhysicianAmbientSession` hook +
+`PhysicianAmbientAiPanel.jsx`; deliberately not built on the
+`useAgentChat`/`AgentChatThread` pattern Wellness/Caregiver Ambient AI use,
+since there's no back-and-forth with the AI here. Added real
+`pauseListening`/`resumeListening` to the shared `DeepgramVoiceSession` for
+a manual pause that doesn't drop a half-spoken sentence (additive, other
+voice features unaffected). Not yet run end-to-end against a live physician
+account.
+
+#### In progress — Pull EHR modal, Therapy Progress Note, Send Message
+
+- Physician's "Pull EHR Data" now works — reuses the caregiver "Pull Epic"
+  modal/logic, just a different title.
+- New "Create Progress Note" panel — static Therapy Progress Note view,
+  ported from the legacy jQuery page.
+- New "Send Message" (physician + caregiver) — modal looks up phone/email,
+  prefills if found, both editable, shows a hint if not found. Email isn't
+  a real backend field yet — sent anyway, backend ignores it for now.
+
+#### Added — MMTA structured answer UI
+
+`/app/patients/:id/mmta` now renders the new structured `mmta` response
+(table with color badge per category, ICD/CPT as code boxes, guidance
+callout, action card, summary) instead of plain markdown. New files:
+`mmta/MmtaAnswer.jsx`, `mmta/mmtaDummyData.js` (fallback if the real API
+errors or hasn't returned structured data yet — clearly labeled on screen
+when shown). Wired to new `POST /v1/mmta` (`mmtaV1()` in `hospitalApi.js`),
+sending `question` + `patient_name` + `patient_type`. Old `/mmta` untouched
+— still used by the legacy `Mmta.jsx`. "Ask anything" box now hidden on
+this page too (`noAssistantPaths`).
+
+#### In progress — Patient Timeline (physician role)
+
+New `PatientTimelinePanel.jsx`, opened via a "Patient Timeline" button on
+`PatientDetails.jsx` (gated by the existing `canTimeline` flag), same
+`activePanel` pattern as Wellness Check-in / Book Appointment. Hits the
+existing `GET /physician-match/encounters` — no backend changes.
+
+Horizontal year-density scrubber (chosen over two other layout options
+after a design pass on real sample data): one bar per year, red dot for
+years with an ER visit, click a year to see its encounters below. Real
+data showed `status`/`location`/`participants` are always empty for this
+patient — shown as muted "Not provided" instead of hidden, so they light
+up on their own once real values exist. Chart section collapses via a
+chevron toggle; summary line shows the full date range with year.
+
+#### In progress — Manage Booking / Manage Calendar (physician role)
+
+New `/app/manage-bookings` route (`ManageBookingPage.jsx`) — a real page, not
+a modal, since this is a growing dashboard (same shape as Jobs/Reports), not
+a one-off popup. Wired into `config/sections.js` + `config/roles.js`
+(`ROLE_NAV.physician`).
+
+Three tabs, all against the existing legacy
+`physician_appointment/physician/calendar/*` backend (no backend changes):
+
+- **Appointments** — list physician's bookings, reschedule (inline datetime
+  edit), confirm (pending → confirmed), cancel.
+- **Settings & Availability** — timezone, slot length, booking window,
+  per-day work hours; shows next open slots, refreshes after save.
+- **Blocked Time** — add/remove manual unavailable blocks (vacation,
+  meetings).
+
+`hospitalApi.js` — 8 new functions for the calendar routes, response shapes
+verified directly against the legacy Flask routes (`physician_routes.py`),
+not guessed. New `appointmentFormat.jsx` — `StatusPill`/
+`APPOINTMENT_TYPE_LABEL`/`formatDateTime` extracted out of
+`MyAppointmentsTab.jsx` so patient- and physician-side appointment views
+share one status-color source instead of duplicating the lookup tables.
+
+Not done yet: Epic sync status indicator, status/date filters on the
+appointments list (API already supports them, just not wired to any UI).
+
+#### Added — Live check-in progress + completion signal (Wellness Check-in)
+
+`WellnessCheckInPanel.jsx`: `ProgressChecklist` (Weight/Breathing/Swelling, live from cumulative `lastResponse.check_in`) and `CompletionBanner` (shown when `status === "check_in_complete"`) — user now sees completion status during the chat, not just buried in reply text. No backend changes.
+
+#### Fixed — Notes dropdown didn't leave Wellness/Appointments panels
+
+`PatientDetails.jsx`'s `handleNotesItemClick` ("Create Visit Notes" / "Create
+Visit Notes AI") navigated to a routed page but never reset `activePanel` —
+only `activePanel === null` renders the routed `<Outlet/>`, so if Wellness
+Check-in, Book Appointment, or Wellness Check-in Report was open, the URL
+changed but the screen stayed on that panel. Added `setActivePanel(null)` to
+both branches, matching the Documents/Care Plan buttons, which already did
+this correctly. Checked every other toolbar action for the same gap — modals
+and the MMTA route (outside `PatientDetails`'s `Outlet` entirely) don't need
+it; nothing else was missing it.
+
+#### Fixed — SignIn showed generic Axios errors instead of the backend's message
+
+`SignIn.jsx`'s catch blocks used `alert(error.message)` — Axios's generic
+"Request failed with status code ..." text, not the backend's actual
+`{error: "..."}` body (e.g. "Invalid credentials. Incorrect password."). Now
+reads `error?.response?.data?.error` first, falling back to `error.message`.
+Also fixed `onSignInReset` missing `await` on `forgotPasswordAPI(...)`,
+which meant a failed request there could never actually reach its own catch
+block.
+
+#### Added — Transition-Care Plan modal (Plan dropdown), replacing the sidebar page
+
+Removed "Transition care services" from the sidebar (`config/roles.js`).
+New `TransitionCarePlanModal.jsx`, opened from the existing "Transition-Care
+Plan" item in `PatientDetails.jsx`'s Plan dropdown (previously unwired).
+Modal has a Transition Care / Services tab switch: Services reuses
+`TransitionCareServicesPage.jsx`'s static list (restyled — left-aligned
+vertical rows, tighter padding/text size, instead of wrapped pill buttons);
+Transition Care is intentionally blank for now. Both tabs share a fixed
+min-height so switching tabs doesn't resize the modal.
+
+#### Fixed — "View Care Plan" opened a blank edit page for already-generated plans
+
+`CarePlan.jsx`'s `handleClick` was checking `effectiveStatus` (which folds
+in the backend existence-check added for the dashboard work above) instead
+of raw session `status` to decide whether to call `generate()`. When a plan
+already existed but wasn't generated in this session, `effectiveStatus` was
+already `"done"`, so `handleClick` skipped `generate()` and navigated
+straight to `CarePlanDetailPage.jsx` — which only reads from Redux, so it
+showed "No care plan generated yet" and offered a regenerate that would
+have created a duplicate plan. Fixed by reverting the condition to `status`,
+so `generate({regenerate: false})` still runs and populates Redux before
+navigating — restores the behavior from before this regression was
+introduced. (The matching gap on `CarePlanDetailPage.jsx` itself — no
+backend fallback of its own, so a hard refresh on that page has the same
+problem — is deliberately deferred to the planned reload-handling work, not
+fixed here.)
+
+#### Added — Book Appointment (patient-side, chat-driven)
+
+New `features/appointments/` (`AppointmentsPanel.jsx`, `MyAppointmentsTab.jsx`), reusing Wellness's chat primitives against the existing `/physician-appointment/*` backend — no backend changes. Wired into `PatientDetails.jsx`'s "Book Physician Visit" button.
+
+Also pulled the tap-to-start mic gate + header mic toggle out of `VisitNotesAI.jsx` into shared `components/chat/VoiceStartGate.jsx` / `VoiceToggleButton.jsx`, applied to Wellness Check-in and Book Appointment too.
+
+**Fixes:** Start New Session no longer gets stuck on "Thinking" (Wellness + Appointments) or leaks the prior session's `physician_user_id` into the fresh kickoff (Appointments). Also dropped `hydrateHistory`/`GET /physician-appointment/history` from booking entirely — legacy's booking flow never resumes a prior session, only Wellness does.
+
+#### Fixed — Patient header dropdowns no longer stay open together
+
+`PatientDetails.jsx`'s Documents/Notes/Plan/Forms/Upload dropdowns each had their own local `open` state, so opening one didn't close another. Lifted to one `openDropdown` state on the parent, keyed by label — only one can be open at a time.
+
+#### Added — Wellness Check-in Report (caregiver-side)
+
+New `WellnessCaregiverPanel.jsx`, inline in `PatientDetails.jsx` (same `activePanel` pattern as Wellness/Appointments — no modal, no new route). Reuses `WellnessTrendsTab`/`WellnessPlanTab` as-is, fed by `GET /hf-wellness/caregiver/dashboard?patient_name=`. Plan editing moved here from the patient side (`WellnessCheckInPanel.jsx`'s "My Baseline" tab removed); Save is stubbed until a caregiver profile-update backend route exists.
+
+#### In progress — Edit Visit Template popup (per new Figma)
+
+Restyled `EditTemplate.tsx` (existing, already wired to `GET/POST
+/discharge_plan_agent/edit_template`, no backend changes) from a stacked
+list of every field to the numbered-strip-plus-single-field-below pattern
+already used in the visit-notes Review & Edit popup — click a section up
+top, its Question/Check Prompt show below. Save stays persistent/always
+visible rather than gated to the last field, since editing one section
+shouldn't require paging through the rest.
+
+#### Added — Patient-role dashboard (skip patients list, role-wise static cards)
+
+Patient role no longer sees the shared `PatientsList` roster — as a patient
+there's only one record (themselves), not a list to pick from. `config/roles.js`
+drops `"patients"` from the patient nav only (route + `PatientsList.jsx`
+untouched, still used by caregiver/physician). `Dashboard.jsx` now branches
+on role: patient gets 6 static placeholder cards (Your Plan, Your
+Appointments, Alerts, Medications, Wellness Check-ins, Documents) plus a
+"View Details" button that opens their own record, via the same navigation
+chain `PatientsList` already used — extracted into two new shared hooks,
+`hooks/usePatientRecords.js` and `hooks/useOpenPatientDetail.js`, so list and
+dashboard can't drift apart. Caregiver/physician dashboard and patients list
+unchanged. Card content is static for now; real per-role data is a later
+phase once the backing APIs exist.
+
+Also: `TopBar`'s search box is now scoped to the patients list page only
+(`AppShell.jsx`'s new `showSearch` flag) — hidden on the dashboard, patient
+details, and everywhere else, for every role.
+
+#### Added — "Transition care services" sidebar section (static, per Figma)
+
+New primary sidebar item, caregiver role only for now.
+
+- `src/config/sections.js` — new `transitionCareServices` section (icon
+  `ArrowLeftRight`, path `/app/transition-care-services`), placed above
+  "Configuration" to match the Figma layout.
+- `src/config/roles.js` — added to the caregiver `primary` nav list.
+- `src/features/services/TransitionCareServicesPage.jsx` — new. Renders the
+  7 tabs from the Figma design (AI Agents, Interactive Contact Scheduler,
+  Non Face 2 Face service, Face 2 Face Service, Billing, Follow up and
+  coordination, Physician Fee Schedule FAQ) as a static button row — no
+  click behavior wired yet.
+- `src/App.jsx` — routes `transitionCareServices` to the new page instead
+  of falling through to the generic `ComingSoon` placeholder.
+
+#### In Progress — Care Plan Dashboard (donut, risk cards, health status table)
+
+Built but **currently switched off** — `CarePlan.jsx` shows the old plain
+placeholder ("Care Plan Dashboard" text) instead of the real dashboard, on
+purpose, until a backend bug (below) is properly fixed.
+
+**What's built (code exists, just not turned on):**
+
+- `src/features/patients/CarePlanDashboard.jsx` — progress donut (SVG, no
+  new chart library), 6 Risk Overview cards, Health Status Analysis table
+  with a per-row "Edit" link into the real document. Pure display
+  component — takes data as a prop, does not fetch on its own.
+- `src/features/patients/CarePlan.jsx` — on page load, checks the backend
+  directly for an existing plan (`GET /care_plan/dashboard?patient_name=`),
+  independent of this session's job-tracking state, so the button/dashboard
+  are correct even on a fresh page load. After a fresh generation, fetches
+  precisely by id instead (`GET /care_plan/<id>/dashboard`) — no duplicate
+  calls. "Last updated" time now shown next to the "Care Plan" title.
+- `src/features/patients/CarePlanDetailPage.jsx` — reads `?section=N` from
+  the URL, so a dashboard row's "Edit" opens straight to that section.
+- `src/api/hospitalApi.js` — `getCarePlanDashboard`,
+  `getCarePlanDashboardByPatient`.
+
+**Known bug found (backend, not yet fixed there — frontend-only workaround
+in place for now):**
+
+- `POST /generate_care_plan` saves the plan under a **lowercased** patient
+  name in most cases (`careplan/routes.py:484`).
+- `GET /care_plan/dashboard?patient_name=` looks it up **without**
+  lowercasing — exact match fails, returns 404 even when the plan exists.
+- Workaround: `src/utils/buildPatientPayload.js` — new
+  `getCarePlanLookupName()`, mirrors the backend's exact save-time rule
+  before querying. Marked in code as temporary; should be deleted once the
+  backend normalizes both sides the same way (one shared helper, not two
+  separate rules).
+
+**Still deferred:**
+
+- The "Generated on / Care Plan / View / Delete / Download" history table —
+  no backend support yet (only "latest plan" is queryable), explicitly
+  left out for now.
+
+#### Added — OASIS-SOC form wired (Forms dropdown, `PatientDetails.jsx`)
+
+"OASIS-SOC" item in the Forms dropdown now opens `OasisSocModal.jsx` — a
+static wireframe of the OASIS-E2 Start of Care assessment (only the patient
+name is dynamic; every other field/button is decorative, no save/export
+logic yet). Other Forms items (CMS-485, OASIS-FU/ROC/DAH/TRN) still unwired.
+
+#### Added — Create Visit Notes AI (voice-first ambient visit notes)
+
+New mic-first flow on `PatientDetails.jsx`'s Notes dropdown (re-enabled —
+it had been fully commented out), separate from the existing chat-wizard
+`/discharge_plan_agent` flow (untouched). Backend already existed and needed
+no changes: `caregiver_ambient_ai`'s session/{start,turn,stop,save} +
+voice/live-token, same visit template as the old flow but with server-side
+yes/no handling this time. New `VisitNotesAI.jsx` + `useAmbientVisitNotes.js`
+(adapter over the existing `useAgentChat`), reusing `useDeepgramVoice`,
+`AgentChatThread`, and `AgentChatComposer` as-is from Wellness Check-in —
+only 2 new files for the whole feature. Landing card → tap mic → live
+chat (voice or typed) → Generate → Review & Save tab → PDF/email.
+
+Found and fixed a real bug in the shared `useAgentChat.js` while wiring
+"Start New Session": `hydrateHistory()`'s once-only guard read `historyLoaded`
+state, which doesn't update in time when called right after `reset()` in the
+same handler — silently no-op'd instead of starting a fresh session. Fixed
+with a synchronous ref, same pattern the hook already used for `sessionId`.
+
+Follow-up polish: header's mic toggle is now a filled pill (emerald "Start
+Mic" / red "Stop Mic", not plain text) matching a recording-in-progress
+convention; Review tab shows a highlighted hint beside "Transcript" ("save
+your changes below first" to generate the PDF) and auto-scrolls to the
+Download button after a successful save — via a `saveResult` effect, not
+inline after `setSaveResult`, since the DOM hasn't updated with the new
+content yet at that point in the same tick.
+
+#### Fixed — Logout (`TopBar.jsx`)
+
+Logout dropdown was fully built but `handleLogout` referenced `dispatch`/
+`navigate` without importing or instantiating either — undefined refs,
+so clicking it threw instead of logging out (`logout` action itself was
+already correctly wired in `store.js` to reset the whole Redux state).
+Also fixed `displayName`'s fallback chain: `` `${firstName} ${lastName}` ``
+is truthy even when both are blank, so `.trim()` now lets it actually fall
+through to `headerItem.name`/`auth.name`/`auth.username`/`"User"`.
+
+#### Added — Doc Reference popup (`DocReferenceModal.jsx`)
+
+`ConversationCard.jsx`'s "Doc Reference" button was dead until now — wired
+to the existing `POST /doc-ref` endpoint using `msg.id` (already the
+`question_id` the backend saves sources under). Uploaded-patient sources
+(`type: "pdf"`) are fully built: filename link + Page N buttons jumping to
+that page. Epic/PCC/Metriport (`type: "ehr"`) get a category icon + label
+matched off `collection_name` (covers both PCC's and FHIR's naming) and a
+monospace snippet, since Epic/Metriport's snippet is a raw data dump, not
+prose like PCC's.
+
+#### In progress — Heart Wellness Check-in (`WellnessCheckInPanel.jsx`)
+
+Patient-only panel on Patient Details (`Wellness Check-in` toolbar button, no
+new route). Today's check-in (chat + mic/voice via Deepgram + zone banner +
+alert handoff + Start New Session), My Progress (stats/chart/history), and
+My Baseline (target weight/fluid/sodium/NYHA/check-in time) are built and
+wired to `/hf-wellness/*`, reusing a new generic chat engine
+(`useAgentChat`, `AgentChatThread`, `AgentChatComposer`) meant for Book
+Appointment too. Blocked on testing: the deployed backend at
+`VITE_API_URL` appears to be running a branch without the
+`heart_failure_wellness` module (PATCH `/profile` CORS-fails; likely true
+for the rest of the feature too) — needs the right branch deployed before
+this can be verified end-to-end. Book Appointment not started.
+
+#### Added — Per-action role gating + physician placeholder, ahead of Wellness Check-in / Book Appointment
+
+Prep work before building the Heart Wellness Check-in and Book Appointment
+features: `ROLE_NAV`/`SECTIONS` only gate whole pages/sidebar entries, not
+individual buttons inside a shared page — `PatientsList.jsx`'s "Add Patient"
+button and most of `PatientDetails.jsx`'s toolbar (Upload, Register/Unregister
+Call, Medication Alerts, Medication, Patient Journey, Create Care Plan,
+Documents/Plan/Forms dropdowns) rendered unconditionally for every role,
+including patient.
+
+New: `config/features.js` (`FEATURE_ROLES`, one entry per gate-able action)
+and `hooks/useCan.js` (reads `state.auth.value.role`, checks it against
+`FEATURE_ROLES`) — same registry-driven pattern as `ROLE_NAV`, so narrowing
+a button to specific roles is a one-line config edit instead of a
+`role === "..."` check scattered into the component. `PatientsList.jsx` and
+`PatientDetails.jsx` now wrap their buttons in `useCan("key") &&`.
+
+Two new placeholder buttons on `PatientDetails.jsx`'s toolbar, patient-role
+only, no page/API behind them yet: **Wellness Check-in** and **Book
+Appointment**.
+
+`AppShell.jsx`: physician role currently renders a blank page (`role ===
+"physician"` short-circuits before the shell/sidebar/`useJobsTracker` mount)
+— deliberate placeholder until physician-specific screens exist, not a bug.
+
+#### In progress — Create Visit Notes header actions (Review & Edit / Send Email / Download)
+
+Reworking the visit-notes chat flow: a header row (`VisitNotesHeader.jsx`)
+with Review & Edit / Send Email / Download replacing the old in-chat-bubble
+buttons and chat-typed email; wired into both the legacy `/care-giver` route
+and the newer `/app/patients/:id/visit-notes` route via a shared
+`VisitNotesPanel.jsx`; look-and-feel aligned to `ConversationCard.jsx`/
+`AiCareAssistant.jsx`; several behavior gaps found and fixed by comparing
+against `caremagix-fe/js/discharge_plan_agent.js` (yes/no confirmation
+steps were ignoring user input, `template` was being locally overwritten
+before sending, Review & Edit was unlocking a step too late). No backend
+changes. Still mid-implementation — will expand this entry once settled.
+
+#### Added — Call Reports (`/app/reports`)
+
+New `reports` entry in the sidebar (patient-independent, `requiresPatient:
+false` — already sat in `roles.js`'s nav list, unused until now) → new
+`CallReportsPage.jsx`. A route, not a modal, styled like `PatientsList.jsx`
+(header bar, table, shared `TopBar` search) — deliberately not reusing
+`components/CallReport.tsx`'s modal UI.
+
+`GET /reports` lists patients who have call records; each row's Download
+calls `POST /generate_report` for just that patient and builds the `.xlsx`
+client-side with the `xlsx` package (already a dependency) — confirmed the
+backend never generates a file itself, only returns JSON call records, by
+reading the same logic already working in `CallReport.tsx`. That file was
+read for reference only, not imported or modified — it's untouched, still
+wired into legacy `CareGiver.jsx` only. This page's version tracks
+per-row download state instead of one shared state for the whole list, so
+downloading one patient's report doesn't visually disable every other row.
+
+Also noticed in the working tree, not part of this change: the per-patient
+"Call Reports" button in `PatientDetails.jsx`'s toolbar is now commented
+out — consistent with Call Reports moving to a patient-independent page.
+
+#### Fixed — SignIn redirected physician/patient to routes that don't exist
+
+`src/pages/SignIn.jsx`'s `redirectByRole()` sent `physician` → `/physician`
+and `patient` → `/patient`, neither of which `App.jsx` defines (only `/app`
+and the legacy `/care-giver`) — both roles would have hit a dead route on
+login. Found while reviewing the multi-role (caregiver/physician/patient)
+migration plan: the new shell (`AppShell`/`Sidebar`/`config/roles.js`/
+`config/sections.js`) already treats all three roles as one shared `/app`
+route, with `ROLE_NAV` alone deciding which sidebar sections are visible per
+role — no reason for separate landing paths. All three roles now redirect to
+`/app`.
+
+Decided but not yet built: which `SECTIONS` keys get added to
+`ROLE_NAV.physician`/`ROLE_NAV.patient`, and which features become
+role-independent — deferred, to be done feature-by-feature later. Backend
+already scopes data per role via the auth token on shared endpoints, so no
+frontend-side patient/physician forks of existing components (`PatientsList`,
+`PatientDetails`, chat, etc.) are expected.
+
+#### Added — Pull Epic Data (Configuration)
+
+New: `useEpicPull.js` + `PullEpicModal.jsx`, added to the Configuration
+group as `pullEpic`. `/ehr_pull` confirmed to return the exact same shape
+as PCC's `/get_pcc_data` (`{success, job_id, status_url, message}` to
+start, lowercase `pending/running/completed/failed` to poll) — since this
+is the second identical consumer, the shared polling logic was extracted
+out of `usePccPull.js` into a new `useJobPull.js` engine first (see PCC
+entry below), and `useEpicPull` is a ~12-line wrapper around it. Legacy
+(`caremagix-fe`) confirmed Epic pull doesn't check Metriport registration
+client-side either — it just calls `/ehr_pull` and shows whatever error
+comes back, same as this version.
+
+On success, closes the modal and navigates to `/app/jobs` instead of just
+showing a static "check the Jobs page" message.
+
+#### Added — Connect Metriport + Pull Metriport Data (Configuration)
+
+New: `ConnectMetriportModal.jsx` (`connectMetriport`) and
+`useMetriportPull.js` + `PullMetriportModal.jsx` (`pullMetriport`).
+
+- **Connect Metriport**: `GET /get-facility` on open decides the view —
+  registered → prefilled Update/Delete form (Delete behind an inline
+  confirm step, not a native `window.confirm`); not registered → empty
+  Register form. Payload (`name`, `npi`, `active`, optional `tin`, nested
+  `address` object) verified against `caregiver-view.html`'s real submit
+  handler, since the backend forwards it straight to Metriport's own API —
+  field names had to match Metriport's schema, not an internal convention.
+  Hit a real version gotcha here: this app runs `@tanstack/react-query@5`,
+  which removed `useQuery`'s `onSuccess`/`onError` — used the same
+  `useEffect`-on-data pattern `useJobPull.js` already uses instead.
+- **Pull Metriport**: also a `useJobPull.js` wrapper — its start call needs
+  a request body (`{pull_all: true, max_patients: 100, async: true}`)
+  unlike PCC/Epic's bare GET, so `startFn` just closes over it; `useJobPull`
+  itself needed no changes. Registration is enforced server-side
+  (`_get_caregiver_metriport_facility`, verified in `metriport.py`) — if the
+  facility isn't connected, the start call returns an error with no
+  `status_url`, which already falls into the normal "failed to start"
+  handling with no special-casing needed.
+
+Both close their modal and navigate to `/app/jobs` on success, same as PCC
+and Epic.
+
+#### Added — Pull PCC Data (Configuration) — and the shared engine behind it
+
+New: `PullPccModal.jsx`, added to the Configuration group as `pullPcc`.
+
+Extracted `useJobPull.js` out of the existing `usePccPull.js` as the shared
+engine behind this whole batch of features (polling, soft progress,
+terminal-state dedup, toast, and pushing the job into `jobsIdSlice` so it's
+still visible on the Jobs page even after the confirm modal that started it
+closes). `usePccPull.js`'s external API (`{start, isRunning, showProgress,
+progress, message, error}`) is unchanged, so its existing legacy consumer
+(`BottonConfigButtons.jsx`) needed no changes — verified by checking exactly
+what it destructures from the hook.
+
+New generic pieces reused by PCC/Epic/Metriport alike:
+
+- **`useExternalJobsProgress.js`** — polls jobs that carry their own
+  `status_url` (Group B/C) instead of sharing Group A's single
+  `/ocr-progress` endpoint. `JobsPage.jsx` merges these rows in alongside
+  the existing Scan PDF/eFax/Care Plan ones, normalizing lowercase status to
+  uppercase so the existing table/badge rendering needed no changes.
+- **`Sidebar.jsx`**'s modal dispatch generalized from one hardcoded eFax
+  check into a `CHILD_MODALS` lookup table — each new Configuration item is
+  now a one-line registration instead of a growing if/else chain.
+
+Also fixed as part of this: eFax Configuration's own success state used to
+just show an inline message and leave the form sitting there — now it
+matches the checkmark-panel pattern every other modal uses, and closes +
+navigates to `/app/jobs` like the rest. Navigating alone isn't enough for
+any of these — `Sidebar` sits outside the route `<Outlet>` in
+`AppShell.jsx`, so it survives navigation and the modal has to be closed
+explicitly or it's left floating on top of the Jobs page.
+
+#### Added — eFax Configuration + collapsible "Configuration" nav group
+
+New: `src/features/configuration/EfaxConfigModal.jsx`, opened from a new
+"Configuration" item in the sidebar (`config/sections.js`/`roles.js`) —
+matches the Figma sidebar, which shows "Configuration" as a collapsible
+group (Pull PCC Data / Set Caller ID / eFax Configuration), not a flat
+link. `Sidebar.jsx`'s `NavGroup` is generic — any section with a
+`children` array gets the same toggle behavior, not just this one; a child
+with a `path` navigates, a child without one (like eFax today) opens as a
+modal instead, special-cased by key. Only eFax is built; the other two
+sub-items aren't added yet.
+
+Started as a page-routed design, corrected mid-build back to a modal to
+match the original Figma popup — `App.jsx`'s route generation and the
+`children` entries were reworked accordingly.
+
+Fields verified directly against `Efax.py`'s `/getfax` route rather than
+copied from the old buggy form: wire keys are `from`/`to` (not
+`date_from`/`date_to`), and `patient_type`/`confirm`/`destination_fax_number`
+are hardcoded server-side, never sent from the client. On success (one job
+per fax found), dispatches into the same `jobsIdSlice.eFaxJobs` the Jobs
+page already reads — verified end-to-end: eFax's `fax_queue` uses the same
+Redis connection as the OCR/care-plan queue, so `/ocr-progress/:jobId` can
+fetch its status too. No toast; inline pending/error/success, matching
+every other feature built this session.
+
+Known issue, not a code bug: submitting currently fails with a 500 from
+the backend's own exception handler — the third-party fax provider
+(Consensus) is rejecting the backend's configured API credentials
+(`EFAX_USER_ID`/`EFAX_APP_ID`/`EFAX_API_KEY`), unrelated to this app's code.
+
+#### Added — Medication (quick question shortcut on `PatientDetails.jsx`)
+
+(Found already in the working tree — not built in this session, documented
+here since it wasn't logged yet.) The "Medication" toolbar button now
+sends a fixed question — "What specific medications were prescribed to
+the patient, along with their intended uses, potential side effects and
+Medication schedule in tabular format?" — through the existing
+`useAskQuestion`/`/ask` flow, after `dispatch(setMode("medication"))`.
+
+`chatSlice.js` gained a `mode` field (`'discharge'` default, reset to
+`'discharge'` on every new `fetchPatientChat`), and `ConversationCard.jsx`
+reads it to adjust the Conversation tab while in medication mode: hides
+the discharge summary table and default question chips, retitles the
+panel header to "Medication", and now shows the loading indicator as soon
+as the question is asked (`conversation.length === 0 && askPending`)
+instead of only after the first message lands.
+
+#### Added — MMTA (`MmtaPage.jsx`)
+
+"MMTA" toolbar button now works. Built as a standalone full-width route
+(`/app/patients/:id/mmta`, declared the same way as `care-plan/view` —
+dropping `PatientDetails`'s toolbar chrome, not a popup) instead of a modal,
+per correction during this build.
+
+Reuses data already fetched rather than adding a new question-generation
+call: `ConversationCard.jsx` already documented that the last item of
+`chatData` (from `/generate_questions`) is the auto-generated MMTA
+question, and legacy `Mmta.jsx` confirmed the pattern — send that question
+straight to `POST /mmta`, which answers directly from the LLM (no RAG/no
+document context) and returns `{status, question, response}`. Renders the
+markdown response; no toast, inline "Thinking..."/error states matching
+every other feature built this session.
+
+(Also noticed in the working tree, not part of this change: `Download`
+button on `ConversationCard.jsx`'s Conversation tab is now commented out.)
+
+#### Fixed — Routing and logo broke under the new `/new/` base path
+
+`vite.config.js` now sets `base: "/new/"` and `.env`'s `VITE_API_URL` points
+at a remote backend instead of localhost — both changed outside this
+session, but broke two things once in place:
+
+- `App.jsx`: `BrowserRouter` had no matching `basename`, so a real
+  deployment under `/new/` would push wrong URLs and 404 on hard refresh.
+  Added `basename="/new/"` (the chrome-extension build's `MemoryRouter` is
+  unaffected — no real URL bar to match against).
+- `Sidebar.jsx`: the logo `<img>` used a filesystem-style relative path
+  (`../../public/images/logo.png`), which browsers resolve as a URL, not a
+  file path — always 404'd. Now `${import.meta.env.BASE_URL}images/logo.png`,
+  which resolves correctly under the base in both dev and prod.
+
+#### Added — Add New Patient (`PatientsList.jsx`)
+
+New "Add Patient" button opens `AddPatientModal.jsx`, a 3-step flow:
+
+1. Enter mobile and/or email → `POST /send-otp` per identifier filled in.
+2. Enter the OTP(s) — 6 digits per identifier (backend generates 6-digit
+   codes; the Figma mockup showed 4, which would truncate the code and
+   always fail, so built to match the backend). If both mobile and email
+   were entered, both must verify; if only one was entered, that one is
+   sufficient.
+3. Patient name + Upload PDF/Upload Scan PDF (reuses the same upload logic
+   as the existing-patient flow — see below). On success, invalidates the
+   `patientList` query so the new patient shows up, and for Scan PDF,
+   dispatches into the same `jobsId` tracking the Jobs page already reads.
+
+Refactored to make step 3 possible without duplicating `UploadPlanModal.jsx`:
+extracted `uploadPlanShared.js` (`MODE_CONFIG` + `buildUploadFormData`, the
+verified `/upload`/`/ocr-upload` field contracts) and `UploadFields.jsx`
+(the plan/file/checkbox UI) into shared pieces used by both
+`UploadPlanModal` and `AddPatientModal`'s step 3.
+
+#### Added — Jobs page (background job tracker)
+
+New: `src/features/jobs/JobsPage.jsx`, at `/app/jobs` (new "Jobs" entry in
+the sidebar). Table of background jobs from this session — Scan PDF (OCR),
+eFax, Care Plan generation — with Type, Patient, File, Status, Progress %,
+Message. Reads the existing `jobsId`/`finalJobStatus` redux state via the
+existing `useProgress.js` polling hook; no new polling logic added.
+
+#### Added — Patient Details: Upload PDF / Upload Scan PDF
+
+`src/features/patients/UploadPlanModal.jsx` now takes a `mode` prop
+(`"pdf"` | `"scan"`) instead of being one fixed form. Upload dropdown items
+renamed to `["Upload PDF", "Upload Scan PDF"]` and wired to it.
+
+- `mode="pdf"` → `POST /upload`, synchronous. Fields verified against
+  `file_upload_api.py`: `file`, `file_type`, `patient_name`, `patient_type`
+  (the selected plan), `confirm`, `note_doc`.
+- `mode="scan"` → `POST /ocr-upload`, an RQ background job. Fields verified
+  against `ocr_upload_api.py`: `image`, `image_type`, `note_doc` +
+  `keep_document`. On success, dispatches `setJobsId({ ocrJobs: response })`
+  so it's tracked by the Jobs page above.
+
+#### Added — Patient Details: Unregister Call (phase 2) + toggle button
+
+New: `src/features/patients/UnregisterCallModal.jsx`. Same centered-modal
+shell as `RegisterCallModal`, but simpler — a confirm step instead of a
+form.
+
+**Toolbar button is now one toggle, not two.** In `PatientDetails.jsx`, the
+Register/Unregister button:
+
+- Only renders when `patient?.type === "Uploaded"` — call registration only
+  applies to that patient type (PCC/Epic/Metriport records never carry
+  `call_registered`/`calling_number`, so there's nothing to toggle for them).
+- Reads `patient?.raw?.call_registered` to decide label + action: `false` →
+  "Register a Call" (opens `RegisterCallModal`), `true` → "Unregister Call"
+  (opens `UnregisterCallModal`).
+
+**Flow:** "Unregister this call? The scheduled call will be cancelled." with
+Cancel/Unregister buttons, then `POST /pause_call` (`unregisterCall`) with
+`{ to_number: patient.raw.calling_number }` — no lookup call needed, the
+number is already on the patient record from registration. Same no-toast
+pattern as Register: Unregister button dims + reads "Unregistering..." while
+pending, inline red error on failure (modal stays open to retry), checkmark
+
+- "Call unregistered" panel on success, auto-closes after ~1.2s.
+
+**Redux fix that made the toggle actually work end-to-end:**
+`PatientSingleDateSlice.js`'s `updatePatientData` reducer used to hardcode a
+single field (`state.value.patient.raw.call_registered = ...`); it's now
+`Object.assign(state.value.patient.raw, action.payload)`, so a dispatch can
+update multiple raw-patient fields at once. `RegisterCallModal`'s success
+handler was also missing a write entirely — it flipped `call_registered`
+but never recorded the number that had just been used, so unregistering
+immediately after a patient's _first-ever_ registration (before the patient
+list next refetched from the backend) would find `calling_number` undefined
+and the Unregister button would stay disabled. Now register success
+dispatches `updatePatientData({ call_registered: true, calling_number: phone })`,
+so both flags are correct without waiting on a refetch.
+
+Note: `registered_number` (used by `UploadPatientDocument.jsx` to prefill
+the upload form's contact field) is a different, unrelated field — the
+patient's contact number for upload/OTP notifications, not the call-register
+number. Not touched by this change.
+
+#### Added — Patient Details: "Register a Call" modal
+
+New: `src/features/patients/RegisterCallModal.jsx`, wired from the
+"Register a Call" toolbar button in `PatientDetails.jsx`. Centered modal
+(`fixed inset-0`, same overlay pattern as `ReviewModal.jsx`) rather than an
+anchored popover.
+
+**Flow**
+
+1. Opening the modal silently calls `POST /get-details` (`getCallDetail`)
+   with `{ patient_name, patient_type, dates }` — `patient_name`/`patient_type`
+   come from the already-selected patient in redux
+   (`patientsingledata.value`); `dates` is `singleData.dates` for `Uploaded`
+   patients or `singleData.patient_collection` otherwise (same branch
+   `PatientDetails`'s own `handleDocumentClick` already uses). The response's
+   `phone_number` prefills the Mobile Number field.
+2. Mobile Number uses `react-phone-number-input` (`defaultCountry="US"`,
+   `international`) — country-code picker + number, same library the legacy
+   call-register form used. Editable even after autofill, e.g. if the lookup
+   fails or the number is wrong.
+3. Schedule Time is a native `datetime-local` input, defaulted to now + 90
+   minutes ("Schedule it for 1 hour 30 minutes from now" hint), which already
+   emits the `"YYYY-MM-DDTHH:mm"` shape the backend expects for `time_slots`
+   — no reformatting needed.
+4. "Schedule" calls `POST /register-call` (`registerCall`) with
+   `{ patient_name, patient_type, dates, to_number, time_slots }`.
+
+**Pending/error/success — no toast.** Both calls use `useMutation` directly
+(not the app's usual `useMyMutation`, which auto-fires `react-hot-toast`) so
+feedback stays inside the modal:
+
+- Phone lookup: field disabled + "Looking up phone number..." while
+  pending; inline red text if it fails (user can still type the number by
+  hand).
+- Schedule button: dims/disables and reads "Scheduling..." while pending;
+  inline red error text below on failure.
+- Success: the form is replaced with a checkmark + "Call scheduled" panel,
+  then the modal auto-closes after ~1.2s.
+
+Unregistering a call was deliberately left out of this pass (see
+"Unregister Call (phase 2)" entry above for that). Patient Name/Type aren't
+shown as fields (unlike the legacy form) — they're derived from the
+selected patient and sent silently.
+
+#### Fixed — Patient Details: Documents dropdown now switches the active document
+
+`src/features/patients/PatientDetails.jsx`.
+
+The Documents dropdown's list items were dead — the `<li>` used a typo'd
+`onkey={item}` prop (not a real React/DOM event) instead of `onClick`, so
+clicking a document silently did nothing. Now:
+
+1. `DOCUMENT_ITEMS` is built from the actual patient record instead of a
+   hardcoded placeholder list: each upload's `dates` for `Uploaded` patients,
+   or `patient?.details` for PCC/Epic/Metriport patients.
+2. Clicking an item clears the current conversation (`clearChat`), rebuilds
+   the patient payload with that document selected (`dates`/`patient_date`
+   for `Uploaded`, `patient_collection` otherwise), and re-fetches the
+   default question set for it via `fetchPatientChat` (`/generate_questions`)
+   — the same pattern `PatientsList`'s "View Details" already uses.
+3. If the user was on the Care Plan tab, picking a document navigates back
+   to the Conversation tab (`navigate(".")`) so the refreshed chat is visible.
+
+`DropdownButton` gained an `onItemClick` prop (only wired up for Documents
+so far — Notes/Plan/Forms/Upload are still inert, see Known issues below).
+
 #### Added — Care Plan, Phase 2 (editable document + PDF export)
 
 Builds on the Care Plan feature below — that phase made the plan
-*generate and display*; this phase makes it *editable and exportable*.
+_generate and display_; this phase makes it _editable and exportable_.
 Full write-up: [`docs/features/care-plan.md`](./docs/features/care-plan.md)
 (flows/API) and
 [`docs/features/care-plan-backend-spec.md`](./docs/features/care-plan-backend-spec.md)
@@ -28,6 +846,7 @@ downloadable PDF — if there are unsaved edits when it's clicked, it saves
 them first automatically, so the PDF can never be stale.
 
 **Backend (`caremagix-be`)**
+
 - `careplan.py`:
   - AI prompt schema: every goal/intervention/action/barrier item now
     includes a `selected` field (the AI always sets it `false` — it proposes
@@ -43,12 +862,13 @@ them first automatically, so the PDF can never be stale.
     generated raw HTML directly — added a "checked" checkbox style to it
     since it previously only drew empty boxes.
   - `POST /export_care_plan_pdf` — repurposed: it already existed but the
-    frontend never called it, and it expected the *caller* to hand it
+    frontend never called it, and it expected the _caller_ to hand it
     pre-built HTML. Now takes `{care_plan_id}` and renders entirely
     server-side from the saved database row, so there's one source of truth
     for what an exported plan looks like.
 
 **Frontend — existing files changed**
+
 - `src/features/patients/CarePlanDetailPage.jsx` — the bulk of this phase:
   per-section and per-patient-block edit sessions, the page-level
   "Save Care Plan" button (`PUT /care_plan/:id`, one call for everything),
@@ -56,6 +876,7 @@ them first automatically, so the PDF can never be stale.
 - `src/api/hospitalApi.js` — added `exportCarePlanPdf()`.
 
 **Design decisions worth knowing**
+
 - Edits are staged locally (per section, per patient block) and only reach
   the server on the one page-level Save — avoids an API call per
   keystroke/checkbox and avoids ever saving a half-finished edit.
@@ -67,12 +888,13 @@ them first automatically, so the PDF can never be stale.
   per section (an ongoing log entry updated at each patient contact), not a
   growing/appendable list — a deliberate scope decision, not an oversight.
 - After a successful page-level save, the result is dispatched into the same
-  Redux slice (`finalJobsStatusSlice`) that tracks a freshly *generated*
+  Redux slice (`finalJobsStatusSlice`) that tracks a freshly _generated_
   plan — caught during design, before it shipped, that keeping the saved
   data only in local component state would show stale (pre-edit) data if the
   Care Manager navigated away and back to the same patient in one session.
 
 **Known issues / not done yet**
+
 - Still no explicit "Regenerate" action (unchanged from Phase 1, below).
 - A hard refresh mid-generation still loses in-progress job tracking
   (unchanged from Phase 1, below).
@@ -93,6 +915,7 @@ is open, and the button correctly shows "Generating..." if you come back to
 that patient before it's done.
 
 **Backend (`caremagix-be`)**
+
 - `models.py` — new `CarePlan` database table (one row per generated plan:
   patient, owner, the plan itself as JSON text, timestamps).
 - `careplan.py` — the AI prompt now asks for structured JSON (a fixed set of
@@ -109,6 +932,7 @@ that patient before it's done.
   returns `care_plan_id`/`care_plan_data` once a care-plan job finishes.
 
 **Frontend — new files**
+
 - `src/features/patients/CarePlan.jsx` — the "Care Plan" header/button,
   shown inline on the Patient Details page (`/app/patients/:id/care-plan`).
 - `src/features/patients/CarePlanDetailPage.jsx` — the full document view,
@@ -128,6 +952,7 @@ that patient before it's done.
 - `docs/features/care-plan.md` — the detailed reference doc mentioned above.
 
 **Frontend — existing files changed**
+
 - `src/App.jsx` — Patient Details is now a proper layout (header/toolbar
   stay on screen, only the content below changes) with nested routes
   instead of one big page swapping content via local state.
@@ -147,10 +972,11 @@ that patient before it's done.
   the animated dots.
 
 **Bugs found and fixed while building this**
+
 - Care plan tracking was originally keyed off each patient row's `id` —
   turned out that ID is randomly regenerated every time the Patients list
   re-fetches, so navigating back to the list and re-opening the same
-  patient looked like a *different* patient and lost track of their plan.
+  patient looked like a _different_ patient and lost track of their plan.
   Fixed by keying on patient name + type instead (stable, and it's what
   the backend already uses to identify a patient).
 - The finished plan's content was being fetched twice — once already
@@ -161,6 +987,7 @@ that patient before it's done.
   to actually start it). Now one click does both.
 
 **Known issues / not done yet**
+
 - A hard browser refresh while a plan is generating loses track of that
   one in-progress job (finished ones already survive a refresh via
   `localStorage`; in-progress ones don't yet).
@@ -228,6 +1055,8 @@ duplicated) at every place that calls the backend.
 
 - TopBar: facility name/beds-available field names are guessed, notification
   bell has no logic yet, logout handler is broken (missing `dispatch`/`navigate`).
-- Patient Details: dropdown items, action buttons, and question chips are not
-  wired to anything yet (UI only).
+- Patient Details: Documents dropdown and "Register a Call" are wired (see
+  entries above); Notes/Plan/Forms/Upload dropdowns, the remaining action
+  buttons (MMTA, Medication Alerts, Call Reports, Medication, Patient
+  Journey), and question chips are still not wired to anything (UI only).
 - Header card's Age/Admission Date have no backing data — rendered blank.

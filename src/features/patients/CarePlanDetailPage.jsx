@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle } from "lucide-react";
@@ -372,7 +372,12 @@ export default function CarePlanDetailPage() {
   const patientKey = getPatientKey(singleData?.patient_name, singleData?.patient_type);
   const { generate, isStarting, error: startError } = useCarePlan();
   const { status, progress, message, carePlanId, carePlanData: statusCarePlanData } = useCarePlanStatus(patientKey);
-  const [openIndex, setOpenIndex] = useState(0);
+  // Deep-linked here from the Dashboard's per-row "Edit" (?section=N) — open
+  // straight to that section instead of always defaulting to the first one.
+  const [searchParams] = useSearchParams();
+  const pinnedPlanId = searchParams.get("care_plan_id");
+  const sectionParam = Number(searchParams.get("section"));
+  const [openIndex, setOpenIndex] = useState(Number.isInteger(sectionParam) && sectionParam >= 0 ? sectionParam : 0);
   // Which section (if any) is currently unlocked for editing — only one at a
   // time. sectionOverrides holds locally-committed (Save clicked) edits per
   // section index, kept separate from the AI-generated baseline so Cancel
@@ -450,15 +455,17 @@ export default function CarePlanDetailPage() {
 
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
-  // Normal case: the just-generated plan is already in shared state
-  // (statusCarePlanData) — no fetch needed. Fallback only: status is "done"
-  // but we don't have the content (e.g. after a reload wiped redux/cache) —
-  // then fetch it by ID.
-  const needsFetch = status === "done" && !statusCarePlanData && !!carePlanId;
+  const needsFetch = !pinnedPlanId && status === "done" && !statusCarePlanData && !!carePlanId;
   const { data: fetched, isLoading: isFetching } = useQuery({
     queryKey: ["care-plan", carePlanId],
     queryFn: () => getCarePlan(carePlanId),
     enabled: needsFetch,
+  });
+
+  const { data: pinnedPlan, isLoading: isPinnedLoading, isError: isPinnedError } = useQuery({
+    queryKey: ["care-plan", pinnedPlanId],
+    queryFn: () => getCarePlan(pinnedPlanId),
+    enabled: !!pinnedPlanId,
   });
 
   const handleGenerate = () => {
@@ -470,7 +477,8 @@ export default function CarePlanDetailPage() {
     });
   };
 
-  const carePlanData = statusCarePlanData || fetched?.care_plan_data;
+  const carePlanData = pinnedPlanId ? pinnedPlan?.care_plan_data : statusCarePlanData || fetched?.care_plan_data;
+  const effectiveCarePlanId = pinnedPlanId || carePlanId;
   const basePatient = carePlanData?.patient;
   const patient = patientOverride || basePatient;
   const sections = normalizeSections(carePlanData?.sections);
@@ -485,25 +493,26 @@ export default function CarePlanDetailPage() {
   const isMidEdit = editingIndex !== null || editingPatient;
 
   const handleSaveCarePlan = async () => {
-    if (!carePlanId) return false;
+    if (!effectiveCarePlanId) return false;
     setIsSavingPlan(true);
     try {
       const merged = { ...carePlanData, patient, sections: effectiveSections };
-      const response = await updateCarePlan(carePlanId, merged);
-      // Same finalization dispatch useJobsTracker uses on job completion —
-      // this becomes the newest entry for this patientKey, so
-      // useCarePlanStatus (here and anywhere else this patient is opened
-      // again this session) reads the saved edits instead of stale data.
-      dispatch(
-        saveFinalJobStatus({
-          jobId: `saved-${carePlanId}-${Date.now()}`,
-          status: "COMPLETED",
-          message: "Care plan saved",
-          carePlanId,
-          carePlanData: response.care_plan_data,
-          patientKey,
-        })
-      );
+      const response = await updateCarePlan(effectiveCarePlanId, merged);
+      // Only update the session's "active plan" tracking when this IS that
+      // plan — saving edits to a pinned (older) plan from history must not
+      // make it look like the active plan everywhere else in the app.
+      if (!pinnedPlanId) {
+        dispatch(
+          saveFinalJobStatus({
+            jobId: `saved-${effectiveCarePlanId}-${Date.now()}`,
+            status: "COMPLETED",
+            message: "Care plan saved",
+            carePlanId: effectiveCarePlanId,
+            carePlanData: response.care_plan_data,
+            patientKey,
+          })
+        );
+      }
       setPatientOverride(null);
       setSectionOverrides({});
       toast.success("Care plan saved.");
@@ -519,7 +528,7 @@ export default function CarePlanDetailPage() {
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const handleGeneratePdf = async () => {
-    if (!carePlanId) return;
+    if (!effectiveCarePlanId) return;
     // The PDF always comes from what's saved on the server — auto-save any
     // pending local edits first so it never reflects a stale version.
     if (hasUnsavedChanges) {
@@ -528,7 +537,7 @@ export default function CarePlanDetailPage() {
     }
     setIsGeneratingPdf(true);
     try {
-      const response = await exportCarePlanPdf(carePlanId);
+      const response = await exportCarePlanPdf(effectiveCarePlanId);
       if (response?.file_path) {
         window.open(response.file_path, "_blank", "noopener,noreferrer");
         toast.success("Care plan PDF generated.");
@@ -578,8 +587,14 @@ export default function CarePlanDetailPage() {
         )}
       </div>
 
+      {pinnedPlanId && pinnedPlan && !pinnedPlan.is_active && (
+        <div className="border-b border-amber-100 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+          Viewing an older version (v{pinnedPlan.version}) — this is not the active plan.
+        </div>
+      )}
+
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {status === "idle" ? (
+        {!pinnedPlanId && status === "idle" ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-4">
             <p className="text-sm text-gray-500">No care plan generated yet for this patient.</p>
             <button
@@ -592,11 +607,13 @@ export default function CarePlanDetailPage() {
             </button>
             {startError && <p className="text-sm text-red-600">Error: {startError}</p>}
           </div>
-        ) : status === "running" ? (
+        ) : !pinnedPlanId && status === "running" ? (
           <GenerationProgress progress={progress} message={message} />
-        ) : status === "failed" ? (
+        ) : !pinnedPlanId && status === "failed" ? (
           <p className="p-4 text-sm text-red-600">Error: {message}</p>
-        ) : isFetching || !carePlanData ? (
+        ) : pinnedPlanId && isPinnedError ? (
+          <p className="p-4 text-sm text-red-600">Could not load this care plan.</p>
+        ) : isFetching || isPinnedLoading || !carePlanData ? (
           <p className="p-4 text-sm text-gray-400">Loading saved care plan...</p>
         ) : (
           <>

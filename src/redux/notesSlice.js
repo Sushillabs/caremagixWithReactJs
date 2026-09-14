@@ -19,6 +19,10 @@ const notesSlice = createSlice({
         pendingChat: null,
         firstQ: '',
         final_template:null,
+        isEditLocked: false,
+        templateReadyForReview: false,
+        savedAt: null,
+        reviewable_template: null,
         template: {
             data: null,
             loading: false,
@@ -31,6 +35,9 @@ const notesSlice = createSlice({
             state.activeTemplate.template = action.payload;
 
             state.template.data.template = action.payload;
+
+            state.reviewable_template = action.payload;
+            state.isEditLocked = true;
         },
         addInputAns: (state, action) => {
             state.pendingChat = {
@@ -38,11 +45,22 @@ const notesSlice = createSlice({
                 answer: action.payload,
             };
         },
+        addLocalTurn: (state, action) => {
+            state.notes_chat.push({
+                id: crypto.randomUUID(),
+                answer: action.payload.answer,
+                question: action.payload.question,
+            });
+        },
         clearNotes: (state) => {
             state.notes_chat = [];
             state.pendingChat = null;
             state.activeTemplate = null;
             state.final_template=null;
+            state.isEditLocked = false;
+            state.templateReadyForReview = false;
+            state.savedAt = null;
+            state.reviewable_template = null;
             state.firstQ = '';
             state.template = {
                 data: null,
@@ -61,6 +79,20 @@ const notesSlice = createSlice({
                 state.template.loading = false;
                 state.template.data = action.payload
                 state.activeTemplate = action.payload;
+                if (action.payload?.pdf_path) {
+                    state.savedAt = new Date().toISOString();
+                }
+                if (action.payload?.awaiting_confirmation && action.payload?.next_field === 'generating the final visit note') {
+                    // All fields answered/confirmed, not yet polished — this is the
+                    // window where the raw per-field template can still be edited
+                    // before the user confirms "yes, generate the final note".
+                    state.templateReadyForReview = true;
+                    state.reviewable_template = action.payload?.template;
+                }
+                if (action.payload?.final_template) {
+                    // The generate-now checkpoint has passed — editing window is closed.
+                    state.templateReadyForReview = false;
+                }
                 if (!state.pendingChat) {
                     state.firstQ = action.payload?.next_question
                 }
@@ -75,13 +107,10 @@ const notesSlice = createSlice({
                         completed = { ...state.pendingChat, question: action.payload?.next_question, final_template:action.payload?.final_template };
                     }
                     if(action.payload?.email_status === 'Email not sent (missing flag or recipient).'){
-                        let newQ=`${action.payload?.message} Would you like to email this visit note? Please provide email id.`
-                        completed = { ...state.pendingChat, question: newQ, isDownload:true };
+                        let newQ=`${action.payload?.message} You can now review, download, or email this visit note using the buttons above.`
+                        completed = { ...state.pendingChat, question: newQ };
                     }
-                    if(action.payload?.email_status === 'Email sent successfully.'){                    
-                        completed = { ...state.pendingChat, question: action.payload?.email_status, isEmailDone:true };
-                    }  
-                    
+
                     state.notes_chat.push(completed);
                     state.pendingChat = null;
                 }
@@ -93,5 +122,5 @@ const notesSlice = createSlice({
     }
 });
 
-export const { reviewTempalte, addInputAns, clearNotes } = notesSlice.actions;
+export const { reviewTempalte, addInputAns, addLocalTurn, clearNotes } = notesSlice.actions;
 export default notesSlice.reducer;

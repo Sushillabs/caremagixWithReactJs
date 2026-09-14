@@ -1,6 +1,3 @@
-// Which sections each role sees, in nav order.
-// Same shell + same components everywhere; this map alone produces the
-// "less or more" difference between roles. Add/remove a key to change a role.
 export const ROLE_NAV = {
   caregiver: {
     primary: [
@@ -12,24 +9,21 @@ export const ROLE_NAV = {
       "fillForms",
       "createCarePlan",
       "alerts",
+      "tcm",
       "reports",
+      "editVisitTemplate",
+      "jobs",
+      "configuration",
     ],
-    secondary: [
-      "dischargePlan",
-      "nursingPlan",
-      "transitionCarePlan",
-      "icdCodes",
-      "cptCodes",
-      "medications",
-      "uploadedPlan",
-    ],
+    secondary: ["dischargePlan", "nursingPlan", "transitionCarePlan", "icdCodes", "cptCodes", "medications", "uploadedPlan"],
   },
   physician: {
-    primary: ["dashboard", "patients", "createCarePlan", "alerts"],
+    // primary: ["dashboard", "patients", "manageCalendar", "configuration", "editDischargePlanTemplate", "editHandoffNote"],
+    primary: ["dashboard", "patients", "manageCalendar", "tcm", "editDischargePlanTemplate", "configuration"],
     secondary: ["dischargePlan", "icdCodes", "cptCodes", "medications"],
   },
   patient: {
-    primary: ["dashboard", "alerts"],
+    primary: ["dashboard"],
     secondary: [],
   },
 };

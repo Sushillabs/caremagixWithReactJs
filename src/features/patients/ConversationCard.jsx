@@ -6,56 +6,77 @@ import { Download } from "lucide-react";
 import { Spinner } from "../../components/Spiner";
 import ChatLoader from "../../components/ChatLoader";
 import useAskQuestion from "../../hooks/useAskQuestion";
-
-const markdownTableComponents = {
-  table: ({ children }) => <table className="min-w-full border-collapse text-xs">{children}</table>,
-  thead: ({ children }) => <thead className="bg-emerald-50 text-left text-gray-700">{children}</thead>,
-  th: ({ children }) => <th className="border border-gray-200 px-3 py-2 font-semibold">{children}</th>,
-  td: ({ children }) => <td className="whitespace-pre-line border border-gray-200 px-3 py-2 align-top text-gray-600">{children}</td>,
-};
+import { markdownTableComponents } from "../../utils/markdownComponents";
+import DocReferenceModal from "./DocReferenceModal";
 
 const TABS = [
   { key: "conversation", label: "Conversation" },
   { key: "summary", label: "Summary" },
-  { key: "history", label: "Chat History" },
+  // Shown but not clickable — no content wired up yet (was rendering blank).
+  { key: "history", label: "Chat History", disabled: true },
 ];
+
+const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
+  patient: ["progress notes for last 7 days", "h & p", "h&p", "hhrg", "icd"],
+};
 
 export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
-  const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending } = useSelector((state) => state.askQ) || {};
+  const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
+  const patientType = useSelector((state) => state.patientsingledata?.value?.patient?.type);
+  const role = useSelector((state) => state.auth?.value?.role) || "caregiver";
+  const isMedication = mode === "medication";
+  // Medication has no summary table for any role — drop that tab entirely.
+  const visibleTabs = isMedication ? TABS.filter((tab) => tab.key !== "summary") : TABS;
   const { askQuestion } = useAskQuestion();
+  const [docRefQuestionId, setDocRefQuestionId] = useState(null);
   const questionsRef = useRef(null);
   const scrollToQuestions = () => questionsRef.current?.scrollIntoView({ behavior: "smooth" });
   const chatEndRef = useRef(null);
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation, askPending]);
-  const summaryTable = chatData?.[0];
+  // If medication mode hides the Summary tab while it's active, fall back to Conversation.
+  useEffect(() => {
+    if (isMedication && activeTab === "summary") setActiveTab("conversation");
+  }, [isMedication, activeTab]);
+  const summaryTable = isMedication ? null : chatData?.[0];
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
-  const defaultQuestions = chatData?.length > 2 ? chatData.slice(1, -1) : [];
+  const rawDefaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
+  const hiddenKeywords = HIDDEN_QUESTION_KEYWORDS_BY_ROLE[role] || [];
+  const defaultQuestions = hiddenKeywords.length
+    ? rawDefaultQuestions.filter((q) => !hiddenKeywords.some((kw) => q.toLowerCase().includes(kw)))
+    : rawDefaultQuestions;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
       <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
         <div>
-          <h3 className="text-xs font-bold text-gray-800">Discharged Plan</h3>
-          <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p>
+          <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : "Discharged Plan"}</h3>
+          {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500 ">
-          {TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setActiveTab(tab.key)}
+              className={
+                tab.disabled
+                  ? "cursor-not-allowed text-gray-300"
+                  : activeTab === tab.key
+                  ? "font-medium text-emerald-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }
             >
               {tab.label}
             </button>
           ))}
-          <button type="button" className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700">
+          {/* <button type="button" className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700">
             <Download size={14} /> Download
-          </button>
+          </button> */}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-4">
@@ -74,8 +95,8 @@ export default function ConversationCard() {
             <p className="mt-3 px-2 text-sm text-gray-400">No summary available yet.</p>
           )
         ) : activeTab === "history" ? (
-          <p className="mt-3 px-2 text-sm text-gray-400">Chat History will be built in a later phase.</p>
-        ) : defaultQuestions.length > 0 || conversation.length > 0 ? (
+          <p className="mt-3 px-2 text-sm text-gray-400"></p>
+        ) : defaultQuestions.length > 0 || conversation.length > 0 || askPending ? (
           <div className="mt-3 space-y-3 px-2 text-sm">
             {defaultQuestions.length > 0 && (
               <div>
@@ -92,7 +113,8 @@ export default function ConversationCard() {
                         className="flex items-start gap-2 text-left text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
                       >
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                        {q}
+                        {/* Backend's own "N. " numbering is stripped — per-role hiding leaves gaps otherwise, and the bullet dot already marks each item. */}
+                        {q.replace(/^\d+\.\s*/, "")}
                       </button>
                     </li>
                   ))}
@@ -102,8 +124,11 @@ export default function ConversationCard() {
 
             {conversation.length > 0 && (
               <div className="space-y-3 border-t border-gray-100 pt-3">
-                {conversation.map((msg, i) =>
-                  msg.role === "user" ? (
+                {conversation.map((msg, i) => {
+                  // Medication's first message is always the fixed canned question
+                  if (isMedication && i === 0 && msg.role === "user") return null;
+
+                  return msg.role === "user" ? (
                     <div key={i} className="flex items-start justify-end gap-2 text-right">
                       <span className="text-gray-700">{msg.content}</span>
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
@@ -112,26 +137,37 @@ export default function ConversationCard() {
                     </div>
                   ) : (
                     <div key={i} className="text-gray-700 space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setDocRefQuestionId(msg.id)}
+                        disabled={!msg.id}
+                        className="mb-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Doc Reference
+                      </button>
+                      <button
+                        type="button"
+                        className="mb-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
+                        onClick={scrollToQuestions}
+                      >
+                        Quick Questions
+                      </button>
                       {typeof msg.content === "string" && (
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownTableComponents}>
                           {msg.content}
                         </ReactMarkdown>
                       )}
-                      <button type="button" className="mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100">
-                        Doc Reference
-                      </button>
-                      <button
-                        type="button"
-                        className="mt-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
-                        onClick={scrollToQuestions}
-                      >
-                        Quich Questions
-                      </button>
                     </div>
-                  )
-                )}
+                  );
+                })}
                 {askPending && <ChatLoader />}
                 <div ref={chatEndRef} />
+              </div>
+            )}
+
+            {conversation.length === 0 && askPending && (
+              <div className="border-t border-gray-100 pt-3">
+                <ChatLoader />
               </div>
             )}
           </div>
@@ -139,6 +175,8 @@ export default function ConversationCard() {
           <p className="mt-3 px-2 text-sm text-gray-400">Document content will render here in a later.</p>
         )}
       </div>
+
+      {docRefQuestionId && <DocReferenceModal questionId={docRefQuestionId} sourceType={patientType} onClose={() => setDocRefQuestionId(null)} />}
     </div>
   );
 }

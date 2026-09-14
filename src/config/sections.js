@@ -14,12 +14,10 @@ import {
   FileCode2,
   Pill,
   Files,
+  CalendarClock,
+  CalendarCheck,
 } from "lucide-react";
 
-// Central registry of every section in the app shell.
-// Each new feature registers here once; roles.js decides who sees it.
-//   assistant       -> show the docked AI assistant while in this section
-//   requiresPatient -> section needs a patient in context to be usable
 export const SECTIONS = {
   // Primary navigation
   dashboard: {
@@ -31,8 +29,7 @@ export const SECTIONS = {
     assistant: false,
     requiresPatient: false,
   },
-  // noAssistantPaths: URL fragments where the docked assistant should stay
-  // hidden even though this section otherwise wants it (non-chat features).
+
   patients: {
     key: "patients",
     label: "Patients",
@@ -41,55 +38,107 @@ export const SECTIONS = {
     group: "primary",
     assistant: true,
     requiresPatient: true,
-    noAssistantPaths: ["/care-plan"],
+    noAssistantPaths: ["/care-plan", "/visit-notes", "/mmta"],
   },
-  // configurations: {
-  //   key: "configurations",
-  //   label: "Configurations",
-  //   icon: Settings,
-  //   path: "/app/configurations",
-  //   group: "primary",
-  //   assistant: false,
-  //   requiresPatient: false,
-  // },
-  // uploads: { key: "uploads", label: "Uploads", icon: Upload, path: "/app/uploads", group: "primary", assistant: true, requiresPatient: true },
-  // visitNotes: {
-  //   key: "visitNotes",
-  //   label: "Visit Notes",
-  //   icon: StickyNote,
-  //   path: "/app/visit-notes",
-  //   group: "primary",
-  //   assistant: true,
-  //   requiresPatient: true,
-  // },
-  // fillForms: {
-  //   key: "fillForms",
-  //   label: "Fill Forms",
-  //   icon: FileText,
-  //   path: "/app/fill-forms",
-  //   group: "primary",
-  //   assistant: true,
-  //   requiresPatient: true,
-  // },
-  // createCarePlan: {
-  //   key: "createCarePlan",
-  //   label: "Create Care Plan",
-  //   icon: ClipboardPlus,
-  //   path: "/app/create-care-plan",
-  //   group: "primary",
-  //   assistant: true,
-  //   requiresPatient: true,
-  // },
-  // alerts: { key: "alerts", label: "Alerts", icon: Bell, path: "/app/alerts", group: "primary", assistant: false, requiresPatient: false },
-  // reports: {
-  //   key: "reports",
-  //   label: "Others & Reports",
-  //   icon: FolderOpen,
-  //   path: "/app/reports",
-  //   group: "primary",
-  //   assistant: false,
-  //   requiresPatient: false,
-  // },
+
+  jobs: {
+    key: "jobs",
+    label: "Jobs",
+    icon: Files,
+    path: "/app/jobs",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  reports: {
+    key: "reports",
+    label: "Call Reports",
+    icon: FolderOpen,
+    path: "/app/reports",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  // No `path`/`children` — a top-level nav item that opens a popup directly
+  // (Sidebar.jsx's ModalNavItem), same CHILD_MODALS registry the
+  // Configuration group's modal-type children already use.
+  editVisitTemplate: {
+    key: "editVisitTemplate",
+    label: "Edit Visit Template",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+  editHandoffNote: {
+    key: "editHandoffNote",
+    label: "Edit Handoff Note",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+  editDischargePlanTemplate: {
+    key: "editDischargePlanTemplate",
+    label: "Edit Discharge Template",
+    icon: FileText,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  // Real page, not a modal — this is a growing dashboard (list now, then
+  // reschedule/cancel/settings/blocks), same shape as Jobs/Reports, not a
+  // one-off popup like the Configuration group's modal children.
+  manageCalendar: {
+    key: "manageCalendar",
+    label: "Manage Calendar",
+    icon: CalendarClock,
+    path: "/app/manage-bookings",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  tcm: {
+    key: "tcm",
+    label: "Transitional Care",
+    icon: CalendarCheck,
+    path: "/app/tcm",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  transitionCareServices: {
+    key: "transitionCareServices",
+    label: "Transition care services",
+    icon: ArrowLeftRight,
+    path: "/app/transition-care-services",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
+  configuration: {
+    key: "configuration",
+    label: "Configuration",
+    icon: Settings,
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+
+    children: [
+      { key: "pullPcc", label: "Pull PCC Data", roles: ["caregiver"] },
+      { key: "connectMetriport", label: "Connect Metriport", roles: ["caregiver"] },
+      { key: "pullMetriport", label: "Pull Metriport Data", roles: ["caregiver"] },
+      { key: "pullEpic", label: "Pull Epic Data", roles: ["caregiver"] },
+      { key: "efaxConfig", label: "Pull eFax Data", roles: ["caregiver"] },
+      { key: "pullEhr", label: "Pull EHR Data", roles: ["physician"] },
+    ],
+  },
 
   // // Secondary navigation (care-plan quick links)
   // dischargePlan: {
@@ -157,8 +206,6 @@ export const SECTIONS = {
   // },
 };
 
-// Sections that already have a real screen built. Everything else falls back
-// to the "coming soon" placeholder until its phase ships.
-export const IMPLEMENTED_SECTIONS = ["dashboard", "patients"];
+export const IMPLEMENTED_SECTIONS = ["dashboard", "patients", "jobs", "reports", "tcm"];
 
 export const getSectionByPath = (pathname) => Object.values(SECTIONS).find((s) => pathname.startsWith(s.path));
