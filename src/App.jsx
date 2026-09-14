@@ -26,6 +26,7 @@ import TransitionCareServicesPage from "./features/services/TransitionCareServic
 import TcmListPage from "./features/tcm/TcmListPage";
 import { SECTIONS } from "./config/sections";
 import OasisFieldPreview from "./features/oasis/OasisFieldPreview";
+import OasisFormPage from "./features/oasis/pages/OasisFormPage";
 
 const isExtension = window.location.protocol === "chrome-extension:";
 console.log("protocol:", window.location.protocol);
@@ -96,6 +97,11 @@ function App() {
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
 
             <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
+
+            {/* Phase 1 Step 2 — real Form Shell, proven on FU. Reached directly by URL
+                for now (?patient_id=&patient_name=&mode=); Phase 2 replaces this with
+                the sidebar + patient grid entry surface (aerial-view doc §J). */}
+            <Route path="/app/oasis/:formType" element={<OasisFormPage />} />
             {Object.values(SECTIONS)
               .filter((section) => !section.children && section.path)
               .map((section) => (

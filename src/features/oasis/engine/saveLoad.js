@@ -42,6 +42,12 @@ export function useOasisSaveLoad({ formKey, patientId, patientName }) {
 
   const saveToServer = useCallback(
     async (values, { patientDetails } = {}) => {
+      // Backend requires patient_id to update (aerial-view doc §I) — mirror legacy's
+      // client-side block so a save never fires a request we know will 400.
+      if (!patientId) {
+        setStatus("error");
+        throw new Error("Patient id is required to save.");
+      }
       setStatus("saving");
       try {
         await saveOasisForm({
