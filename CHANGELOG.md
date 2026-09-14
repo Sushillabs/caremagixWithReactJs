@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Wellness check-in: question editor for physicians
+
+New `wellnessQuestionEditor` role flag + "Wellness Check-in Questions" nav
+button on the physician patient view (`WellnessQuestionsPanel.jsx`), reusing
+the same `WellnessQuestionEditor` the caregiver tab uses.
+
 #### Added — Dashboard: Uploads and Active Care Plans open real lists
 
 New modals (`DashboardDocumentsModal.jsx`, `DashboardCarePlansModal.jsx`) backed
