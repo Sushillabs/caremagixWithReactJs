@@ -6,3 +6,5 @@ import http from "../../../api/httpClient";
 export const saveOasisForm = (data) => http.post("/save_oasis_json", data, { withAuth: true });
 
 export const getOasisForm = (params) => http.get("/get_oasis_json", { params, withAuth: true });
+
+export const listOasisPatients = () => http.get("/get_oasis_json", { withAuth: true });

@@ -51,6 +51,16 @@ export const SECTIONS = {
     requiresPatient: false,
   },
 
+  fillForms: {
+    key: "fillForms",
+    label: "OASIS",
+    icon: ClipboardPlus,
+    path: "/app/oasis",
+    group: "primary",
+    assistant: false,
+    requiresPatient: false,
+  },
+
   reports: {
     key: "reports",
     label: "Call Reports",

@@ -26,7 +26,8 @@ function OasisFormShell({ schema }) {
   const patientName = searchParams.get("patient_name") || "";
 
   const methods = useForm({ defaultValues: {} });
-  const [activeSectionId, setActiveSectionId] = useState(schema.sections[0]?.id);
+  const firstSectionWithFields = schema.sections.find((s) => s.items.length > 0) ?? schema.sections[0];
+  const [activeSectionId, setActiveSectionId] = useState(firstSectionWithFields?.id);
   const [loading, setLoading] = useState(true);
 
   const { status, saveToServer, loadFromServer } = useOasisSaveLoad({
@@ -62,7 +63,6 @@ function OasisFormShell({ schema }) {
 
   const answers = methods.watch();
   const activeSection = schema.sections.find((s) => s.id === activeSectionId) ?? schema.sections[0];
-  const visibleFields = filterVisibleFields(activeSection.items, answers);
 
   const handleSave = methods.handleSubmit(async (values) => {
     try {
@@ -126,9 +126,13 @@ function OasisFormShell({ schema }) {
             answers={answers}
           />
           <FormProvider {...methods}>
-            <form className="divide-y" onSubmit={(e) => e.preventDefault()}>
-              {visibleFields.map((field) => (
-                <OasisField key={field.fieldId ?? field.itemCode ?? field.label} field={field} />
+            <form onSubmit={(e) => e.preventDefault()}>
+              {schema.sections.map((section) => (
+                <div key={section.id} hidden={section.id !== activeSection.id} className="divide-y">
+                  {filterVisibleFields(section.items, answers).map((field) => (
+                    <OasisField key={field.fieldId ?? field.itemCode ?? field.label} field={field} />
+                  ))}
+                </div>
               ))}
             </form>
           </FormProvider>
