@@ -101,7 +101,8 @@ export default function useJobPull({ startFn, statusFn, toastId, defaultMsg, job
     resetJob();
   }, [isStatusError, statusError, jobId, resetJob, toastId]);
 
-  const start = useCallback(async () => {
+  // args are forwarded to startFn — POST-based starts (Epic user pull) send a body.
+  const start = useCallback(async (args) => {
     if (isRunning) return;
 
     setError(null);
@@ -112,7 +113,7 @@ export default function useJobPull({ startFn, statusFn, toastId, defaultMsg, job
     toast.loading(defaultMsg, { id: toastId });
 
     try {
-      const response = await startFn();
+      const response = await startFn(args);
 
       if (response?.success && response?.job_id && response?.status_url) {
         setMessage(response.message || defaultMsg);

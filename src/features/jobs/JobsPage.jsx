@@ -24,7 +24,7 @@ const normalizeExternalStatus = (status) => {
 };
 
 export default function JobsPage() {
-  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, epicJobs, metriportJobs } = useSelector((state) => state.jobsId);
+  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, epicJobs, epicUserJobs, metriportJobs } = useSelector((state) => state.jobsId);
   const finalJobs = useSelector((state) => state.finalJobStatus.finalJobs);
 
   const jobs = [
@@ -58,6 +58,7 @@ export default function JobsPage() {
   const externalJobs = [
     ...(Array.isArray(pccJobs) ? pccJobs.map((j) => ({ ...j, type: "PCC" })) : []),
     ...(Array.isArray(epicJobs) ? epicJobs.map((j) => ({ ...j, type: "Epic" })) : []),
+    ...(Array.isArray(epicUserJobs) ? epicUserJobs.map((j) => ({ ...j, type: "Epic (my login)" })) : []),
     ...(Array.isArray(metriportJobs) ? metriportJobs.map((j) => ({ ...j, type: "Metriport" })) : []),
   ];
   const externalQueries = useExternalJobsProgress(externalJobs);
