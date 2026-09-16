@@ -15,7 +15,16 @@ import {
 // already scoped server-side. Auto-selects the patient open in PatientDetails
 // by matching patient_display_name, falling back to a picker.
 
-const ANSWER_TYPES = ["text", "enum", "boolean", "number", "integer"];
+// Backend always gets the raw key (see ANSWER_TYPES below) — these are only
+// the friendly labels shown in the UI. "integer" is a valid backend type but
+// isn't offered as a choice here; "number" covers it for new/edited questions.
+const ANSWER_TYPE_LABELS = {
+  text: "Text",
+  enum: "Selection / Choice",
+  boolean: "Yes/No",
+  number: "Number",
+};
+const ANSWER_TYPES = ["text", "enum", "boolean", "number"];
 
 const apiMessage = (err) => err?.response?.data?.message || err?.message || "Something went wrong";
 const norm = (s) => (s || "").trim().toLowerCase().replace(/\s+/g, " ");
@@ -90,7 +99,7 @@ function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, b
           <select value={draft.answer_type} onChange={set("answer_type")} className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs">
             {ANSWER_TYPES.map((t) => (
               <option key={t} value={t}>
-                {titleCase(t)}
+                {ANSWER_TYPE_LABELS[t] || titleCase(t)}
               </option>
             ))}
           </select>
@@ -169,7 +178,7 @@ function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy
       <div className="min-w-0 flex-1">
         <div className="text-gray-700">{q.prompt}</div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">{q.answer_type}</span>
+          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">{ANSWER_TYPE_LABELS[q.answer_type] || q.answer_type}</span>
           {q.origin === "custom" && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] text-purple-700">Custom</span>}
           {q.is_core && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">Required</span>}
           {q.field_key && <span className="text-[10px] text-gray-400">{q.field_key}</span>}
