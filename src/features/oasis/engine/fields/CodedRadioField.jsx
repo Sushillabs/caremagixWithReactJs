@@ -1,52 +1,79 @@
 import { Controller, useFormContext } from "react-hook-form";
+import { Check } from "lucide-react";
 import FieldShell from "./FieldShell";
 
-// Code-box + synced radio list (§1.1) — the single most common OASIS pattern. Both
-// controls represent ONE value on ONE field id; selecting a radio or typing a code
-// writes the same underlying value, matching legacy's two-way sync.
 export default function CodedRadioField({ field }) {
   const { control } = useFormContext();
+
   return (
     <Controller
       name={field.fieldId}
       control={control}
       defaultValue=""
-      render={({ field: { value, onChange } }) => (
-        <FieldShell field={field}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs uppercase tracking-wide text-gray-500">Enter code</span>
+      render={({ field: { value, onChange } }) => {
+        const codeBox = (
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Code</span>
             <input
               type="text"
               maxLength={field.maxLength ?? 2}
               value={value ?? ""}
               onChange={(e) => onChange(e.target.value)}
-              className="w-14 border rounded-lg px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={
+                "h-9 w-14 rounded-md border text-center text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 " +
+                (value ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-gray-300 text-gray-800")
+              }
             />
           </div>
-          <div className="space-y-1">
-            {field.options?.map((opt) => (
-              <div key={opt.value}>
-                {opt.groupLabel && (
-                  <p className="mt-2 mb-1 font-mono text-xs uppercase tracking-wide text-gray-400">{opt.groupLabel}</p>
-                )}
-                <label className="flex items-start gap-2 text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name={field.fieldId}
-                    checked={value === opt.value}
-                    onChange={() => onChange(opt.value)}
-                    className="mt-1"
-                  />
-                  <span>
-                    <span className="font-mono mr-1">{opt.value}.</span>
-                    {opt.label}
-                  </span>
-                </label>
-              </div>
-            ))}
-          </div>
-        </FieldShell>
-      )}
+        );
+
+        return (
+          <FieldShell field={field} headerRight={codeBox}>
+            <div className="flex flex-col gap-2">
+              {field.options?.map((opt) => {
+                const selected = value === opt.value;
+                return (
+                  <div key={opt.value}>
+                    {opt.groupLabel && (
+                      <p className="mb-1.5 mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                        {opt.groupLabel}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onChange(opt.value)}
+                      className={
+                        "flex w-full min-h-[46px] items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors " +
+                        (selected
+                          ? "border-emerald-500 bg-emerald-50"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50")
+                      }
+                    >
+                      {selected ? (
+                        <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-600">
+                          <Check size={12} strokeWidth={3} className="text-white" />
+                        </span>
+                      ) : (
+                        <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-gray-300" />
+                      )}
+                      <span
+                        className={
+                          "shrink-0 font-mono text-xs " + (selected ? "font-semibold text-emerald-700" : "text-gray-400")
+                        }
+                      >
+                        {opt.value}
+                      </span>
+                      <span className={"text-[13px] " + (selected ? "text-emerald-900" : "text-gray-600")}>
+                        {opt.label}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </FieldShell>
+        );
+      }}
     />
   );
 }

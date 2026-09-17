@@ -1,25 +1,42 @@
 import { useFieldErrors } from "../ValidationContext";
 
-export default function FieldShell({ field, children }) {
+export default function FieldShell({ field, children, headerRight }) {
   const fieldErrors = useFieldErrors(field);
 
   return (
-    <div className={"py-2" + (fieldErrors.length ? " -mx-2 rounded-lg border-2 border-red-400 bg-red-50 px-2" : "")}>
-      <div className="flex items-baseline gap-2 mb-1">
+    <div
+      className={
+        "rounded-lg border bg-white p-4 " + (fieldErrors.length ? "border-red-300" : "border-gray-200")
+      }
+    >
+      <div className="mb-3 flex items-start gap-2.5">
         {field.itemCode && (
-          <span className="font-mono text-xs text-gray-400">{field.itemCode}</span>
+          <span className="mt-0.5 shrink-0 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+            {field.itemCode}
+          </span>
         )}
-        <span className="text-sm font-medium text-gray-800">{field.label}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-gray-800">{field.label}</p>
+          {field.description && <p className="mt-1 text-xs text-gray-500">{field.description}</p>}
+        </div>
+        {headerRight}
       </div>
-      {field.description && <p className="mb-2 text-xs text-gray-500">{field.description}</p>}
+
       {children}
-      {field.skipWhen?.note && (
-        <p className="mt-1 text-xs text-gray-500 italic">{field.skipWhen.note}</p>
-      )}
+
+      {field.skipWhen?.note && <p className="mt-2 text-xs italic text-gray-500">{field.skipWhen.note}</p>}
+
       {fieldErrors.map(({ fieldId, error }, i) => (
-        <p key={`${fieldId}-${i}`} className="mt-1 border-l-[3px] border-red-500 bg-red-50 px-2 py-1 font-mono text-xs text-red-700">
-          ⚠ {fieldId}: "{error.provided_value}" not allowed. Allowed: {(error.allowed_values ?? []).join(", ")}
-        </p>
+        <div
+          key={`${fieldId}-${i}`}
+          className="mt-2 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-2.5 py-2"
+        >
+          <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
+          <p className="text-[11px] text-red-700">
+            <span className="font-mono">{fieldId}</span>: "{error.provided_value}" not allowed. Allowed:{" "}
+            {(error.allowed_values ?? []).join(", ")}
+          </p>
+        </div>
       ))}
     </div>
   );

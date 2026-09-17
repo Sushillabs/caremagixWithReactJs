@@ -93,6 +93,7 @@ const gFunctionalItems = [
 export const fuSchema = {
   formKey: "OASIS-E2-FU",
   formType: "FU",
+  title: "Follow-up Assessment",
   skipMarks: [
     { when: (d) => GG_SKIP_CODES.includes(d.GG0170_I), mark: ["GG0170_J", "GG0170_L"] },
     { when: (d) => GG_SKIP_CODES.includes(d.GG0170_M), mark: ["GG0170_N"] },

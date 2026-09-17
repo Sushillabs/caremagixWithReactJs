@@ -11,11 +11,16 @@ function sectionProgress(section, answers) {
   return answered / leafIds.length;
 }
 
-// Pill navigation + per-section progress (legacy's `.form-section` tabs + progressPct,
-// but schema-driven — progress reflects only fields skip-logic actually leaves visible).
+function barColor({ active, hasError, pct }) {
+  if (hasError) return "bg-red-500";
+  if (pct === 100) return "bg-emerald-500";
+  if (active) return "bg-emerald-500";
+  return "bg-gray-300";
+}
+
 export default function SectionNavigator({ sections, activeSectionId, onSelect, answers, sectionsWithErrors }) {
   return (
-    <nav className="flex flex-wrap gap-2 border-b pb-3 mb-4">
+    <nav className="-mx-2 flex flex-wrap gap-x-1 gap-y-1">
       {sections.map((section) => {
         const pct = Math.round(sectionProgress(section, answers) * 100);
         const active = section.id === activeSectionId;
@@ -26,17 +31,32 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
             type="button"
             onClick={() => onSelect(section.id)}
             className={
-              "relative px-3 py-1.5 rounded-full text-sm border flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 " +
-              (active
-                ? "bg-blue-600 text-white border-blue-600"
-                : hasError
-                ? "bg-red-50 text-red-600 border-red-500"
-                : "bg-white text-gray-700 border-gray-300 hover:border-blue-400")
+              "group flex min-w-[104px] cursor-pointer flex-col gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 " +
+              (active ? "bg-emerald-50/70 hover:bg-emerald-50" : "hover:bg-gray-100")
             }
           >
-            <span>{section.label}</span>
-            <span className={active ? "text-xs text-blue-100" : "text-xs text-gray-400"}>{pct}%</span>
-            {hasError && <span className="absolute right-1.5 top-1 h-1.5 w-1.5 rounded-full bg-red-600" />}
+            <span className="flex items-center gap-1.5">
+              <span
+                className={
+                  "text-xs " +
+                  (hasError
+                    ? "font-semibold text-red-600"
+                    : active
+                    ? "font-semibold text-emerald-700"
+                    : "text-gray-500 group-hover:text-gray-700")
+                }
+              >
+                {section.label}
+              </span>
+              <span className={"text-[11px] " + (active ? "text-emerald-500" : "text-gray-300")}>{pct}%</span>
+              {hasError && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
+            </span>
+            <span className="h-[3px] w-full overflow-hidden rounded-full bg-gray-200 group-hover:bg-gray-300">
+              <span
+                className={"block h-full rounded-full transition-all " + barColor({ active, hasError, pct })}
+                style={{ width: `${pct}%` }}
+              />
+            </span>
           </button>
         );
       })}

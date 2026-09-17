@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download, MoreVertical } from "lucide-react";
 import OasisField from "../engine/fields";
 import SectionNavigator from "../engine/SectionNavigator";
 import { filterVisibleFields } from "../engine/skipLogic";
@@ -40,6 +40,7 @@ function OasisFormShell({ schema }) {
   const [validation, setValidation] = useState({ errors: [], headline: "", topLevel: null });
   const [patientDetails, setPatientDetails] = useState(null);
   const [exportingXml, setExportingXml] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { status, saveToServer, loadFromServer, clearOnServer } = useOasisSaveLoad({
     formKey: schema.formKey,
@@ -195,12 +196,15 @@ function OasisFormShell({ schema }) {
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <h3 className="truncate font-semibold text-gray-800">
-          {schema.formKey}
-          {patientName ? ` — ${patientName}` : ""}
-        </h3>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-gray-800">{schema.title ?? schema.formKey}</p>
+          <p className="truncate text-[11px] text-gray-400">
+            {patientName ? `${patientName} · ` : ""}
+            {schema.formKey}
+          </p>
+        </div>
         {isReview && (
-          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
             Review
           </span>
         )}
@@ -210,38 +214,57 @@ function OasisFormShell({ schema }) {
           {status === "error" && <span className="text-xs text-red-600">Save failed</span>}
           <button
             type="button"
-            onClick={handleExportJson}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Export JSON
-          </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Import JSON
-          </button>
-          <button
-            type="button"
             onClick={handleExportXml}
             disabled={exportingXml}
-            className="rounded-md border border-blue-300 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
           >
-            {exportingXml ? "Exporting…" : "Export CMS XML"}
+            <Download size={13} />
+            {exportingXml ? "Exporting…" : "Export XML"}
           </button>
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-          >
-            Clear All
-          </button>
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+            >
+              <MoreVertical size={15} />
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 z-30 mt-1 w-44 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); handleExportJson(); }}
+                    className="block w-full px-3 py-2 text-left text-xs text-gray-600 hover:bg-gray-50"
+                  >
+                    Export JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); fileInputRef.current?.click(); }}
+                    className="block w-full px-3 py-2 text-left text-xs text-gray-600 hover:bg-gray-50"
+                  >
+                    Import JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); handleClearAll(); }}
+                    className="block w-full border-t border-gray-100 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleSave}
             disabled={status === "saving"}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-emerald-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
           >
             Save
           </button>
@@ -258,7 +281,17 @@ function OasisFormShell({ schema }) {
       {loading ? (
         <div className="p-6 text-sm text-gray-500">Loading…</div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
+          <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-3">
+            <SectionNavigator
+              sections={schema.sections}
+              activeSectionId={activeSection.id}
+              onSelect={setActiveSectionId}
+              answers={answers}
+              sectionsWithErrors={validationIndex.sectionIds}
+            />
+          </div>
+          <div className="p-4">
           <ValidationErrorPanel
             schema={schema}
             errors={validation.errors}
@@ -267,18 +300,11 @@ function OasisFormShell({ schema }) {
             onDismiss={dismissValidation}
             onJump={jumpToField}
           />
-          <SectionNavigator
-            sections={schema.sections}
-            activeSectionId={activeSection.id}
-            onSelect={setActiveSectionId}
-            answers={answers}
-            sectionsWithErrors={validationIndex.sectionIds}
-          />
           <FormProvider {...methods}>
             <ValidationProvider value={validationIndex}>
               <form onSubmit={(e) => e.preventDefault()}>
                 {schema.sections.map((section) => (
-                  <div key={section.id} hidden={section.id !== activeSection.id} className="divide-y">
+                  <div key={section.id} hidden={section.id !== activeSection.id} className="flex flex-col gap-3">
                     {filterVisibleFields(section.items, answers).map((field) => (
                       <OasisField key={field.fieldId ?? field.itemCode ?? field.label} field={field} />
                     ))}
@@ -287,6 +313,7 @@ function OasisFormShell({ schema }) {
               </form>
             </ValidationProvider>
           </FormProvider>
+          </div>
         </div>
       )}
     </div>

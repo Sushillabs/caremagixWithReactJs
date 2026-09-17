@@ -106,8 +106,12 @@ function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, b
         </label>
         <label className="space-y-1">
           <span className="text-[11px] text-gray-600">Diagnosis group</span>
-          <select value={draft.diagnosis_key} onChange={set("diagnosis_key")} className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs">
-            <option value="">None (free-standing)</option>
+          <select
+            value={draft.diagnosis_key}
+            onChange={set("diagnosis_key")}
+            className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-xs"
+          >
+            {/* <option value="">None (free-standing)</option> */}
             {diagnosisOptions.map((d) => (
               <option key={d.diagnosis_key} value={d.diagnosis_key}>
                 {d.label}
@@ -168,10 +172,20 @@ function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy
   return (
     <div className="flex items-start gap-2 rounded-md border border-gray-100 p-2 text-xs">
       <div className="flex flex-col">
-        <button type="button" disabled={!canMoveUp || busy} onClick={() => onMove(-1)} className="text-gray-300 hover:text-gray-600 disabled:opacity-30">
+        <button
+          type="button"
+          disabled={!canMoveUp || busy}
+          onClick={() => onMove(-1)}
+          className="text-gray-300 hover:text-gray-600 disabled:opacity-30"
+        >
           <ChevronUp size={14} />
         </button>
-        <button type="button" disabled={!canMoveDown || busy} onClick={() => onMove(1)} className="text-gray-300 hover:text-gray-600 disabled:opacity-30">
+        <button
+          type="button"
+          disabled={!canMoveDown || busy}
+          onClick={() => onMove(1)}
+          className="text-gray-300 hover:text-gray-600 disabled:opacity-30"
+        >
           <ChevronDown size={14} />
         </button>
       </div>
@@ -292,7 +306,10 @@ export default function WellnessQuestionEditor({ patientName }) {
     setBusy(true);
     setFormError(null);
     try {
-      const data = await reorderClinicianWellnessQuestions(patientKey, nextRows.map((q) => q.id));
+      const data = await reorderClinicianWellnessQuestions(
+        patientKey,
+        nextRows.map((q) => q.id)
+      );
       setPayload(data);
       setRows(data?.questions || nextRows);
     } catch (err) {
