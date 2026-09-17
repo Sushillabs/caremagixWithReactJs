@@ -30,6 +30,7 @@ export const FIELD_WIDGETS = {
   GG_MATRIX: 'gg-matrix',           // GG0130/GG0170 one-code-per-row table (§b)
   LIVING_GRID: 'living-grid',       // M1100 row×column radio grid, ROC only (§b)
   AI_ASSIST_TRIGGER: 'ai-assist-trigger', // non-data-bearing plugin trigger, e.g. SOC coding assistant (§1.16)
+  NOTICE: 'notice',                 // static prose block, no data field (PRA notice, GG code legend)
 };
 
 /**

@@ -1,5 +1,7 @@
 import { FIELD_WIDGETS } from "../engine/schema";
-import { YES_NO } from "./shared/optionSets";
+import { YES_NO, GG_CODE_LEGEND } from "./shared/optionSets";
+
+const GG_SKIP_CODES = ["07", "09", "10", "88"];
 
 // FU (Follow-up) — the smallest of the 6 forms: 6 sections, no wizard extras, no
 // coding-assistant. Transcribed directly from caremagix-fe/oasis-fu.html (Phase 1
@@ -91,11 +93,44 @@ const gFunctionalItems = [
 export const fuSchema = {
   formKey: "OASIS-E2-FU",
   formType: "FU",
+  skipMarks: [
+    { when: (d) => GG_SKIP_CODES.includes(d.GG0170_I), mark: ["GG0170_J", "GG0170_L"] },
+    { when: (d) => GG_SKIP_CODES.includes(d.GG0170_M), mark: ["GG0170_N"] },
+    { when: (d) => d.GG0170Q === "0", mark: ["GG0170_R"] },
+  ],
   sections: [
     {
       id: "cover",
       label: "Cover",
-      items: [], // PRA notice only — no clinical fields, matches legacy's cover page
+      items: [
+        {
+          itemCode: "COVER-HEADER",
+          widget: FIELD_WIDGETS.NOTICE,
+          title: "OASIS-E2 Follow-up (FU) Assessment",
+          lines: [
+            "Outcome and Assessment Information Set · Version E2",
+            "Effective: 04/01/2026",
+            "Agency: Centers for Medicare & Medicaid Services",
+            "Form: Pages 1–6 of 6",
+          ],
+        },
+        {
+          itemCode: "PRA-NOTICE",
+          widget: FIELD_WIDGETS.NOTICE,
+          title: "Paperwork Reduction Act Disclosure",
+          lines: [
+            "According to the Paperwork Reduction Act of 1995, no persons are required to respond to a collection of information unless it displays a valid OMB control number. The valid OMB control number for this information collection is XXXX-XXXX. The time required to complete this information collection is estimated to be XX minutes per data element, including the time to review instructions, search existing data resources, gather the data needed, and complete and review the information collection.",
+          ],
+        },
+        {
+          itemCode: "CMS-DISCLAIMER",
+          widget: FIELD_WIDGETS.NOTICE,
+          variant: "warn",
+          lines: [
+            "CMS Disclaimer: Please do not send applications, claims, payments, medical records or any documents containing sensitive information to the PRA Reports Clearance Office.",
+          ],
+        },
+      ],
     },
     {
       id: "A",
@@ -120,13 +155,13 @@ export const fuSchema = {
           label: "This Assessment is Currently Being Completed for the Following Reason",
           widget: FIELD_WIDGETS.CODED_RADIO, maxLength: 2,
           options: [
-            { value: "1", label: "Start of care — further visits planned" },
+            { value: "1", label: "Start of care — further visits planned", groupLabel: "Start/Resumption of Care" },
             { value: "3", label: "Resumption of Care (after inpatient stay)" },
-            { value: "4", label: "Recertification (follow-up) reassessment" },
+            { value: "4", label: "Recertification (follow-up) reassessment", groupLabel: "Follow-up" },
             { value: "5", label: "Other follow-up" },
-            { value: "6", label: "Transferred to an inpatient facility — patient not discharged from agency" },
+            { value: "6", label: "Transferred to an inpatient facility — patient not discharged from agency", groupLabel: "Transfer to an Inpatient Facility" },
             { value: "7", label: "Transferred to an inpatient facility — patient discharged from agency" },
-            { value: "8", label: "Death at home" },
+            { value: "8", label: "Death at home", groupLabel: "Discharge from Agency — Not to an Inpatient Facility" },
             { value: "9", label: "Discharge from agency" },
           ],
         },
@@ -141,6 +176,11 @@ export const fuSchema = {
       id: "GG",
       label: "GG · Abilities",
       items: [
+        {
+          itemCode: "GG-LEGEND",
+          widget: FIELD_WIDGETS.NOTICE,
+          lines: [GG_CODE_LEGEND],
+        },
         {
           itemCode: "GG0130", label: "GG0130 — Self-Care (Follow-up Performance)",
           widget: FIELD_WIDGETS.GG_MATRIX, columnLabel: "Code (01–06, 07, 09, 10, 88)",
@@ -178,7 +218,9 @@ export const fuSchema = {
       items: [
         {
           itemCode: "M1033",
-          label: "Risk for Hospitalization — Check all that apply",
+          label: "Risk for Hospitalization",
+          description:
+            "Which of the following signs or symptoms characterize this patient as at risk for hospitalization? Check all that apply.",
           widget: FIELD_WIDGETS.CHECKBOX_GROUP, layout: "two-col",
           checkboxOptions: [
             { fieldId: "M1033_HOSP_RISK_HSTRY_FALLS", itemCode: "M1033_HOSP_RISK_HSTRY_FALLS", label: "1. History of falls (2 or more falls — or any fall with an injury — in the past 12 months)" },
@@ -202,6 +244,7 @@ export const fuSchema = {
         {
           itemCode: "M1306", fieldId: "M1306",
           label: "Does this patient have at least one Unhealed Pressure Ulcer/Injury at Stage 2 or Higher or designated as Unstageable?",
+          description: "Excludes Stage 1 pressure injuries and all healed pressure ulcers/injuries.",
           widget: FIELD_WIDGETS.CODED_RADIO, maxLength: 1,
           options: YES_NO,
         },

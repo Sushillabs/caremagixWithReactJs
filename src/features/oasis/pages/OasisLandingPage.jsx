@@ -39,7 +39,7 @@ export default function OasisLandingPage() {
       patient_id: patient.patient_id || "",
       patient_name: patient.patient_name || "",
     });
-    // navigate(`/app/oasis/patient?${params.toString()}`);
+    navigate(`/app/oasis/patient?${params.toString()}`);
   };
 
   return (

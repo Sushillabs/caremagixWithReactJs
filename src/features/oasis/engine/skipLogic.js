@@ -12,3 +12,16 @@ export function isFieldSkipped(field, answers) {
 export function filterVisibleFields(fields, answers) {
   return fields.filter((field) => !isFieldSkipped(field, answers));
 }
+
+export const SKIP_MARK = "^";
+
+// Rules run in order against the accumulating result, so later rules see earlier marks.
+export function applySkipMarks(schema, values) {
+  const marked = { ...values };
+  for (const rule of schema?.skipMarks ?? []) {
+    if (rule.when(marked)) {
+      for (const fieldId of rule.mark) marked[fieldId] = SKIP_MARK;
+    }
+  }
+  return marked;
+}

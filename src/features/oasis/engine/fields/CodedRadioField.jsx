@@ -25,19 +25,24 @@ export default function CodedRadioField({ field }) {
           </div>
           <div className="space-y-1">
             {field.options?.map((opt) => (
-              <label key={opt.value} className="flex items-start gap-2 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name={field.fieldId}
-                  checked={value === opt.value}
-                  onChange={() => onChange(opt.value)}
-                  className="mt-1"
-                />
-                <span>
-                  <span className="font-mono mr-1">{opt.value}.</span>
-                  {opt.label}
-                </span>
-              </label>
+              <div key={opt.value}>
+                {opt.groupLabel && (
+                  <p className="mt-2 mb-1 font-mono text-xs uppercase tracking-wide text-gray-400">{opt.groupLabel}</p>
+                )}
+                <label className="flex items-start gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name={field.fieldId}
+                    checked={value === opt.value}
+                    onChange={() => onChange(opt.value)}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="font-mono mr-1">{opt.value}.</span>
+                    {opt.label}
+                  </span>
+                </label>
+              </div>
             ))}
           </div>
         </FieldShell>

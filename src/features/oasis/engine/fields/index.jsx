@@ -13,6 +13,7 @@ import ButtonGroupField from "./ButtonGroupField";
 import GgMatrixField from "./GgMatrixField";
 import LivingGridField from "./LivingGridField";
 import AiAssistTriggerField from "./AiAssistTriggerField";
+import NoticeField from "./NoticeField";
 
 // One component per widget kind (§(a) of the field inventory) — the field registry
 // the schema-driven engine dispatches against. Adding a 14th widget kind means adding
@@ -32,6 +33,7 @@ export const FIELD_COMPONENTS = {
   [FIELD_WIDGETS.GG_MATRIX]: GgMatrixField,
   [FIELD_WIDGETS.LIVING_GRID]: LivingGridField,
   [FIELD_WIDGETS.AI_ASSIST_TRIGGER]: AiAssistTriggerField,
+  [FIELD_WIDGETS.NOTICE]: NoticeField,
 };
 
 // Dispatcher every section renderer uses: <OasisField field={fieldDef} />.
