@@ -31,7 +31,7 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
             type="button"
             onClick={() => onSelect(section.id)}
             className={
-              "group flex min-w-[104px] cursor-pointer flex-col gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 " +
+              "group flex min-w-[104px] cursor-pointer flex-col gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus:ring-emerald-500/40 " +
               (active ? "bg-emerald-50/70 hover:bg-emerald-50" : "hover:bg-gray-100")
             }
           >
@@ -39,11 +39,7 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
               <span
                 className={
                   "text-xs " +
-                  (hasError
-                    ? "font-semibold text-red-600"
-                    : active
-                    ? "font-semibold text-emerald-700"
-                    : "text-gray-500 group-hover:text-gray-700")
+                  (hasError ? "font-semibold text-red-600" : active ? "font-semibold text-emerald-700" : "text-gray-500 group-hover:text-gray-700")
                 }
               >
                 {section.label}
@@ -52,10 +48,7 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
               {hasError && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
             </span>
             <span className="h-[3px] w-full overflow-hidden rounded-full bg-gray-200 group-hover:bg-gray-300">
-              <span
-                className={"block h-full rounded-full transition-all " + barColor({ active, hasError, pct })}
-                style={{ width: `${pct}%` }}
-              />
+              <span className={"block h-full rounded-full transition-all " + barColor({ active, hasError, pct })} style={{ width: `${pct}%` }} />
             </span>
           </button>
         );
