@@ -7,6 +7,7 @@ import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
+import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
 import MyAppointmentsTab from "./MyAppointmentsTab";
 import {
   appointmentChat,
@@ -194,6 +195,7 @@ export default function AppointmentsPanel({ initialTab }) {
 
   const handleStart = () => {
     setStarted(true);
+    voice.start()?.catch(() => {});
     sendMessage(KICKOFF_MESSAGE);
   };
 
@@ -219,6 +221,7 @@ export default function AppointmentsPanel({ initialTab }) {
     await reset();
     setBookingConfirmed(false);
     setSelectedPhysicianId(null);
+    voice.start()?.catch(() => {});
     sendMessage(KICKOFF_MESSAGE, { physician_user_id: undefined });
   };
 
@@ -250,7 +253,10 @@ export default function AppointmentsPanel({ initialTab }) {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => {
+                  if (tab.key !== "book" && voice.isActive) voice.stop();
+                  setActiveTab(tab.key);
+                }}
                 className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
               >
                 {tab.label}
@@ -259,6 +265,7 @@ export default function AppointmentsPanel({ initialTab }) {
             {activeTab === "book" && started && (
               <>
                 <VoiceToggleButton voice={voice} />
+                <ConversationHoldToggle voice={voice} />
                 <button
                   type="button"
                   onClick={handleStartOver}

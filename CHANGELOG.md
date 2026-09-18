@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Physician booking: Pause Now / Start Now
+
+Pause/Start Now toggle on the patient booking chat (`AppointmentsPanel.jsx`).
+Voice now auto-starts on chat start and Start New Session; switching to My
+Appointments stops the mic.
+
 #### Added — Wellness check-in: question editor for physicians
 
 New `wellnessQuestionEditor` role flag + "Wellness Check-in Questions" nav
