@@ -15,6 +15,7 @@ import EditTemplate from "../../components/EditTemplate";
 import useCan from "../../hooks/useCan";
 import WellnessCheckInPanel from "../wellness/WellnessCheckInPanel";
 import WellnessCaregiverPanel from "../wellness/WellnessCaregiverPanel";
+import WellnessQuestionsPanel from "../wellness/WellnessQuestionsPanel";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
 import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
 import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
@@ -126,6 +127,7 @@ export default function PatientDetails() {
   const canWellnessCheckIn = useCan("wellnessCheckIn");
   const canBookAppointment = useCan("bookAppointment");
   const canWellnessCheckInReport = useCan("wellnessCheckInReport");
+  const canWellnessQuestionEditor = useCan("wellnessQuestionEditor");
   const canCreateProgressNote = useCan("createProgressNotes");
   const canTimeline = useCan("timeline");
   const canSendMessage = useCan("sendMessage");
@@ -393,6 +395,16 @@ export default function PatientDetails() {
               Wellness Check-in Report
             </button>
           )}
+
+          {canWellnessQuestionEditor && (
+            <button
+              type="button"
+              onClick={() => setActivePanel("wellnessQuestions")}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Wellness Check-in Questions
+            </button>
+          )}
           {/* {canCreateProgressNote && (
             <button
               type="button"
@@ -411,6 +423,8 @@ export default function PatientDetails() {
         <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
+      ) : activePanel === "wellnessQuestions" ? (
+        <WellnessQuestionsPanel patientName={patient?.name} />
       ) : activePanel === "timeline" ? (
         <PatientTimelinePanel />
       ) : activePanel === "ambientAi" ? (

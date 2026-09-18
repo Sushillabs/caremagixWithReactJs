@@ -5,39 +5,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
-#### Added — OASIS: schema-driven form engine, proven on Follow-up (FU)
-
-New `src/features/oasis/` engine: a form is a schema (`fu.schema.js`), not a
-page. Field registry (15 widgets), skip-logic, section nav with progress,
-autosave + save/load, fill/review mode. `OasisFormPage.jsx` renders any form
-from its schema against `save_oasis_json` / `get_oasis_json`.
-
-#### Added — OASIS: sidebar section, patient list, Fill Wizard
-
-New "OASIS" sidebar entry (`/app/oasis`) — its own section, not under a
-patient, since the wizard can register someone the Patients list doesn't have
-yet. Patient list → per-patient page with the 6 form types as cards
-(`OasisPatientDetailPage.jsx`). 3-step Fill Wizard (picker → OTP → prefill
-demographics), plus standalone Edit Patient Details reusing step 3.
-
-#### Added — OASIS: JSON export/import, Clear All, CMS XML export, validation panel
-
-Form Shell header actions, shared by all six forms. Export/Import JSON,
-Clear All (`POST /clear_oasis_json`), and Export CMS XML
-(`POST /download_oasis_xml`, auth-fetches the returned `xml_url`). Backend
-validation errors render in a shared panel with per-field inline messages,
-section error markers and jump-to-field.
-
-#### Fixed — OASIS: skipped fields were not marked in saved data
-
-Legacy writes `^` into fields the GG skip patterns bypass
-(`applySkipPatternsToRaw_FU`); React sent the raw values, so identical input
-produced different saved data. Skip rules are now schema data
-(`skipMarks`) applied by the engine. Payload is also derived from the schema
-rather than from registered inputs, so untouched fields still ship as `""` —
-the backend replaces rather than merges, so a missing key silently dropped
-stored data.
-
 #### Added — Dashboard: Uploads and Active Care Plans open real lists
 
 New modals (`DashboardDocumentsModal.jsx`, `DashboardCarePlansModal.jsx`) backed

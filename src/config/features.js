@@ -18,6 +18,7 @@ export const FEATURE_ROLES = {
   wellnessCheckIn: ["patient"],
   bookAppointment: ["patient"],
   wellnessCheckInReport: ["caregiver"],
+  wellnessQuestionEditor: ["physician"],
   createProgressNotes: ["physician"],
   timeline: ["physician"],
   ambientVisitNotes: ["physician"],

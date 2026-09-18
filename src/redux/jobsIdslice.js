@@ -11,6 +11,7 @@ const jobsIdSlice = createSlice({
         // polled separately from Group A's shared /ocr-progress endpoint.
         pccJobs: [],
         epicJobs: [],
+        epicUserJobs: [],
         metriportJobs: [],
     },
     reducers: {
@@ -35,6 +36,10 @@ const jobsIdSlice = createSlice({
                 state.epicJobs.push(action.payload.epicJobs);
             }
 
+            if (action.payload?.epicUserJobs && typeof action.payload.epicUserJobs === "object") {
+                state.epicUserJobs.push(action.payload.epicUserJobs);
+            }
+
             if (action.payload?.metriportJobs && typeof action.payload.metriportJobs === "object") {
                 state.metriportJobs.push(action.payload.metriportJobs);
             }
@@ -45,6 +50,7 @@ const jobsIdSlice = createSlice({
             state.carePlanJobs = [];
             state.pccJobs = [];
             state.epicJobs = [];
+            state.epicUserJobs = [];
             state.metriportJobs = [];
         }
     }

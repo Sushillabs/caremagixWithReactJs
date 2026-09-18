@@ -65,6 +65,26 @@ export const getPccData = () => http.get("/get_pcc_data", { withAuth: true });
 export const getPccDataStatus = (jobId) => http.get(`/get_pcc_data/status/${jobId}`, { withAuth: true });
 export const pullEpicData = () => http.get("/ehr_pull", { withAuth: true });
 export const getEpicPullStatus = (jobId) => http.get(`/ehr_pull/status/${jobId}`, { withAuth: true });
+
+// Epic SMART user-connect (v1) — caregiver signs into their own Epic account.
+// Separate from /ehr_pull above, which uses the shared backend-services app.
+export const getEpicConnectConfig = () => http.get("/v1/epic/config", { withAuth: true });
+export const getEpicConnection = () => http.get("/v1/epic/connection", { withAuth: true });
+// Backend defaults the return URL to the old caregiver-view.html, so always pass ours.
+export const startEpicConnect = (frontendRedirect) =>
+  http.get(`/v1/epic/connect/start?frontend_redirect=${encodeURIComponent(frontendRedirect)}`, { withAuth: true });
+export const disconnectEpic = () => http.delete("/v1/epic/connection", { withAuth: true });
+export const searchEpicPatients = ({ family, given, birthdate, name, _count = 20 } = {}) => {
+  const params = new URLSearchParams();
+  if (family) params.set("family", family);
+  if (given) params.set("given", given);
+  if (birthdate) params.set("birthdate", birthdate);
+  if (name) params.set("name", name);
+  params.set("_count", _count);
+  return http.get(`/v1/epic/patients?${params.toString()}`, { withAuth: true });
+};
+export const startEpicUserPull = (body = {}) => http.post("/v1/epic/pull", body, { withAuth: true });
+export const getEpicUserPullStatus = (jobId) => http.get(`/v1/epic/pull/${jobId}`, { withAuth: true });
 export const getMetriportFacility = () => http.get("/get-facility", { withAuth: true });
 export const createMetriportFacility = (data) => http.post("/create-facility", data, { withAuth: true });
 export const updateMetriportFacility = (data) => http.put("/update-facility", data, { withAuth: true });

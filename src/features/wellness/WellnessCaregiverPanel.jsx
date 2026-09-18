@@ -13,11 +13,6 @@ const TABS = [
   // { key: "plan", label: "Plan" },
 ];
 
-// Plan editing lives here instead of on the patient side now — but there's
-// no backend route yet for a caregiver to update another user's profile
-// (only PATCH /hf-wellness/profile, which always targets current_user).
-// Stubbed until that route exists; WellnessPlanTab's own error UI surfaces
-// this via its onSave catch.
 async function saveNotYetSupported() {
   throw new Error("Saving isn't available yet — this will be wired up once the caregiver profile-update API exists.");
 }
@@ -26,9 +21,6 @@ export default function WellnessCaregiverPanel() {
   const [activeTab, setActiveTab] = useState("trends");
   const { setAssistantHidden } = useOutletContext() || {};
 
-  // Read-only report — hide the shared AiCareAssistant docked bar while it's
-  // mounted, same as WellnessCheckInPanel/AppointmentsPanel (no chat/input
-  // here at all, so the bar has nothing useful to do).
   useEffect(() => {
     setAssistantHidden?.(true);
     return () => setAssistantHidden?.(false);

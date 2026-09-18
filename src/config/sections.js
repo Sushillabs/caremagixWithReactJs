@@ -145,6 +145,7 @@ export const SECTIONS = {
       { key: "connectMetriport", label: "Connect Metriport", roles: ["caregiver"] },
       { key: "pullMetriport", label: "Pull Metriport Data", roles: ["caregiver"] },
       { key: "pullEpic", label: "Pull Epic Data", roles: ["caregiver"] },
+      { key: "connectEpic", label: "Connect Epic (My Login)", roles: ["caregiver"] },
       { key: "efaxConfig", label: "Pull eFax Data", roles: ["caregiver"] },
       { key: "pullEhr", label: "Pull EHR Data", roles: ["physician"] },
     ],
