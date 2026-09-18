@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Changed — Wellness check-in: urgent visit bar
+
+Handoff panel moved out of the chat into a fixed bar above the composer
+(`WellnessCheckInPanel.jsx`). Request urgent visit opens Book Physician
+Visit; Not now dismisses. Patient "Start New Session" renamed "Resume Session".
+
 #### Added — Physician booking: Pause Now / Start Now
 
 Pause/Start Now toggle on the patient booking chat (`AppointmentsPanel.jsx`).

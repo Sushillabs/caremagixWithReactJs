@@ -102,9 +102,7 @@ const MAX_PROGRESS_CHIPS = 8;
 // Tracks all active questions ("N of M answered"); core questions get a * so
 // the patient knows which the coach chases first.
 function ProgressChecklist({ questions, checkIn }) {
-  const list = Array.isArray(questions)
-    ? [...questions].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    : [];
+  const list = Array.isArray(questions) ? [...questions].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)) : [];
   if (!list.length) return null;
 
   const answeredCount = list.filter((q) => isQuestionAnswered(q, checkIn)).length;
@@ -147,25 +145,21 @@ function CompletionBanner() {
   );
 }
 
-function HandoffPanel({ alert, onAction }) {
-  if (!alert) return null;
+function HandoffPanel({ handoff, onRequestVisit, onDismiss }) {
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-      <span className="font-medium">{alert.message || "This may need prompt attention."}</span>
+    <div className="shrink-0 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
       <div className="ml-auto flex gap-2">
-        <a href="tel:911" className="rounded-md bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-700">
-          Call 911
-        </a>
-        <button
-          type="button"
-          onClick={() => onAction(alert.id, "handed_off")}
-          className="rounded-md bg-amber-600 px-2 py-1 font-medium text-white hover:bg-amber-700"
-        >
+        {/* {handoff.call_emergency_services && (
+          <a href="tel:911" className="rounded-md bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-700">
+            Call 911
+          </a>
+        )} */}
+        <button type="button" onClick={onRequestVisit} className="rounded-md bg-amber-600 px-2 py-1 font-medium text-white hover:bg-amber-700">
           Request urgent visit
         </button>
         <button
           type="button"
-          onClick={() => onAction(alert.id, "dismissed")}
+          onClick={onDismiss}
           className="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-700 hover:bg-amber-100"
         >
           Not now
@@ -178,7 +172,7 @@ function HandoffPanel({ alert, onAction }) {
 // initialTab: which TABS key to land on — set by PatientDetails from ?tab=
 // (e.g. the dashboard's Wellness Streak card links straight to "trends").
 // Falls back to the default "checkin" tab for anything else, including no prop at all.
-export default function WellnessCheckInPanel({ initialTab }) {
+export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   const [activeTab, setActiveTab] = useState(TABS.some((t) => t.key === initialTab) ? initialTab : "checkin");
   // Gates the checkin tab's chat behind a tap-to-start mic screen, same
   // pattern as VisitNotesAI — Trends/Baseline stay independent, fed by their
@@ -277,11 +271,20 @@ export default function WellnessCheckInPanel({ initialTab }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
-  const handleAlertAction = (alertId, status) => {
-    // TODO(Phase 3): "handed_off" should hand off into Book Appointment's
-    // chat, prefilled from this alert — same cross-feature link the legacy
-    // backend already wires (escalation.py).
-    wellnessAlertAction(alertId, { status }).catch(() => {});
+  const [closedAlertId, setClosedAlertId] = useState(null);
+  const handoffAlert = lastResponse?.handoff ? lastResponse.alert : null;
+  const showHandoff = !!handoffAlert && handoffAlert.id !== closedAlertId;
+
+  const closeHandoff = (status) => {
+    setClosedAlertId(handoffAlert.id);
+    wellnessAlertAction(handoffAlert.id, { status }).catch(() => {});
+  };
+
+  const handleRequestVisit = () => {
+    closeHandoff("handed_off");
+    speakAbortRef.current?.abort();
+    if (voice.isActive) voice.stop();
+    onRequestVisit?.();
   };
 
   const handleStartOver = async () => {
@@ -332,7 +335,7 @@ export default function WellnessCheckInPanel({ initialTab }) {
                   className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <RotateCcw size={12} />
-                  Start New Session
+                  Resume Session
                 </button>
               </>
             )}
@@ -356,12 +359,7 @@ export default function WellnessCheckInPanel({ initialTab }) {
                 onQuickReply={(option) => send(option)}
                 emptyState="Loading your check-in..."
                 liveText={voice.transcript}
-                renderExtra={(meta) => (
-                  <>
-                    <HandoffPanel alert={meta?.handoff ? meta.alert : null} onAction={handleAlertAction} />
-                    {meta?.status === "check_in_complete" && <CompletionBanner />}
-                  </>
-                )}
+                renderExtra={(meta) => meta?.status === "check_in_complete" && <CompletionBanner />}
               />
             </>
           ) : (
@@ -386,6 +384,10 @@ export default function WellnessCheckInPanel({ initialTab }) {
             Answer now
           </button>
         </div>
+      )}
+
+      {activeTab === "checkin" && started && showHandoff && (
+        <HandoffPanel handoff={lastResponse.handoff} onRequestVisit={handleRequestVisit} onDismiss={() => closeHandoff("dismissed")} />
       )}
 
       {activeTab === "checkin" && started && (

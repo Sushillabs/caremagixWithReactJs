@@ -418,7 +418,10 @@ export default function PatientDetails() {
       </div>
 
       {activePanel === "wellness" ? (
-        <WellnessCheckInPanel initialTab={initialPanelTab} />
+        <WellnessCheckInPanel
+          initialTab={initialPanelTab}
+          onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined}
+        />
       ) : activePanel === "appointments" ? (
         <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
