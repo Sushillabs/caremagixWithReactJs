@@ -7,7 +7,7 @@ import { Mic, Send, Volume2 } from "lucide-react";
 // rather than a shell-docked bar, since it sits inline in the page instead
 // of pinned to the AppShell chrome. Takes onSubmit and reflects whatever
 // voice state the caller passes in from useDeepgramVoice.
-export default function AgentChatComposer({ onSubmit, disabled, placeholder = "Type or tap the microphone to talk continuously.", voice }) {
+export default function AgentChatComposer({ onSubmit, disabled, placeholder = "Type or tap the microphone to talk continuously.", voice, onMicToggle }) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e) => {
@@ -35,7 +35,7 @@ export default function AgentChatComposer({ onSubmit, disabled, placeholder = "T
         {voice && (
           <button
             type="button"
-            onClick={voice.toggle}
+            onClick={onMicToggle || voice.toggle}
             disabled={disabled}
             title={micLabel}
             aria-pressed={micActive}

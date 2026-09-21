@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { HeartPulse, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
+import useVoiceTurnLock from "../../hooks/useVoiceTurnLock";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
@@ -178,6 +179,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   // pattern as VisitNotesAI — Trends/Baseline stay independent, fed by their
   // own dashboard fetch below, not blocked by this.
   const [started, setStarted] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
   const { setAssistantHidden } = useOutletContext() || {};
 
   // This panel has its own composer (below) instead of the shared
@@ -214,30 +216,35 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     fetchToken: getWellnessVoiceToken,
     onUtterance: (text) => send(text, { source: "voice" }),
   });
+  const pendingRef = useVoiceTurnLock(voice, { pending, error });
+  const micOnRef = useRef(false);
+  micOnRef.current = voice.isActive;
 
   // Streams the reply's audio as it's generated, falling back to a plain
   // base64 clip on genuine failure (not on a user-triggered interrupt).
+  // Replies stay text-only while the check-in is stopped.
   const speakAbortRef = useRef(null);
-  const speak = async (text) => {
-    if (!text) return;
+  const speak = async (text, { force = false } = {}) => {
+    if (!text || (!force && !micOnRef.current)) return;
     const controller = new AbortController();
     speakAbortRef.current = controller;
     try {
       const res = await wellnessSpeakStream(text, controller.signal);
       if (!res.ok || !res.body) throw new Error("stream failed");
+      if (!force && !micOnRef.current) return;
       await voice.playStream(res);
     } catch (err) {
       if (err?.name !== "AbortError") {
         try {
           const data = await wellnessSpeakBase64(text);
-          if (data?.audio_base64) await voice.playReply(data.audio_base64, data.audio_content_type);
+          if (data?.audio_base64 && (force || micOnRef.current)) await voice.playReply(data.audio_base64, data.audio_content_type);
         } catch {
           /* text is already shown either way — give up on audio silently */
         }
       }
     } finally {
       if (speakAbortRef.current === controller) speakAbortRef.current = null;
-      voice.resumeAfterTurn();
+      if (!pendingRef.current) voice.resumeAfterTurn();
     }
   };
 
@@ -253,13 +260,33 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
 
   const handleStart = async () => {
     setStarted(true);
-    // Start the voice session right away, same as VisitNotesAI — otherwise
-    // the mic never goes active until the user separately taps Start
-    // Conversation, and voice.isActive-gated UI (Answer now, the Pause
-    // Now/Start Now hold toggle) stays hidden by default until then.
-    voice.start();
-    const res = await hydrateHistory();
-    if (!res?.chat_history?.length) send(KICKOFF_MESSAGE);
+    await hydrateHistory();
+  };
+
+  const lastAssistantText = [...turns].reverse().find((t) => t.role === "assistant" && typeof t.content === "string")?.content;
+
+  const beginCheckIn = () => {
+    setConversationStarted(true);
+    voice.start()?.catch(() => {});
+    if (turns.length) speak(lastAssistantText, { force: true });
+    else send(KICKOFF_MESSAGE);
+  };
+
+  const stopCheckIn = () => {
+    speakAbortRef.current?.abort();
+    voice.stop();
+  };
+
+  const toggleCheckIn = () => (voice.isActive ? stopCheckIn() : beginCheckIn());
+
+  const handleHoldToggle = () => {
+    if (voice.isActive) {
+      if (voice.isPaused) voice.resumeListening();
+      else voice.pauseListening();
+    } else {
+      voice.start()?.catch(() => {});
+      speak(lastAssistantText, { force: true });
+    }
   };
 
   // Speak the assistant's reply when the turn came from voice input.
@@ -267,6 +294,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   // legacy's "reloads dashboard quietly if check_in was recorded".
   useEffect(() => {
     if (lastResponse?.message) speak(lastResponse.message);
+    else if (lastResponse) voice.resumeAfterTurn();
     if (lastResponse?.check_in) refreshDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
@@ -289,9 +317,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
 
   const handleStartOver = async () => {
     if (pending) return;
+    speakAbortRef.current?.abort();
+    setConversationStarted(true);
     if (voice.isActive) voice.stop();
     await reset();
-    voice.start();
+    voice.start()?.catch(() => {});
     // reset() clears historyLoaded back to false, and AgentChatThread's
     // pending indicator is `pending || !historyLoaded` — without
     // re-hydrating here it stays stuck showing "Thinking" forever, even
@@ -325,8 +355,23 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
             ))}
             {activeTab === "checkin" && started && (
               <>
-                <VoiceToggleButton voice={voice} />
-                <ConversationHoldToggle voice={voice} />
+                {!voice.isPaused && (
+                  <VoiceToggleButton
+                    voice={voice}
+                    startLabel={conversationStarted ? "Mic Off" : "Start Wellness Check-in"}
+                    stopLabel="Mic On"
+                    onToggle={toggleCheckIn}
+                    disabled={!historyLoaded}
+                  />
+                )}
+                {conversationStarted && (
+                  <ConversationHoldToggle
+                    voice={voice}
+                    showWhenIdle
+                    speaking={voice.isActive && !voice.isPaused}
+                    onToggle={handleHoldToggle}
+                  />
+                )}
                 <button
                   type="button"
                   onClick={handleStartOver}
@@ -335,7 +380,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
                   className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <RotateCcw size={12} />
-                  Resume Session
+                  Start a New Session
                 </button>
               </>
             )}
@@ -357,7 +402,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
                 error={error}
                 quickReplies={lastResponse?.follow_up_question?.options}
                 onQuickReply={(option) => send(option)}
-                emptyState="Loading your check-in..."
+                emptyState="Tap Start Wellness Check-in to begin."
                 liveText={voice.transcript}
                 renderExtra={(meta) => meta?.status === "check_in_complete" && <CompletionBanner />}
               />
@@ -395,7 +440,8 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
           onSubmit={(text) => send(text)}
           disabled={pending}
           placeholder="Tell me your morning weight and how you are feeling. Type, or tap the microphone to talk continuously."
-          voice={voice}
+          voice={voice.isPaused ? null : voice}
+          onMicToggle={toggleCheckIn}
         />
       )}
     </div>
