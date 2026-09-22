@@ -22,6 +22,7 @@ const chatSlice = createSlice({
     error: null,
     isAskPending: false,
     mode: 'discharge',
+    chatId: 0,
   },
     reducers: {
         addQconversation: (state, action) => {
@@ -32,6 +33,8 @@ const chatSlice = createSlice({
         // },
         clearChat: (state) => {
             state.value = [];
+            state.chatId += 1;
+            state.isAskPending = false;
         },
         setAskPending: (state, action) => {
             state.isAskPending = action.payload;

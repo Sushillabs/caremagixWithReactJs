@@ -1,20 +1,22 @@
 // hooks/useAskQuestion.js
 import { useMutation } from '@tanstack/react-query';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { addQconversation , setAskPending} from '../redux/chatSlice';
 import { askAPI } from '../api/hospitalApi'; 
 
 const useAskQuestion = () => {
   const dispatch = useDispatch();
+  const store = useStore();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector(state => state.askQ.value); 
 
   const { mutate, isPending, isError, error } = useMutation({
-    mutationFn: askAPI,
+    mutationFn: ({ chatId, ...data }) => askAPI(data),
     onMutate: () => {
       dispatch(setAskPending(true));
     },
     onSuccess: (res, variables) => {
+      if (variables.chatId !== store.getState().askQ.chatId) return;
       const parts = variables.meta.content.parts;
       const latestConversation = [
         ...parts,
@@ -49,7 +51,7 @@ const useAskQuestion = () => {
       },
     };
 
-    mutate(askQPayload);
+    mutate({ ...askQPayload, chatId: store.getState().askQ.chatId });
     console.log("askPayload", askQPayload);
   };
 

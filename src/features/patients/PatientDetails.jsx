@@ -100,6 +100,7 @@ export default function PatientDetails() {
   const [activePanel, setActivePanel] = useState(() => searchParams.get("panel"));
   const initialPanelTab = searchParams.get("tab");
 
+  const [homeKey, setHomeKey] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
   const singleData = useSelector((state) => state.patientsingledata?.value);
@@ -141,6 +142,9 @@ export default function PatientDetails() {
 
   const handleHome = () => {
     setActivePanel(null);
+    dispatch(clearChat());
+    dispatch(setMode("discharge"));
+    setHomeKey((k) => k + 1);
     navigate(".");
   };
 
@@ -435,7 +439,7 @@ export default function PatientDetails() {
       ) : activePanel === "createProgress" ? (
         <TherapyProgressNotePanel patientName={patient?.name} />
       ) : (
-        <Outlet />
+        <Outlet key={homeKey} />
       )}
 
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
