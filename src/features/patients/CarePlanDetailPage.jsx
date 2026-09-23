@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle, X, AlertTriangle } from "lucide-react";
 import useCarePlan from "../../hooks/useCarePlan";
 import useCarePlanStatus from "../../hooks/useCarePlanStatus";
 import { getCarePlan, updateCarePlan, exportCarePlanPdf } from "../../api/hospitalApi";
@@ -538,13 +538,14 @@ export default function CarePlanDetailPage() {
   };
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showSaveFirstModal, setShowSaveFirstModal] = useState(false);
   const handleGeneratePdf = async () => {
     if (!effectiveCarePlanId) return;
-    // The PDF always comes from what's saved on the server — auto-save any
-    // pending local edits first so it never reflects a stale version.
+    // The PDF always comes from what's saved on the server, so unsaved edits
+    // get a prompt instead of being auto-saved here.
     if (hasUnsavedChanges) {
-      const saved = await handleSaveCarePlan();
-      if (!saved) return; // save already showed an error toast — don't export a stale/unsaved plan
+      setShowSaveFirstModal(true);
+      return;
     }
     setIsGeneratingPdf(true);
     try {
@@ -777,6 +778,45 @@ export default function CarePlanDetailPage() {
           </>
         )}
       </div>
+
+      {showSaveFirstModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-[340px] rounded-2xl bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <h2 className="text-sm font-semibold text-emerald-700">Unsaved Changes</h2>
+              <button type="button" onClick={() => setShowSaveFirstModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                <X size={16} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="space-y-4 p-4">
+              <div className="flex items-start gap-2 text-sm text-gray-700">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
+                <p>Save the care plan first. The PDF is created from the saved version.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSaveFirstModal(false)}
+                  className="flex-1 rounded-md border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSaveFirstModal(false);
+                    handleSaveCarePlan();
+                  }}
+                  disabled={isSavingPlan || isMidEdit}
+                  className="flex-1 rounded-md bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Save Care Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
