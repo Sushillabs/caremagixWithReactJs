@@ -14,6 +14,7 @@ export default function TopBar({
   onSearchChange,
   showSearch,
   notifOpen,
+  notifExpand,
   notifications,
   unreadCount,
   onToggleNotifications,
@@ -92,6 +93,8 @@ export default function TopBar({
             </button>
             {notifOpen && (
               <NotificationDropdown
+                key={notifExpand || "all"}
+                onlySection={notifExpand}
                 notifications={notifications}
                 onDismiss={onDismissNotification}
                 onMarkRead={onMarkNotificationRead}

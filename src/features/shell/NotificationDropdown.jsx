@@ -25,18 +25,22 @@ function formatTime(ts) {
   return new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-export default function NotificationDropdown({ notifications, onDismiss, onMarkRead, onClose }) {
-  const [expanded, setExpanded] = useState({});
+export default function NotificationDropdown({ notifications, onlySection, onDismiss, onMarkRead, onClose }) {
+  const [expanded, setExpanded] = useState(() => (onlySection ? { [onlySection]: true } : {}));
   const [reportState, setReportState] = useState({});
   const patients = usePatientRecords();
   const openPatientDetail = useOpenPatientDetail();
 
-  const grouped = SECTIONS.map((sec) => ({
-    ...sec,
-    items: notifications.filter((n) => resolveSection(n.type) === sec.key),
-  })).filter((sec) => sec.items.length > 0);
+  const visible = onlySection ? notifications.filter((n) => resolveSection(n.type) === onlySection) : notifications;
 
-  const unreadTotal = notifications.filter((n) => n.unread).length;
+  const grouped = SECTIONS.filter((sec) => !onlySection || sec.key === onlySection)
+    .map((sec) => ({
+      ...sec,
+      items: visible.filter((n) => resolveSection(n.type) === sec.key),
+    }))
+    .filter((sec) => sec.items.length > 0);
+
+  const unreadTotal = visible.filter((n) => n.unread).length;
 
   const handleItemClick = (n, clickable) => {
     if (n.unread) onMarkRead?.(n.id);
