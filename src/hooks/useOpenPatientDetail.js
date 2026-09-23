@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addDischargePatientDate } from "../redux/PatientSingleDateSlice";
-import { clearChat, fetchPatientChat } from "../redux/chatSlice";
+import { clearChat, fetchPatientChat, resetInitialChat } from "../redux/chatSlice";
 import { buildPatientPayload } from "../utils/buildPatientPayload";
 
 export default function useOpenPatientDetail() {
@@ -13,6 +13,7 @@ export default function useOpenPatientDetail() {
     const payload = buildPatientPayload(p, user_id);
 
     dispatch(clearChat());
+    dispatch(resetInitialChat(payload));
     dispatch(addDischargePatientDate(payload));
     dispatch(fetchPatientChat(payload));
 

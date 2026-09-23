@@ -23,6 +23,8 @@ const chatSlice = createSlice({
     isAskPending: false,
     mode: 'discharge',
     chatId: 0,
+    initialData: null,
+    initialPayload: null,
   },
     reducers: {
         addQconversation: (state, action) => {
@@ -41,6 +43,17 @@ const chatSlice = createSlice({
         },
         setMode: (state, action) => {
             state.mode = action.payload;
+        },
+        resetInitialChat: (state, action) => {
+            state.initialData = null;
+            state.initialPayload = action.payload || null;
+        },
+        restoreInitialChat: (state) => {
+            state.data = state.initialData || [];
+            state.value = [];
+            state.chatId += 1;
+            state.isAskPending = false;
+            state.mode = 'discharge';
         }
     },
   extraReducers: (builder) => {
@@ -53,6 +66,7 @@ const chatSlice = createSlice({
       .addCase(fetchPatientChat.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
+        if (state.initialData === null) state.initialData = action.payload;
       })
       .addCase(fetchPatientChat.rejected, (state, action) => {
         state.loading = false;
@@ -60,5 +74,5 @@ const chatSlice = createSlice({
       });
   },
 });
-export const { clearChat,addQconversation, setAskPending, setMode } = chatSlice.actions;
+export const { clearChat,addQconversation, setAskPending, setMode, resetInitialChat, restoreInitialChat } = chatSlice.actions;
 export default chatSlice.reducer;

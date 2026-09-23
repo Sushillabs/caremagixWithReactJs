@@ -4,7 +4,7 @@ import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, Home, User } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
-import { clearChat, fetchPatientChat, setMode } from "../../redux/chatSlice";
+import { clearChat, fetchPatientChat, setMode, restoreInitialChat } from "../../redux/chatSlice";
 import { clearNotes, fetchDischargePlan } from "../../redux/notesSlice";
 import RegisterCallModal from "./RegisterCallModal";
 import UnregisterCallModal from "./UnregisterCallModal";
@@ -127,6 +127,7 @@ export default function PatientDetails() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
   const singleData = useSelector((state) => state.patientsingledata?.value);
+  const initialPayload = useSelector((state) => state.askQ?.initialPayload);
   const patient = singleData?.patient;
   const type = patient?.type;
   const auth = useSelector((state) => state.auth?.value) || {};
@@ -165,8 +166,8 @@ export default function PatientDetails() {
 
   const handleHome = () => {
     setActivePanel(null);
-    dispatch(clearChat());
-    dispatch(setMode("discharge"));
+    dispatch(restoreInitialChat());
+    if (initialPayload) dispatch(addDischargePatientDate(initialPayload));
     setHomeKey((k) => k + 1);
     navigate(".");
   };
