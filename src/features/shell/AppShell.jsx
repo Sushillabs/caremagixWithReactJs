@@ -21,15 +21,9 @@ export default function AppShell() {
   // in the Outlet below (e.g. Dashboard's Medication Alerts card) can open
   // the exact same notification panel.
   const [notifOpen, setNotifOpen] = useState(false);
-  const { notifications, unreadCount, markAllRead, dismiss } = useNotifications();
-  const openNotifications = () => {
-    markAllRead();
-    setNotifOpen(true);
-  };
-  const toggleNotifications = () => {
-    if (!notifOpen) markAllRead();
-    setNotifOpen((v) => !v);
-  };
+  const { notifications, unreadCount, markRead, dismiss } = useNotifications();
+  const openNotifications = () => setNotifOpen(true);
+  const toggleNotifications = () => setNotifOpen((v) => !v);
 
   // if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
@@ -55,6 +49,7 @@ export default function AppShell() {
           unreadCount={unreadCount}
           onToggleNotifications={toggleNotifications}
           onDismissNotification={dismiss}
+          onMarkNotificationRead={markRead}
           onCloseNotifications={() => setNotifOpen(false)}
         />
 

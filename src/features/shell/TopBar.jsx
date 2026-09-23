@@ -18,6 +18,7 @@ export default function TopBar({
   unreadCount,
   onToggleNotifications,
   onDismissNotification,
+  onMarkNotificationRead,
   onCloseNotifications,
 }) {
   const dispatch = useDispatch();
@@ -89,7 +90,14 @@ export default function TopBar({
                 </span>
               )}
             </button>
-            {notifOpen && <NotificationDropdown notifications={notifications} onDismiss={onDismissNotification} onClose={onCloseNotifications} />}
+            {notifOpen && (
+              <NotificationDropdown
+                notifications={notifications}
+                onDismiss={onDismissNotification}
+                onMarkRead={onMarkNotificationRead}
+                onClose={onCloseNotifications}
+              />
+            )}
           </div>
         )}
 
