@@ -146,15 +146,10 @@ function CompletionBanner() {
   );
 }
 
-function HandoffPanel({ handoff, onRequestVisit, onDismiss }) {
+function HandoffPanel({ onRequestVisit, onDismiss }) {
   return (
     <div className="shrink-0 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
       <div className="ml-auto flex gap-2">
-        {/* {handoff.call_emergency_services && (
-          <a href="tel:911" className="rounded-md bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-700">
-            Call 911
-          </a>
-        )} */}
         <button type="button" onClick={onRequestVisit} className="rounded-md bg-amber-600 px-2 py-1 font-medium text-white hover:bg-amber-700">
           Request urgent visit
         </button>
@@ -296,16 +291,30 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     if (lastResponse?.message) speak(lastResponse.message);
     else if (lastResponse) voice.resumeAfterTurn();
     if (lastResponse?.check_in) refreshDashboard();
+    if (lastResponse?.handoff && lastResponse?.alert?.id) setActiveAlertId(lastResponse.alert.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
-  const [closedAlertId, setClosedAlertId] = useState(null);
-  const handoffAlert = lastResponse?.handoff ? lastResponse.alert : null;
-  const showHandoff = !!handoffAlert && handoffAlert.id !== closedAlertId;
+  // Stays up once set, across later chat turns and across reopening the
+  // check-in — only "Request urgent visit"/"Not now" clear it, not the next
+  // unrelated reply. dismissedAlertIdsRef stops a stale dashboard snapshot
+  // (fetched before the dismiss round-trips) from bringing it straight back.
+  const [activeAlertId, setActiveAlertId] = useState(null);
+  const dismissedAlertIdsRef = useRef(new Set());
+
+  useEffect(() => {
+    if (activeAlertId) return;
+    const openAlert = dashboard?.open_alerts?.[0];
+    if (openAlert?.id && !dismissedAlertIdsRef.current.has(openAlert.id)) setActiveAlertId(openAlert.id);
+  }, [dashboard, activeAlertId]);
+
+  const showHandoff = !!activeAlertId;
 
   const closeHandoff = (status) => {
-    setClosedAlertId(handoffAlert.id);
-    wellnessAlertAction(handoffAlert.id, { status }).catch(() => {});
+    if (!activeAlertId) return;
+    dismissedAlertIdsRef.current.add(activeAlertId);
+    wellnessAlertAction(activeAlertId, { status }).catch(() => {});
+    setActiveAlertId(null);
   };
 
   const handleRequestVisit = () => {
@@ -395,6 +404,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
                 questions={dashboard?.questions?.questions}
                 checkIn={lastResponse?.check_in || (dashboard?.checked_in_today ? dashboard?.latest_check_in : null)}
               />
+              {showHandoff && (
+                <div className="mx-2 mt-2">
+                  <HandoffPanel onRequestVisit={handleRequestVisit} onDismiss={() => closeHandoff("dismissed")} />
+                </div>
+              )}
               <AgentChatThread
                 bare
                 turns={turns}
@@ -429,10 +443,6 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
             Answer now
           </button>
         </div>
-      )}
-
-      {activeTab === "checkin" && started && showHandoff && (
-        <HandoffPanel handoff={lastResponse.handoff} onRequestVisit={handleRequestVisit} onDismiss={() => closeHandoff("dismissed")} />
       )}
 
       {activeTab === "checkin" && started && (

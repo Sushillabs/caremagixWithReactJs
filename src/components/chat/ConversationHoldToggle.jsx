@@ -20,7 +20,7 @@ export default function ConversationHoldToggle({ voice, speaking, onToggle, show
       }`}
     >
       {held ? <Play size={14} /> : <Pause size={14} />}
-      {held ? "Start Now" : "Pause Now"}
+      {held ? "Continue Now" : "Pause Now"}
     </button>
   );
 }
