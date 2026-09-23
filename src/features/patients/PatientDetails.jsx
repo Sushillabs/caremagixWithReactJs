@@ -187,7 +187,13 @@ export default function PatientDetails() {
   const handleDocumentClick = (item) => {
     let payload = null;
     if (type === "Uploaded") {
-      payload = { ...singleData, dates: item, patient_date: item };
+      const doc = patient?.raw?.data?.find((d) => d.dates === item);
+      payload = {
+        ...singleData,
+        dates: item,
+        patient_date: item,
+        patient_type: doc?.patient_type || singleData?.patient_type,
+      };
     } else {
       payload = { ...singleData, patient_collection: item };
     }
@@ -427,10 +433,7 @@ export default function PatientDetails() {
       </div>
 
       {activePanel === "wellness" ? (
-        <WellnessCheckInPanel
-          initialTab={initialPanelTab}
-          onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined}
-        />
+        <WellnessCheckInPanel initialTab={initialPanelTab} onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined} />
       ) : activePanel === "appointments" ? (
         <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
@@ -451,9 +454,7 @@ export default function PatientDetails() {
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
-      {showTransitionCareModal && (
-        <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />
-      )}
+      {showTransitionCareModal && <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
       {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
     </div>

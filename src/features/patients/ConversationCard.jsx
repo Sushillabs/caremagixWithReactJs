@@ -16,6 +16,26 @@ const TABS = [
   { key: "history", label: "Chat History", disabled: true },
 ];
 
+const SOURCE_LABELS = {
+  "Discharge Plan": "Discharge Plan",
+  Discharged: "Discharge Plan",
+  "Nursing Plan": "Nursing Plan",
+  "Nursing-Care": "Nursing Plan",
+  "Medication Adherence": "Medication Adherence",
+  "Medical Adherence": "Medication Adherence",
+  care_plan: "Care Plan",
+  prescription: "Prescription",
+  "Visit Note": "Visit Note",
+  OASIS: "OASIS Assessment",
+  Efax: "eFax Documents",
+  PCC: "PCC Records",
+  epic: "EHR Records",
+  EHR: "EHR Records",
+  metriport: "Metriport Records",
+  "ICD-Codes": "ICD Codes",
+  "CPT-Codes": "CPT Codes",
+};
+
 const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
   patient: ["progress notes for last 7 days", "h & p", "h&p", "hhrg", "icd"],
 };
@@ -24,7 +44,9 @@ export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
   const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
-  const patientType = useSelector((state) => state.patientsingledata?.value?.patient?.type);
+  const singleData = useSelector((state) => state.patientsingledata?.value);
+  const patientType = singleData?.patient?.type;
+  const sourceLabel = SOURCE_LABELS[singleData?.patient_type] || singleData?.patient_type || "Discharged Plan";
   const role = useSelector((state) => state.auth?.value?.role) || "caregiver";
   const isMedication = mode === "medication";
   // Medication has no summary table for any role — drop that tab entirely.
@@ -53,7 +75,7 @@ export default function ConversationCard() {
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
       <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
         <div>
-          <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : "Discharged Plan"}</h3>
+          <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : sourceLabel}</h3>
           {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-500 ">
@@ -101,7 +123,7 @@ export default function ConversationCard() {
             {defaultQuestions.length > 0 && (
               <div>
                 <p className="mb-2 text-gray-700" ref={questionsRef}>
-                  Welcome!! Try asking me questions related to Discharged Plan. You can ask questions like:
+                  Welcome!! Try asking me questions related to {sourceLabel}. You can ask questions like:
                 </p>
                 <ul className="space-y-1">
                   {defaultQuestions.map((q, i) => (
@@ -172,7 +194,7 @@ export default function ConversationCard() {
             )}
           </div>
         ) : (
-          <p className="mt-3 px-2 text-sm text-gray-400">Document content will render here in a later.</p>
+          <p className="mt-3 px-2 text-sm text-gray-400">Content is not available</p>
         )}
       </div>
 
