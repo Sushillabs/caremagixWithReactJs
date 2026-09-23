@@ -17,6 +17,8 @@ const TABS = [
 // ?kind=discharge|handoff -> physician flow; absent -> caregiver visit note
 const LABELS = { discharge: "Discharge Plan", handoff: "Handoff Note" };
 
+const SKIP_MESSAGE = "I do not have information, move to the next section without asking follow up questions";
+
 const isValidEmailFormate = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
@@ -24,6 +26,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   const [sendEmail, setSendEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveResult, setSaveResult] = useState(null);
   const bottomRef = useRef(null);
@@ -36,38 +39,37 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
     if (saveResult) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [saveResult]);
 
-  const handleSave = async () => {
+  const submit = async (withEmail, setBusy) => {
     setSaveError(null);
     if (!noteText.trim()) {
       setSaveError(`${label} cannot be empty.`);
       return;
     }
-    if (sendEmail && !isValidEmailFormate(email)) {
+    if (withEmail && !isValidEmailFormate(email)) {
       setSaveError("Enter a valid email address, or turn off email.");
       return;
     }
-    setIsSaving(true);
+    setBusy(true);
     try {
       const result = await saveNote({
         session_id: sessionId,
         note_text: noteText,
-        send_email: sendEmail,
-        recipient_email: sendEmail ? email.trim() : "",
+        send_email: withEmail,
+        recipient_email: withEmail ? email.trim() : "",
       });
       setSaveResult(result);
     } catch (err) {
       setSaveError(err?.message || `Could not save ${label.toLowerCase()}`);
     } finally {
-      setIsSaving(false);
+      setBusy(false);
     }
   };
 
+  const handleSave = () => submit(sendEmail, setIsSaving);
+  const handleSendEmail = () => submit(true, setIsSending);
+
   if (!lastResponse || lastResponse.status !== "generated") {
-    return (
-      <p className="mt-3 px-3 text-sm text-gray-400">
-        Finish the conversation and tap "Generate {label}" to review it here.
-      </p>
-    );
+    return <p className="mt-3 px-3 text-sm text-gray-400">Finish the conversation and tap "Generate {label}" to review it here.</p>;
   }
 
   return (
@@ -96,13 +98,23 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
         Email this {label.toLowerCase()}
       </label>
       {sendEmail && (
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Recipient email"
-          className="w-full border rounded p-2 text-sm"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Recipient email"
+            className="min-w-0 flex-1 border rounded p-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={handleSendEmail}
+            disabled={isSaving || isSending || !email.trim()}
+            className="shrink-0 rounded bg-emerald-800 px-3 py-2 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
+          >
+            {isSending ? "Sending..." : "Send"}
+          </button>
+        </div>
       )}
 
       {saveError && <p className="text-sm text-red-600">{saveError}</p>}
@@ -110,7 +122,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
       <button
         type="button"
         onClick={handleSave}
-        disabled={isSaving}
+        disabled={isSaving || isSending}
         className="px-3 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded disabled:opacity-50"
       >
         {isSaving ? "Saving..." : "Save to patient record"}
@@ -195,6 +207,12 @@ export default function VisitNotesAI() {
     voice.interruptSpeech();
   };
 
+  const handleSkip = () => {
+    speakAbortRef.current?.abort();
+    voice.interruptSpeech();
+    send(SKIP_MESSAGE, { displayText: "Skipped" });
+  };
+
   useEffect(() => {
     if (lastResponse?.message) speak(lastResponse.message);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -268,6 +286,21 @@ export default function VisitNotesAI() {
             error={error}
             emptyState="Starting..."
             liveText={voice.transcript}
+            renderExtra={(meta, { isLast }) =>
+              isLast &&
+              meta?.status !== "generated" && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    disabled={pending || !historyLoaded}
+                    className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    skip and move to the next section
+                  </button>
+                </div>
+              )
+            }
           />
           {voice.state === "speaking" && (
             <div className="shrink-0 flex items-center justify-between gap-2 border-t border-gray-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
@@ -281,7 +314,12 @@ export default function VisitNotesAI() {
               </button>
             </div>
           )}
-          <AgentChatComposer onSubmit={(text) => send(text)} disabled={pending} voice={voice} placeholder={`Talk or type your ${label.toLowerCase()} answers...`} />
+          <AgentChatComposer
+            onSubmit={(text) => send(text)}
+            disabled={pending}
+            voice={voice}
+            placeholder={`Talk or type your ${label.toLowerCase()} answers...`}
+          />
           <div className="shrink-0 border-t border-gray-100 p-2 text-right">
             <button
               type="button"
