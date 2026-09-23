@@ -152,7 +152,7 @@ export default function ConversationCard() {
 
                   return msg.role === "user" ? (
                     <div key={i} className="flex items-start justify-end gap-2 text-right">
-                      <span className="text-gray-700">{msg.content}</span>
+                      <span className="max-w-[80%] rounded-lg rounded-tr-none bg-emerald-50 px-3 py-2 text-left text-gray-700">{msg.content}</span>
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
                         A
                       </div>
