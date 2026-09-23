@@ -172,8 +172,7 @@ const SUBSECTIONS = [
 // Care Manager fills this in over time (contact-by-contact); the AI never
 // populates it. Old plans may still have the legacy empty-array shape —
 // normalize to the {header_data, table_data} object either way.
-const DEFAULT_ASSESSMENT_CAPTION =
-  "Care Manager documents progress toward each goal and completion of each intervention at every contact.";
+const DEFAULT_ASSESSMENT_CAPTION = "Care Manager documents progress toward each goal and completion of each intervention at every contact.";
 function getAssessmentOfProgress(section) {
   const aop = section.assessment_of_progress;
   const isObjectShape = aop && !Array.isArray(aop);
@@ -216,11 +215,7 @@ function CarePlanSection({
 
         {editing ? (
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
-            >
+            <button type="button" onClick={onCancel} className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50">
               Cancel
             </button>
             <button type="button" onClick={onSave} className="rounded-md bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700">
@@ -280,11 +275,7 @@ function CarePlanSection({
                     </ul>
                   ))}
                 {sub.type === "items" && (
-                  <ItemList
-                    items={value}
-                    editing={editing}
-                    onItemChange={(itemIndex, field, val) => onItemChange(sub.key, itemIndex, field, val)}
-                  />
+                  <ItemList items={value} editing={editing} onItemChange={(itemIndex, field, val) => onItemChange(sub.key, itemIndex, field, val)} />
                 )}
               </div>
             );
@@ -473,7 +464,11 @@ export default function CarePlanDetailPage() {
     enabled: needsFetch,
   });
 
-  const { data: pinnedPlan, isLoading: isPinnedLoading, isError: isPinnedError } = useQuery({
+  const {
+    data: pinnedPlan,
+    isLoading: isPinnedLoading,
+    isError: isPinnedError,
+  } = useQuery({
     queryKey: ["care-plan", pinnedPlanId],
     queryFn: () => getCarePlan(pinnedPlanId),
     enabled: !!pinnedPlanId,
@@ -568,15 +563,13 @@ export default function CarePlanDetailPage() {
     <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
       <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3">
         <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-          <ArrowLeft size={16} /> Back to Care Plan
+          <ArrowLeft size={16} /> Back
         </button>
         <h3 className="font-semibold text-gray-800">Care Plan{patient?.name ? ` — ${patient.name}` : ""}</h3>
 
         {carePlanData && (
           <div className="ml-auto flex items-center gap-2">
-            {hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf && (
-              <span className="text-xs text-amber-600">Unsaved changes</span>
-            )}
+            {hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf && <span className="text-xs text-amber-600">Unsaved changes</span>}
             <button
               type="button"
               onClick={handleSaveCarePlan}
