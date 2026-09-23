@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -104,22 +104,34 @@ function StatusRow({ status, editing, onChange }) {
 // Checkbox stays visible read-only too (disabled) so it's clear what's
 // selected even outside edit mode — matches the original printed-form
 // idea where every candidate item shows its box, checked or not.
+function AutoTextarea({ value, onChange, className }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return <textarea ref={ref} rows={1} value={value} onChange={onChange} className={`resize-none overflow-hidden ${className}`} />;
+}
+
 function ItemList({ items, editing, onItemChange }) {
   if (!items?.length) return null;
   return (
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-700">
+        <li key={i} className="flex flex-wrap items-start gap-x-3 gap-y-1 text-sm text-gray-700">
           <input
             type="checkbox"
             checked={Boolean(item.selected)}
             disabled={!editing}
             onChange={(e) => onItemChange(i, "selected", e.target.checked)}
-            className="h-4 w-4 shrink-0 accent-emerald-600 disabled:opacity-60"
+            className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 disabled:opacity-60"
           />
           {editing ? (
-            <input
-              type="text"
+            <AutoTextarea
               value={item.text}
               onChange={(e) => onItemChange(i, "text", e.target.value)}
               className="min-w-[12rem] flex-1 rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
@@ -127,7 +139,7 @@ function ItemList({ items, editing, onItemChange }) {
           ) : (
             <span className="flex-1">{item.text}</span>
           )}
-          <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+          <span className="mt-1 flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
             Target Date:{" "}
             {editing ? (
               <input
@@ -252,8 +264,7 @@ function CarePlanSection({
                     <ul className="space-y-1">
                       {value.map((line, i) => (
                         <li key={i}>
-                          <input
-                            type="text"
+                          <AutoTextarea
                             value={line}
                             onChange={(e) => onTextListChange(sub.key, i, e.target.value)}
                             className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
