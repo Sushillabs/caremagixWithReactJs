@@ -111,6 +111,18 @@ export default function PatientDetails() {
   const [activePanel, setActivePanel] = useState(() => searchParams.get("panel"));
   const initialPanelTab = searchParams.get("tab");
 
+  // ?tab= stays in the URL after a deep link, so the Wellness Check-in button
+  // needs its own tab state plus a remount key — otherwise it re-lands on the
+  // deep-linked tab, or does nothing at all when the panel is already open.
+  const [wellnessTab, setWellnessTab] = useState(() => searchParams.get("tab"));
+  const [wellnessKey, setWellnessKey] = useState(0);
+
+  const openWellnessCheckIn = () => {
+    setActivePanel("wellness");
+    setWellnessTab("checkin");
+    setWellnessKey((k) => k + 1);
+  };
+
   const [homeKey, setHomeKey] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
@@ -375,7 +387,7 @@ export default function PatientDetails() {
           {canWellnessCheckIn && (
             <button
               type="button"
-              onClick={() => setActivePanel("wellness")}
+              onClick={openWellnessCheckIn}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Wellness Check-in
@@ -444,7 +456,11 @@ export default function PatientDetails() {
       </div>
 
       {activePanel === "wellness" ? (
-        <WellnessCheckInPanel initialTab={initialPanelTab} onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined} />
+        <WellnessCheckInPanel
+          key={wellnessKey}
+          initialTab={wellnessTab}
+          onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined}
+        />
       ) : activePanel === "appointments" ? (
         <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
