@@ -46,11 +46,11 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
   );
 
   const send = useCallback(
-    async (message, opts = {}) => {
+    async (message, { displayText, ...opts } = {}) => {
       const text = message?.trim();
       if (!text || pending) return null;
 
-      setTurns((prev) => [...prev, { role: "user", content: text }]);
+      setTurns((prev) => [...prev, { role: "user", content: displayText ?? text }]);
       return runAction(() =>
         sendMessage({
           message: text,

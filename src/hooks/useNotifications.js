@@ -58,10 +58,14 @@ export default function useNotifications() {
     markAllNotificationsRead().catch(() => {});
   };
 
+  const markRead = (id) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+  };
+
   const dismiss = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     deleteNotificationApi(id).catch(() => {});
   };
 
-  return { notifications, unreadCount, markAllRead, dismiss };
+  return { notifications, unreadCount, markAllRead, markRead, dismiss };
 }

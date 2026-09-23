@@ -41,7 +41,9 @@ export default function WellnessCaregiverPanel() {
         setDashboard(data);
         setError(null);
       })
-      .catch((err) => setError(err?.message || "Could not load this patient's wellness data"))
+      .catch((err) =>
+        setError(err?.response?.data?.message || err?.message || "Could not load this patient's wellness data")
+      )
       .finally(() => setLoading(false));
   }, [patientName]);
 

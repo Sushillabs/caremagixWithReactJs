@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, Home, User } from "lucide-react";
@@ -45,8 +45,19 @@ const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Scan PDF" }];
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
 function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, disabled }) {
+  const boxRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (!boxRef.current?.contains(e.target)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, onClose]);
+
   return (
-    <div className="relative">
+    <div ref={boxRef} className="relative">
       <button
         type="button"
         disabled={disabled}
@@ -100,6 +111,19 @@ export default function PatientDetails() {
   const [activePanel, setActivePanel] = useState(() => searchParams.get("panel"));
   const initialPanelTab = searchParams.get("tab");
 
+  // ?tab= stays in the URL after a deep link, so the Wellness Check-in button
+  // needs its own tab state plus a remount key — otherwise it re-lands on the
+  // deep-linked tab, or does nothing at all when the panel is already open.
+  const [wellnessTab, setWellnessTab] = useState(() => searchParams.get("tab"));
+  const [wellnessKey, setWellnessKey] = useState(0);
+
+  const openWellnessCheckIn = () => {
+    setActivePanel("wellness");
+    setWellnessTab("checkin");
+    setWellnessKey((k) => k + 1);
+  };
+
+  const [homeKey, setHomeKey] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
   const singleData = useSelector((state) => state.patientsingledata?.value);
@@ -141,6 +165,9 @@ export default function PatientDetails() {
 
   const handleHome = () => {
     setActivePanel(null);
+    dispatch(clearChat());
+    dispatch(setMode("discharge"));
+    setHomeKey((k) => k + 1);
     navigate(".");
   };
 
@@ -183,7 +210,13 @@ export default function PatientDetails() {
   const handleDocumentClick = (item) => {
     let payload = null;
     if (type === "Uploaded") {
-      payload = { ...singleData, dates: item, patient_date: item };
+      const doc = patient?.raw?.data?.find((d) => d.dates === item);
+      payload = {
+        ...singleData,
+        dates: item,
+        patient_date: item,
+        patient_type: doc?.patient_type || singleData?.patient_type,
+      };
     } else {
       payload = { ...singleData, patient_collection: item };
     }
@@ -320,7 +353,12 @@ export default function PatientDetails() {
                 dispatch(clearChat());
                 dispatch(setMode("medication"));
                 askQuestion(
-                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
+                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?",
+                  {
+                    dates: "Consolidated Med Summary",
+                    patient_collection: "Consolidated Med Summary",
+                    patient_date: "Consolidated Med Summary",
+                  }
                 );
                 navigate(".");
               }}
@@ -349,7 +387,7 @@ export default function PatientDetails() {
           {canWellnessCheckIn && (
             <button
               type="button"
-              onClick={() => setActivePanel("wellness")}
+              onClick={openWellnessCheckIn}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Wellness Check-in
@@ -418,7 +456,11 @@ export default function PatientDetails() {
       </div>
 
       {activePanel === "wellness" ? (
-        <WellnessCheckInPanel initialTab={initialPanelTab} />
+        <WellnessCheckInPanel
+          key={wellnessKey}
+          initialTab={wellnessTab}
+          onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined}
+        />
       ) : activePanel === "appointments" ? (
         <AppointmentsPanel initialTab={initialPanelTab} />
       ) : activePanel === "wellnessReport" ? (
@@ -432,16 +474,14 @@ export default function PatientDetails() {
       ) : activePanel === "createProgress" ? (
         <TherapyProgressNotePanel patientName={patient?.name} />
       ) : (
-        <Outlet />
+        <Outlet key={homeKey} />
       )}
 
       {showCallModal && <RegisterCallModal onClose={() => setShowCallModal(false)} />}
       {showUnregisterModal && <UnregisterCallModal onClose={() => setShowUnregisterModal(false)} />}
       {uploadModalMode && <UploadPlanModal mode={uploadModalMode} onClose={() => setUploadModalMode(null)} />}
       {showOasisSocModal && <OasisSocModal patientName={patient?.name} onClose={() => setShowOasisSocModal(false)} />}
-      {showTransitionCareModal && (
-        <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />
-      )}
+      {showTransitionCareModal && <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
       {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
     </div>

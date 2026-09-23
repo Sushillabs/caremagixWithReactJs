@@ -76,7 +76,7 @@ export default function Dashboard() {
     cardActions.uploaded_document_count = () => setShowDocuments(true);
   }
   if (isCaregiver && openNotifications) {
-    cardActions.medication_alert_count = () => openNotifications();
+    cardActions.medication_alert_count = () => openNotifications("call_alert");
   }
   if (data?.view === "physician") {
     cardActions.upcoming_appointment_count = () => navigate("/app/manage-bookings");

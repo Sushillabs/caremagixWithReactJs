@@ -34,6 +34,7 @@ export default function AgentChatThread({
   }, [turns, pending, liveText]);
 
   const hasContent = turns.length > 0 || pending || !!liveText;
+  const lastAssistantIndex = turns.map((t) => t.role).lastIndexOf("assistant");
 
   const body = (
     <div className="min-h-0 flex-1 overflow-y-auto pb-4">
@@ -60,7 +61,7 @@ export default function AgentChatThread({
                       {msg.content}
                     </ReactMarkdown>
                   )}
-                  {renderExtra?.(msg.meta)}
+                  {renderExtra?.(msg.meta, { isLast: i === lastAssistantIndex })}
                 </div>
               </div>
             )

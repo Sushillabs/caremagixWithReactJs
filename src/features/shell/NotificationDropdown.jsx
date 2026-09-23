@@ -25,20 +25,26 @@ function formatTime(ts) {
   return new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-export default function NotificationDropdown({ notifications, onDismiss, onClose }) {
-  const [collapsed, setCollapsed] = useState({});
+export default function NotificationDropdown({ notifications, onlySection, onDismiss, onMarkRead, onClose }) {
+  const [expanded, setExpanded] = useState(() => (onlySection ? { [onlySection]: true } : {}));
   const [reportState, setReportState] = useState({});
   const patients = usePatientRecords();
   const openPatientDetail = useOpenPatientDetail();
 
-  const grouped = SECTIONS.map((sec) => ({
-    ...sec,
-    items: notifications.filter((n) => resolveSection(n.type) === sec.key),
-  })).filter((sec) => sec.items.length > 0);
+  const visible = onlySection ? notifications.filter((n) => resolveSection(n.type) === onlySection) : notifications;
 
-  const unreadTotal = notifications.filter((n) => n.unread).length;
+  const grouped = SECTIONS.filter((sec) => !onlySection || sec.key === onlySection)
+    .map((sec) => ({
+      ...sec,
+      items: visible.filter((n) => resolveSection(n.type) === sec.key),
+    }))
+    .filter((sec) => sec.items.length > 0);
 
-  const handleOpenPatient = (n) => {
+  const unreadTotal = visible.filter((n) => n.unread).length;
+
+  const handleItemClick = (n, clickable) => {
+    if (n.unread) onMarkRead?.(n.id);
+    if (!clickable) return;
     const match = patients.find((p) => p.name?.toLowerCase() === n.patient_name?.toLowerCase());
     if (!match) return;
     openPatientDetail(match);
@@ -74,7 +80,7 @@ export default function NotificationDropdown({ notifications, onDismiss, onClose
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <span className="text-sm font-semibold text-gray-800">Notifications</span>
         <div className="flex items-center gap-2">
-          {unreadTotal > 0 && <span className="text-xs font-medium text-emerald-600">{unreadTotal} new</span>}
+          {unreadTotal > 0 && <span className="text-xs font-medium text-red-600">{unreadTotal} new</span>}
           <button type="button" onClick={onClose} title="Close" aria-label="Close notifications" className="text-gray-300 hover:text-gray-500">
             <X size={15} />
           </button>
@@ -91,15 +97,17 @@ export default function NotificationDropdown({ notifications, onDismiss, onClose
 
         {grouped.map((sec) => {
           const Icon = sec.icon;
-          const isCollapsed = !!collapsed[sec.key];
+          const isOpen = !!expanded[sec.key];
           const unreadCount = sec.items.filter((n) => n.unread).length;
           const clickable = sec.key !== "call_alert";
           return (
             <div key={sec.key} className="border-b border-gray-50 last:border-0">
               <button
                 type="button"
-                onClick={() => setCollapsed((c) => ({ ...c, [sec.key]: !c[sec.key] }))}
-                className="flex w-full items-center justify-between px-4 py-2.5 hover:bg-gray-50"
+                onClick={() => setExpanded((c) => ({ ...c, [sec.key]: !c[sec.key] }))}
+                className={`flex w-full items-center justify-between px-4 py-2.5 ${
+                  unreadCount > 0 ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-50"
+                }`}
               >
                 <span className="flex items-center gap-2">
                   <span className={`flex h-6 w-6 items-center justify-center rounded-full ${sec.bg}`}>
@@ -108,25 +116,27 @@ export default function NotificationDropdown({ notifications, onDismiss, onClose
                   <span className="text-xs font-medium text-gray-700">{sec.label}</span>
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                      unreadCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-400"
+                      unreadCount > 0 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-400"
                     }`}
                   >
-                    {unreadCount > 0 ? unreadCount : sec.items.length}
+                    {unreadCount > 0 ? `${unreadCount} new` : sec.items.length}
                   </span>
                 </span>
-                {isCollapsed ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+                {isOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
               </button>
 
-              {!isCollapsed &&
+              {isOpen &&
                 sec.items.map((n) => {
                   const rs = reportState[n.id] || {};
                   return (
                     <div
                       key={n.id}
-                      onClick={clickable ? () => handleOpenPatient(n) : undefined}
-                      className={`group relative flex items-start gap-2 px-4 py-2.5 pl-6 text-xs hover:bg-gray-50 ${clickable ? "cursor-pointer" : ""}`}
+                      onClick={() => handleItemClick(n, clickable)}
+                      className={`group relative flex cursor-pointer items-start gap-2 px-4 py-2.5 pl-6 text-xs ${
+                        n.unread ? "bg-red-50 hover:bg-red-100" : "hover:bg-gray-50"
+                      }`}
                     >
-                      {n.unread && <span className="absolute left-4 top-4 h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                      {n.unread && <span className="absolute left-4 top-4 h-1.5 w-1.5 rounded-full bg-red-500" />}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-800">{n.title}</p>
                         {n.message && <p className="mt-0.5 text-gray-500">{n.message}</p>}

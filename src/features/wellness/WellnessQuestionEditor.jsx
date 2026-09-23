@@ -12,8 +12,8 @@ import {
 
 // Physician + caregiver question editor for one patient's Wellness Check-in.
 // Same backend routes for both roles (/hf-wellness/clinician/*); the list is
-// already scoped server-side. Auto-selects the patient open in PatientDetails
-// by matching patient_display_name, falling back to a picker.
+// already scoped server-side. Selects the patient open in PatientDetails by
+// matching patient_display_name — no match means no data is shown.
 
 // Backend always gets the raw key (see ANSWER_TYPES below) — these are only
 // the friendly labels shown in the UI. "integer" is a valid backend type but
@@ -216,7 +216,6 @@ function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy
 }
 
 export default function WellnessQuestionEditor({ patientName }) {
-  const [patients, setPatients] = useState(null);
   const [patientKey, setPatientKey] = useState(null);
   const [payload, setPayload] = useState(null);
   const [rows, setRows] = useState([]);
@@ -240,9 +239,8 @@ export default function WellnessQuestionEditor({ patientName }) {
       .then((data) => {
         if (!alive) return;
         const list = data?.patients || [];
-        setPatients(list);
         const match = list.find((p) => norm(p.patient_display_name) === norm(patientName));
-        setPatientKey(match ? match.patient_key : list.length === 1 ? list[0].patient_key : null);
+        setPatientKey(match ? match.patient_key : null);
       })
       .catch((err) => {
         if (!alive) return;
@@ -405,28 +403,11 @@ export default function WellnessQuestionEditor({ patientName }) {
   if (loading) return <p className="p-4 text-sm text-gray-400">Loading questions...</p>;
   if (error) return <p className="p-4 text-sm text-red-600">Error: {error}</p>;
 
-  // No auto-match — show the picker.
   if (!patientKey) {
     return (
-      <div className="space-y-2 p-3 text-xs">
-        <p className="text-gray-500">
-          {patients?.length ? "Pick a patient to edit their check-in questions:" : "No patients are available for you to edit."}
-        </p>
-        {(patients || []).map((p) => (
-          <button
-            key={p.patient_key}
-            type="button"
-            onClick={() => setPatientKey(p.patient_key)}
-            className="flex w-full items-center justify-between rounded-md border border-gray-100 p-2 text-left hover:bg-gray-50"
-          >
-            <span>
-              <span className="text-gray-700">{p.patient_display_name}</span>
-              {p.primary_diagnosis && <span className="ml-2 text-gray-400">{p.primary_diagnosis}</span>}
-            </span>
-            <span className="text-gray-400">{p.question_count || 0} questions</span>
-          </button>
-        ))}
-      </div>
+      <p className="p-4 text-xs text-gray-500">
+        Check-in questions aren't available for {patientName || "this patient"}.
+      </p>
     );
   }
 

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +20,6 @@ export default function CarePlan() {
   const patientKey = getPatientKey(singleData?.patient_name, singleData?.patient_type);
   const { status, progress, carePlanId } = useCarePlanStatus(patientKey);
   const { generate, regenerate, isStarting } = useCarePlan();
-  const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
 
   const backendCheck = useQuery({
     queryKey: ["care-plan-dashboard-by-patient", patientKey],
@@ -56,7 +54,6 @@ export default function CarePlan() {
 
   const handleRegenerate = async () => {
     if (!dashboardData?.care_plan_id) return;
-    setConfirmingRegenerate(false);
     await regenerate({
       care_plan_id: dashboardData.care_plan_id,
       patient_name: singleData?.patient_name,
@@ -93,36 +90,16 @@ export default function CarePlan() {
             </button>
           )}
 
-          {effectiveStatus === "done" &&
-            (confirmingRegenerate ? (
-              <span className="flex items-center gap-1">
-                <span className="text-[11px] text-amber-600">Start a new plan? Progress won't carry over.</span>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingRegenerate(false)}
-                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRegenerate}
-                  disabled={isStarting}
-                  className="rounded-md bg-amber-600 px-2 py-1 text-white hover:bg-amber-700 disabled:opacity-70"
-                >
-                  Yes, Create New
-                </button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmingRegenerate(true)}
-                disabled={isStarting}
-                className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-70"
-              >
-                Create New
-              </button>
-            ))}
+          {effectiveStatus === "done" && (
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              disabled={isStarting}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+            >
+              Create New
+            </button>
+          )}
 
           <button
             type="button"

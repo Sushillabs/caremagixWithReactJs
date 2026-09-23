@@ -37,6 +37,23 @@ produced different saved data. Skip rules are now schema data
 rather than from registered inputs, so untouched fields still ship as `""` —
 the backend replaces rather than merges, so a missing key silently dropped
 stored data.
+#### Changed — Wellness check-in: urgent visit bar
+
+Handoff panel moved out of the chat into a fixed bar above the composer
+(`WellnessCheckInPanel.jsx`). Request urgent visit opens Book Physician
+Visit; Not now dismisses. Patient "Start New Session" renamed "Resume Session".
+
+#### Added — Physician booking: Pause Now / Start Now
+
+Pause/Start Now toggle on the patient booking chat (`AppointmentsPanel.jsx`).
+Voice now auto-starts on chat start and Start New Session; switching to My
+Appointments stops the mic.
+
+#### Added — Wellness check-in: question editor for physicians
+
+New `wellnessQuestionEditor` role flag + "Wellness Check-in Questions" nav
+button on the physician patient view (`WellnessQuestionsPanel.jsx`), reusing
+the same `WellnessQuestionEditor` the caregiver tab uses.
 
 #### Added — Dashboard: Uploads and Active Care Plans open real lists
 

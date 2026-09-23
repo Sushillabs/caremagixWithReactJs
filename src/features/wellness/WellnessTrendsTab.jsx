@@ -16,7 +16,7 @@ function ZonePill({ zone }) {
 // then a check-in list with per-row yellow/red reasons.
 export default function WellnessTrendsTab({ dashboard, loading, error }) {
   if (loading) return <p className="p-4 text-sm text-gray-400">Loading your trends...</p>;
-  if (error) return <p className="p-4 text-sm text-red-600">Error: {error}</p>;
+  if (error) return <p className="p-4 text-sm text-gray-500">{error}</p>;
   if (!dashboard) return null;
 
   const { current_zone, check_in_streak_days, latest_check_in, adherence, weight_series, recent_check_ins } = dashboard;

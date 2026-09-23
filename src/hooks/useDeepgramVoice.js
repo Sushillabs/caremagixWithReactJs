@@ -39,8 +39,7 @@ export default function useDeepgramVoice({ fetchToken, onUtterance, continuous =
   // an agent's turn in a chat flow.
   const pauseListening = useCallback(() => sessionRef.current?.pauseListening(), []);
   const resumeListening = useCallback(() => sessionRef.current?.resumeListening(), []);
-  const toggleListening = useCallback(() => sessionRef.current?.toggleListening(), []);
-  const drainPendingTranscript = useCallback(() => sessionRef.current?.drainPendingTranscript() || "", []);
+  const toggleListening = useCallback(() => sessionRef.current?.toggleListening(), []);  const drainPendingTranscript = useCallback(() => sessionRef.current?.drainPendingTranscript() || "", []);
   const playReply = useCallback((base64Audio, contentType) => sessionRef.current?.playBase64Audio(base64Audio, contentType), []);
   const playStream = useCallback((response) => sessionRef.current?.playPcmStream(response), []);
   const stopPlayback = useCallback(() => sessionRef.current?.stopPlayback(), []);

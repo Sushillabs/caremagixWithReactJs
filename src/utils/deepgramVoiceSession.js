@@ -67,6 +67,7 @@ export default class DeepgramVoiceSession {
     this.interimText = "";
     this.ignoreTranscripts = false;
     this.flushing = false;
+    this.inTurn = false;
     this.audioEl = null;
     this.reconnectAttempts = 0;
     this.speakToken = 0;
@@ -130,6 +131,7 @@ export default class DeepgramVoiceSession {
     this.paused = false;
     this.ignoreTranscripts = false;
     this.flushing = false;
+    this.inTurn = false;
     this.finalPieces = [];
     this.interimText = "";
     this.stopPlayback();
@@ -150,15 +152,24 @@ export default class DeepgramVoiceSession {
   // socket as "thinking" so nothing captured while the agent is replying is
   // treated as the next utterance.
   pauseForTurn() {
+    if (!this.active) return;
+    this.inTurn = true;
     this.ignoreTranscripts = true;
+    this.finalPieces = [];
+    this.interimText = "";
+    this._clearUtteranceTimer();
     this._setMicMuted(true);
     this._sendKeepAlive();
-    if (this.state !== "speaking") this._setState("thinking");
+    this._emitTranscript("");
+    if (!this.paused && this.state !== "speaking") this._setState("thinking");
   }
 
   // Called once a reply (and its optional spoken playback) has finished.
+  // Never lifts a manual Pause Now — only Start Now does.
   resumeAfterTurn() {
     if (!this.active) return;
+    this.inTurn = false;
+    if (this.paused) return;
     this.finalPieces = [];
     this.interimText = "";
     this.flushing = false;
@@ -208,11 +219,11 @@ export default class DeepgramVoiceSession {
   resumeListening() {
     if (!this.active || !this.paused) return Promise.resolve();
     this.paused = false;
-    this.ignoreTranscripts = false;
+    this.ignoreTranscripts = this.inTurn;
     this.flushing = false;
     this.finalPieces = [];
     this.interimText = "";
-    this._setMicMuted(false);
+    this._setMicMuted(this.inTurn);
     this._emitTranscript("");
 
     // Un-freeze whatever reply was mid-playback when Pause Now was tapped.
@@ -233,7 +244,7 @@ export default class DeepgramVoiceSession {
     }
 
     if (this.socket?.readyState === WebSocket.OPEN) {
-      this._setState(hadPausedReply ? "speaking" : "listening");
+      this._setState(hadPausedReply ? "speaking" : this.inTurn ? "thinking" : "listening");
       return Promise.resolve();
     }
 
@@ -252,7 +263,6 @@ export default class DeepgramVoiceSession {
   toggleListening() {
     return this.paused ? this.resumeListening() : this.pauseListening();
   }
-
   // Returns and clears whatever text has been recognized but not yet flushed
   // as a finished utterance — used by pauseListening (above) and by a caller
   // that wants the last few words before stopping outright.
@@ -274,7 +284,7 @@ export default class DeepgramVoiceSession {
       this.stopPlayback();
       if (this.active) {
         this._setMicMuted(true);
-        this._setState("speaking");
+        if (!this.paused) this._setState("speaking");
       }
       const audio = new Audio(`data:${contentType || "audio/mpeg"};base64,${b64}`);
       this.audioEl = audio;
@@ -286,7 +296,7 @@ export default class DeepgramVoiceSession {
       };
       audio.onended = done;
       audio.onerror = done;
-      audio.play()?.catch(done);
+      if (!(this.active && this.paused)) audio.play()?.catch(done);
     });
   }
 
@@ -303,14 +313,16 @@ export default class DeepgramVoiceSession {
     if (!AudioCtx) return Promise.reject(new Error("Web Audio is not available"));
 
     this.stopPlayback();
+    const holdPlayback = this.active && this.paused;
     if (this.active) {
       this._setMicMuted(true);
-      this._setState("speaking");
+      if (!this.paused) this._setState("speaking");
     }
 
     const ctx = new AudioCtx();
     const playback = { ctx, sources: [] };
     this.pcmPlayback = playback;
+    if (holdPlayback && ctx.state === "running") ctx.suspend().catch(() => {});
 
     return new Promise((resolve) => {
       this._speakDone = resolve;
@@ -320,7 +332,7 @@ export default class DeepgramVoiceSession {
         if (token === this.speakToken) resolve();
       };
 
-      Promise.resolve(ctx.state === "suspended" ? ctx.resume() : null)
+      Promise.resolve(ctx.state === "suspended" && !holdPlayback ? ctx.resume() : null)
         .then(() => {
           const reader = response.body.getReader();
           let leftover = new Uint8Array(0);
@@ -357,8 +369,13 @@ export default class DeepgramVoiceSession {
               if (token !== this.speakToken || this.pcmPlayback !== playback) return;
               if (result.done) {
                 if (leftover.length) schedulePcm(leftover);
-                const remainingMs = Math.max(0, (nextTime - ctx.currentTime) * 1000);
-                return new Promise((r) => setTimeout(r, remainingMs + 40));
+                return new Promise((r) => {
+                  const tick = () => {
+                    if (token !== this.speakToken || this.pcmPlayback !== playback || ctx.currentTime >= nextTime) r();
+                    else setTimeout(tick, 100);
+                  };
+                  tick();
+                });
               }
               const chunk = result.value || new Uint8Array(0);
               const combined = new Uint8Array(leftover.length + chunk.length);

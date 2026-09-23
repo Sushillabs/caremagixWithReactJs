@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowLeft, CheckCircle2, Loader2, Circle, X, AlertTriangle } from "lucide-react";
 import useCarePlan from "../../hooks/useCarePlan";
 import useCarePlanStatus from "../../hooks/useCarePlanStatus";
 import { getCarePlan, updateCarePlan, exportCarePlanPdf } from "../../api/hospitalApi";
@@ -104,22 +104,34 @@ function StatusRow({ status, editing, onChange }) {
 // Checkbox stays visible read-only too (disabled) so it's clear what's
 // selected even outside edit mode — matches the original printed-form
 // idea where every candidate item shows its box, checked or not.
+function AutoTextarea({ value, onChange, className }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return <textarea ref={ref} rows={1} value={value} onChange={onChange} className={`resize-none overflow-hidden ${className}`} />;
+}
+
 function ItemList({ items, editing, onItemChange }) {
   if (!items?.length) return null;
   return (
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-700">
+        <li key={i} className="flex flex-wrap items-start gap-x-3 gap-y-1 text-sm text-gray-700">
           <input
             type="checkbox"
             checked={Boolean(item.selected)}
             disabled={!editing}
             onChange={(e) => onItemChange(i, "selected", e.target.checked)}
-            className="h-4 w-4 shrink-0 accent-emerald-600 disabled:opacity-60"
+            className="mt-1 h-4 w-4 shrink-0 accent-emerald-600 disabled:opacity-60"
           />
           {editing ? (
-            <input
-              type="text"
+            <AutoTextarea
               value={item.text}
               onChange={(e) => onItemChange(i, "text", e.target.value)}
               className="min-w-[12rem] flex-1 rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
@@ -127,7 +139,7 @@ function ItemList({ items, editing, onItemChange }) {
           ) : (
             <span className="flex-1">{item.text}</span>
           )}
-          <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+          <span className="mt-1 flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
             Target Date:{" "}
             {editing ? (
               <input
@@ -160,8 +172,7 @@ const SUBSECTIONS = [
 // Care Manager fills this in over time (contact-by-contact); the AI never
 // populates it. Old plans may still have the legacy empty-array shape —
 // normalize to the {header_data, table_data} object either way.
-const DEFAULT_ASSESSMENT_CAPTION =
-  "Care Manager documents progress toward each goal and completion of each intervention at every contact.";
+const DEFAULT_ASSESSMENT_CAPTION = "Care Manager documents progress toward each goal and completion of each intervention at every contact.";
 function getAssessmentOfProgress(section) {
   const aop = section.assessment_of_progress;
   const isObjectShape = aop && !Array.isArray(aop);
@@ -204,11 +215,7 @@ function CarePlanSection({
 
         {editing ? (
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
-            >
+            <button type="button" onClick={onCancel} className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50">
               Cancel
             </button>
             <button type="button" onClick={onSave} className="rounded-md bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700">
@@ -252,8 +259,7 @@ function CarePlanSection({
                     <ul className="space-y-1">
                       {value.map((line, i) => (
                         <li key={i}>
-                          <input
-                            type="text"
+                          <AutoTextarea
                             value={line}
                             onChange={(e) => onTextListChange(sub.key, i, e.target.value)}
                             className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
@@ -269,11 +275,7 @@ function CarePlanSection({
                     </ul>
                   ))}
                 {sub.type === "items" && (
-                  <ItemList
-                    items={value}
-                    editing={editing}
-                    onItemChange={(itemIndex, field, val) => onItemChange(sub.key, itemIndex, field, val)}
-                  />
+                  <ItemList items={value} editing={editing} onItemChange={(itemIndex, field, val) => onItemChange(sub.key, itemIndex, field, val)} />
                 )}
               </div>
             );
@@ -462,7 +464,11 @@ export default function CarePlanDetailPage() {
     enabled: needsFetch,
   });
 
-  const { data: pinnedPlan, isLoading: isPinnedLoading, isError: isPinnedError } = useQuery({
+  const {
+    data: pinnedPlan,
+    isLoading: isPinnedLoading,
+    isError: isPinnedError,
+  } = useQuery({
     queryKey: ["care-plan", pinnedPlanId],
     queryFn: () => getCarePlan(pinnedPlanId),
     enabled: !!pinnedPlanId,
@@ -527,13 +533,14 @@ export default function CarePlanDetailPage() {
   };
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showSaveFirstModal, setShowSaveFirstModal] = useState(false);
   const handleGeneratePdf = async () => {
     if (!effectiveCarePlanId) return;
-    // The PDF always comes from what's saved on the server — auto-save any
-    // pending local edits first so it never reflects a stale version.
+    // The PDF always comes from what's saved on the server, so unsaved edits
+    // get a prompt instead of being auto-saved here.
     if (hasUnsavedChanges) {
-      const saved = await handleSaveCarePlan();
-      if (!saved) return; // save already showed an error toast — don't export a stale/unsaved plan
+      setShowSaveFirstModal(true);
+      return;
     }
     setIsGeneratingPdf(true);
     try {
@@ -556,15 +563,13 @@ export default function CarePlanDetailPage() {
     <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
       <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3">
         <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-          <ArrowLeft size={16} /> Back to Care Plan
+          <ArrowLeft size={16} /> Back
         </button>
         <h3 className="font-semibold text-gray-800">Care Plan{patient?.name ? ` — ${patient.name}` : ""}</h3>
 
         {carePlanData && (
           <div className="ml-auto flex items-center gap-2">
-            {hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf && (
-              <span className="text-xs text-amber-600">Unsaved changes</span>
-            )}
+            {hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf && <span className="text-xs text-amber-600">Unsaved changes</span>}
             <button
               type="button"
               onClick={handleSaveCarePlan}
@@ -766,6 +771,45 @@ export default function CarePlanDetailPage() {
           </>
         )}
       </div>
+
+      {showSaveFirstModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-[340px] rounded-2xl bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <h2 className="text-sm font-semibold text-emerald-700">Unsaved Changes</h2>
+              <button type="button" onClick={() => setShowSaveFirstModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+                <X size={16} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="space-y-4 p-4">
+              <div className="flex items-start gap-2 text-sm text-gray-700">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
+                <p>Save the care plan first. The PDF is created from the saved version.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSaveFirstModal(false)}
+                  className="flex-1 rounded-md border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSaveFirstModal(false);
+                    handleSaveCarePlan();
+                  }}
+                  disabled={isSavingPlan || isMidEdit}
+                  className="flex-1 rounded-md bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Save Care Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
