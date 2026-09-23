@@ -25,6 +25,10 @@ import ManageBookingPage from "./features/appointments/ManageBookingPage";
 import TransitionCareServicesPage from "./features/services/TransitionCareServicesPage";
 import TcmListPage from "./features/tcm/TcmListPage";
 import { SECTIONS } from "./config/sections";
+import OasisFieldPreview from "./features/oasis/OasisFieldPreview";
+import OasisFormPage from "./features/oasis/pages/OasisFormPage";
+import OasisLandingPage from "./features/oasis/pages/OasisLandingPage";
+import OasisPatientDetailPage from "./features/oasis/pages/OasisPatientDetailPage";
 
 const isExtension = window.location.protocol === "chrome-extension:";
 console.log("protocol:", window.location.protocol);
@@ -58,6 +62,9 @@ function App() {
       <Toaster position="top-right" containerStyle={{ top: 60 }} />
       <Router {...routerProps}>
         <Routes>
+          {/* Phase 0 smoke test only — no auth, remove once Phase 1's real FU page exists */}
+          <Route path="/oasis-preview" element={<OasisFieldPreview />} />
+
           <Route element={<AuthLayout />}>
             <Route path="/" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
@@ -92,6 +99,9 @@ function App() {
             <Route path="/app/patients/:id/care-plan/view" element={<CarePlanDetailPage />} />
 
             <Route path="/app/patients/:id/mmta" element={<MmtaPage />} />
+
+            <Route path="/app/oasis/patient" element={<OasisPatientDetailPage />} />
+            <Route path="/app/oasis/:formType" element={<OasisFormPage />} />
             {Object.values(SECTIONS)
               .filter((section) => !section.children && section.path)
               .map((section) => (
@@ -113,6 +123,8 @@ function App() {
                       <TransitionCareServicesPage />
                     ) : section.key === "tcm" ? (
                       <TcmListPage />
+                    ) : section.key === "fillForms" ? (
+                      <OasisLandingPage />
                     ) : (
                       <ComingSoon />
                     )
