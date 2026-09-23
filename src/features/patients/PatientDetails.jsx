@@ -324,7 +324,12 @@ export default function PatientDetails() {
                 dispatch(clearChat());
                 dispatch(setMode("medication"));
                 askQuestion(
-                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?"
+                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?",
+                  {
+                    dates: "Consolidated Med Summary",
+                    patient_collection: "Consolidated Med Summary",
+                    patient_date: "Consolidated Med Summary",
+                  }
                 );
                 navigate(".");
               }}

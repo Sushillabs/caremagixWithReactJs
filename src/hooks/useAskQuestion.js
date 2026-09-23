@@ -35,12 +35,13 @@ const useAskQuestion = () => {
     },
   });
 
-  const askQuestion = (questionContent) => {
+  const askQuestion = (questionContent, overrides = {}) => {
     const newId = crypto.randomUUID();
     const parts = [{ content: questionContent, role: 'user' }];
 
     const askQPayload = {
       ...singleDate,
+      ...overrides,
       meta: {
         id: newId,
         content: {
