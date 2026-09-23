@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { logout } from "../../redux/authSlice";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -35,6 +35,16 @@ export default function TopBar({
   const displayName = `${firstName} ${lastName}`.trim() || headerItem.name || auth.name || auth.username || "User";
   const role = auth.role || "";
   const [logoutShow, setLogoutShow] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    if (!logoutShow) return;
+    const handler = (e) => {
+      if (!profileRef.current?.contains(e.target)) setLogoutShow(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [logoutShow]);
 
   const handleNameClick = () => {
     setLogoutShow(!logoutShow);
@@ -104,25 +114,27 @@ export default function TopBar({
           </div>
         )}
 
-        <button className="flex items-center gap-2 text-sm hover:cursor-pointer" onClick={handleNameClick}>
-          <UserCircle2 size={26} className="text-emerald-600" />
-          <span className="hidden text-left leading-tight sm:block">
-            <span className="block font-medium text-gray-800">{displayName}</span>
-            <span className="block text-xs capitalize text-gray-400">{role}</span>
-          </span>
-          {logoutShow ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-        </button>
-        {logoutShow && (
-          <button
-            class="px-6 py-2 text-gray-500 flex gap-2 items-center text-xs absolute right-0 top-10 border border-gray-200 bg-white rounded-sm hover:cursor-pointer"
-            onClick={handleLogout}
-          >
-            <span>
-              <LogOut size={14} />
+        <div ref={profileRef} className="relative">
+          <button className="flex items-center gap-2 text-sm hover:cursor-pointer" onClick={handleNameClick}>
+            <UserCircle2 size={26} className="text-emerald-600" />
+            <span className="hidden text-left leading-tight sm:block">
+              <span className="block font-medium text-gray-800">{displayName}</span>
+              <span className="block text-xs capitalize text-gray-400">{role}</span>
             </span>
-            <span>Logout</span>
+            {logoutShow ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
           </button>
-        )}
+          {logoutShow && (
+            <button
+              className="px-6 py-2 text-gray-500 flex gap-2 items-center text-xs absolute right-0 top-10 border border-gray-200 bg-white rounded-sm hover:cursor-pointer"
+              onClick={handleLogout}
+            >
+              <span>
+                <LogOut size={14} />
+              </span>
+              <span>Logout</span>
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, Home, User } from "lucide-react";
@@ -45,8 +45,19 @@ const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Scan PDF" }];
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
 function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, disabled }) {
+  const boxRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (!boxRef.current?.contains(e.target)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, onClose]);
+
   return (
-    <div className="relative">
+    <div ref={boxRef} className="relative">
       <button
         type="button"
         disabled={disabled}
