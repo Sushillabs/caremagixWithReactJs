@@ -49,6 +49,7 @@ export default function SendMessageModal({ onClose }) {
           setPhoneNumber(hasPhone ? fetchedPhone : "");
           setPhoneNotFound(!hasPhone);
           setCaregiverName(data?.caregiver || "");
+          if (data?.message) setMessage((current) => current || data.message);
         },
       }
     );
