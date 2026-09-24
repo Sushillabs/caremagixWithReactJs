@@ -292,7 +292,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     if (lastResponse?.message) speak(lastResponse.message);
     else if (lastResponse) voice.resumeAfterTurn();
     if (lastResponse?.check_in) refreshDashboard();
-    if (lastResponse?.handoff && lastResponse?.alert?.id) setActiveAlertId(lastResponse.alert.id);
+    // The zone (and so the offer) is decided by the backend from the
+    // clinician's yellow/red answers — the card only mirrors what it sends.
+    const handoff = lastResponse?.appointment_handoff;
+    if (handoff) setActiveHandoff(handoff);
+    if ((lastResponse?.handoff || handoff) && lastResponse?.alert?.id) setActiveAlertId(lastResponse.alert.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
@@ -301,9 +305,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   // unrelated reply. dismissedAlertIdsRef stops a stale dashboard snapshot
   // (fetched before the dismiss round-trips) from bringing it straight back.
   const [activeAlertId, setActiveAlertId] = useState(null);
+  const [activeHandoff, setActiveHandoff] = useState(null);
   const dismissedAlertIdsRef = useRef(new Set());
 
   useEffect(() => {
+    if (dashboard?.appointment_handoff) setActiveHandoff((h) => h || dashboard.appointment_handoff);
     if (activeAlertId) return;
     const openAlert = dashboard?.open_alerts?.[0];
     if (openAlert?.id && !dismissedAlertIdsRef.current.has(openAlert.id)) setActiveAlertId(openAlert.id);
@@ -314,6 +320,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     dashboard?.open_alerts?.find((a) => a.id === activeAlertId) || (lastResponse?.alert?.id === activeAlertId ? lastResponse.alert : null);
 
   const closeHandoff = (status) => {
+    setActiveHandoff(null);
     if (!activeAlertId) return;
     dismissedAlertIdsRef.current.add(activeAlertId);
     wellnessAlertAction(activeAlertId, { status }).catch(() => {});
