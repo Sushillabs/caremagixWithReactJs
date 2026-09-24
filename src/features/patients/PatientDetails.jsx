@@ -292,7 +292,7 @@ export default function PatientDetails() {
               disabled
             />
           )}
-          {canForms && (
+          {/* {canForms && (
             <DropdownButton
               label="Forms"
               items={FORMS_ITEMS}
@@ -301,7 +301,7 @@ export default function PatientDetails() {
               onToggle={() => toggleDropdown("Forms")}
               onClose={() => setOpenDropdown(null)}
             />
-          )}
+          )} */}
           {canUpload && (
             <DropdownButton
               label="Upload"
