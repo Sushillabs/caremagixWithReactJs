@@ -116,6 +116,16 @@ export default function Dashboard() {
           {cards.map((c) => (
             <StatCard key={c.key} {...c} />
           ))}
+          {isPatient && myRecord && (
+            <StatCard
+              icon={HeartPulse}
+              value="Start"
+              label="Wellness Check-in"
+              accent="text-rose-600"
+              iconBg="bg-rose-50"
+              onClick={() => openDetail(myRecord, { panel: "wellness", tab: "checkin" })}
+            />
+          )}
         </div>
       )}
 
