@@ -165,10 +165,10 @@ export default function NotificationDropdown({ notifications, onlySection, onDis
                           e.stopPropagation();
                           onDismiss(n.id);
                         }}
-                        title="Dismiss"
-                        className="shrink-0 text-gray-300 opacity-0 hover:text-gray-500 group-hover:opacity-100"
+                        title="Cancel"
+                        className="shrink-0 rounded-md border border-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                       >
-                        <X size={13} />
+                        Cancel
                       </button>
                     </div>
                   );
