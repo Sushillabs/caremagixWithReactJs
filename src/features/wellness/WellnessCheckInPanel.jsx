@@ -146,9 +146,10 @@ function CompletionBanner() {
   );
 }
 
-function HandoffPanel({ onRequestVisit, onDismiss }) {
+function HandoffPanel({ message, onRequestVisit, onDismiss }) {
   return (
     <div className="shrink-0 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+      <span className="font-medium">{message || "This may need prompt attention."}</span>
       <div className="ml-auto flex gap-2">
         <button type="button" onClick={onRequestVisit} className="rounded-md bg-amber-600 px-2 py-1 font-medium text-white hover:bg-amber-700">
           Request urgent visit
@@ -309,6 +310,8 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   }, [dashboard, activeAlertId]);
 
   const showHandoff = !!activeAlertId;
+  const activeAlert =
+    dashboard?.open_alerts?.find((a) => a.id === activeAlertId) || (lastResponse?.alert?.id === activeAlertId ? lastResponse.alert : null);
 
   const closeHandoff = (status) => {
     if (!activeAlertId) return;
@@ -406,7 +409,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
               />
               {showHandoff && (
                 <div className="mx-2 mt-2">
-                  <HandoffPanel onRequestVisit={handleRequestVisit} onDismiss={() => closeHandoff("dismissed")} />
+                  <HandoffPanel
+                    message={activeAlert?.message}
+                    onRequestVisit={handleRequestVisit}
+                    onDismiss={() => closeHandoff("dismissed")}
+                  />
                 </div>
               )}
               <AgentChatThread
