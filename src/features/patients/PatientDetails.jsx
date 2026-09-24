@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, Home, User } from "lucide-react";
+import { ChevronDown, Home, User, Trash2 } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat, setMode, restoreInitialChat } from "../../redux/chatSlice";
@@ -21,8 +21,12 @@ import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
 import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
 import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import useDeletePatientDocument from "../../hooks/useDeletePatientDocument";
 
 let DOCUMENT_ITEMS = [];
+
+const CONSOLIDATED_DOC = "Consolidated Med Summary";
 
 const NOTES_ITEMS = [
   { label: "Create Visit Notes AI", roles: ["caregiver"] },
@@ -44,7 +48,7 @@ const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Image" }];
 
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
-function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, disabled }) {
+function DropdownButton({ label, items, onItemClick, onItemDelete, open, onToggle, onClose, disabled }) {
   const boxRef = useRef(null);
 
   useEffect(() => {
@@ -74,15 +78,30 @@ function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, di
       {!disabled && open && (
         <ul className="absolute h-60 overflow-y-auto right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
           {items.map((item) => (
-            <li
-              key={item}
-              onClick={() => {
-                onClose();
-                onItemClick?.(item);
-              }}
-              className="cursor-pointer px-3 py-1.5 text-gray-600 hover:bg-gray-50"
-            >
-              {item}
+            <li key={item} className="group flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-50">
+              <span
+                onClick={() => {
+                  onClose();
+                  onItemClick?.(item);
+                }}
+                className="flex-1 cursor-pointer"
+              >
+                {item}
+              </span>
+              {onItemDelete && item !== CONSOLIDATED_DOC && (
+                <button
+                  type="button"
+                  title="Delete this document"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                    onItemDelete(item);
+                  }}
+                  className="shrink-0 text-gray-300 hover:text-red-600"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -139,6 +158,9 @@ export default function PatientDetails() {
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
+  const canDeleteDocument = useCan("deleteDocument");
+  const [deleteDocTarget, setDeleteDocTarget] = useState(null);
+  const { remove: deleteDoc, isPending: deletePending, errorMessage: deleteError, reset: resetDelete } = useDeletePatientDocument();
   const documentsLabel = role === "patient" ? "Documents" : "Pre-Visits";
   const canPlan = useCan("plan");
   const canForms = useCan("forms");
@@ -171,6 +193,24 @@ export default function PatientDetails() {
     if (initialPayload) dispatch(addDischargePatientDate(initialPayload));
     setHomeKey((k) => k + 1);
     navigate(".");
+  };
+
+  const handleConfirmDeleteDocument = () => {
+    const doc = patient?.raw?.data?.find((d) => d.dates === deleteDocTarget);
+    deleteDoc(
+      {
+        patient_name: singleData?.patient_name,
+        patient_type: doc?.patient_type || singleData?.patient_type,
+        patient_date: deleteDocTarget,
+      },
+      {
+        onSuccess: () => {
+          const wasOpen = singleData?.dates === deleteDocTarget || singleData?.patient_collection === deleteDocTarget;
+          setDeleteDocTarget(null);
+          if (wasOpen) handleHome();
+        },
+      }
+    );
   };
 
   const handleUploadItemClick = (item) => {
@@ -266,6 +306,7 @@ export default function PatientDetails() {
               label={documentsLabel}
               items={DOCUMENT_ITEMS}
               onItemClick={handleDocumentClick}
+              onItemDelete={canDeleteDocument && type === "Uploaded" ? setDeleteDocTarget : undefined}
               open={openDropdown === documentsLabel}
               onToggle={() => toggleDropdown(documentsLabel)}
               onClose={() => setOpenDropdown(null)}
@@ -486,6 +527,19 @@ export default function PatientDetails() {
       {showTransitionCareModal && <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
       {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
+      {deleteDocTarget && (
+        <DeleteConfirmModal
+          title="Delete Document"
+          message={`Delete "${deleteDocTarget}" for ${patient?.name || "this patient"}? This cannot be undone.`}
+          pending={deletePending}
+          error={deleteError}
+          onCancel={() => {
+            resetDelete();
+            setDeleteDocTarget(null);
+          }}
+          onConfirm={handleConfirmDeleteDocument}
+        />
+      )}
     </div>
   );
 }
