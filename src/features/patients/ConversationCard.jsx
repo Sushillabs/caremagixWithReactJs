@@ -30,7 +30,7 @@ const SOURCE_LABELS = {
   PCC: "PCC Records",
   epic: "EHR Records",
   EHR: "EHR Records",
-  metriport: "Metriport Records",
+  metriport: "HIE Records",
   "ICD-Codes": "ICD Codes",
   "CPT-Codes": "CPT Codes",
 };

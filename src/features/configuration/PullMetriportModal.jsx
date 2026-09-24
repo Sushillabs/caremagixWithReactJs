@@ -29,7 +29,7 @@ export default function PullMetriportModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-[380px] rounded-2xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-emerald-700">Pull Metriport Data</h2>
+          <h2 className="text-sm font-semibold text-emerald-700">Pull HIE Data</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
             <X size={16} className="text-gray-500" />
           </button>
@@ -44,8 +44,8 @@ export default function PullMetriportModal({ onClose }) {
           <div className="space-y-4 p-4">
             <div className="flex items-start gap-2 rounded-md bg-blue-50 p-2 text-xs text-blue-700">
               <Info size={14} className="mt-0.5 shrink-0" />
-              Pulls Metriport data for up to 100 patients at this facility in the background. The facility must
-              already be connected to Metriport for this to succeed.
+              Pulls HIE data for up to 100 patients at this facility in the background. The facility must
+              already be connected to the HIE for this to succeed.
             </div>
 
             {error && <p className="text-xs text-red-600">{error}</p>}

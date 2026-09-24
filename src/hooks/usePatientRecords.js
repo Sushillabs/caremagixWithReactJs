@@ -36,6 +36,7 @@ export default function usePatientRecords() {
       const source = rest[key];
       if (!source?.details) return [];
       let type = key.replace(/_data$/, ""); // "pcc" | "epic" | "metriport"
+      if (type === "metriport") type = "HIE";
       type = type.charAt(0).toUpperCase() + type.slice(1);
       return Object.entries(source.details).map(([name, detailsArray]) => ({
         id: crypto.randomUUID(),

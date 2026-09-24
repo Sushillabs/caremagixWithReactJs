@@ -8,7 +8,8 @@ import { getDocRef } from "../../api/hospitalApi";
 const SOURCE_LABELS = {
   Pcc: "PointClickCare",
   Epic: "Epic",
-  Metriport: "Metriport",
+  Metriport: "HIE",
+  HIE: "HIE",
   Uploaded: "Uploaded",
 };
 

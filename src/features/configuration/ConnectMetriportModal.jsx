@@ -99,7 +99,7 @@ export default function ConnectMetriportModal({ onClose }) {
     mutationFn: deleteMetriportFacility,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["metriport-facility"] });
-      setSuccessMessage("Facility disconnected from Metriport.");
+      setSuccessMessage("Facility disconnected from the HIE.");
       setTimeout(onClose, 1500);
     },
   });
@@ -138,7 +138,7 @@ export default function ConnectMetriportModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-[640px] rounded-2xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-emerald-700">Connect Metriport</h2>
+          <h2 className="text-sm font-semibold text-emerald-700">Connect HIE</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
             <X size={16} className="text-gray-500" />
           </button>
@@ -155,7 +155,7 @@ export default function ConnectMetriportModal({ onClose }) {
           <div className="space-y-4 p-4">
             <div className="flex items-start gap-2 rounded-md bg-red-50 p-2 text-xs text-red-700">
               <Info size={14} className="mt-0.5 shrink-0" />
-              Disconnect this facility from Metriport? You can register again later. Patient data via Metriport
+              Disconnect this facility from the HIE? You can register again later. Patient data via the HIE
               will stop until then.
             </div>
             {deleteError && (
@@ -192,7 +192,7 @@ export default function ConnectMetriportModal({ onClose }) {
             ) : (
               <div className="flex items-start gap-2 rounded-md bg-blue-50 p-2 text-xs text-blue-700">
                 <Info size={14} className="mt-0.5 shrink-0" />
-                Register Facility — Connect this facility to Epic via Metriport.
+                Register Facility — Connect this facility to Epic via the HIE.
               </div>
             )}
 
