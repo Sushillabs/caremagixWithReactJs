@@ -40,7 +40,7 @@ const PLAN_ITEMS = ["Nursing Plan", "Transition-Care Plan"];
 
 const FORMS_ITEMS = ["CMS-485", "OASIS-FU", "OASIS-ROC", "OASIS-SOC", "OASIS-DAH", "OASIS-TRN"];
 
-const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Scan PDF" }];
+const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Image" }];
 
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
@@ -139,6 +139,7 @@ export default function PatientDetails() {
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
+  const documentsLabel = role === "patient" ? "Documents" : "Pre-Visits";
   const canPlan = useCan("plan");
   const canForms = useCan("forms");
   const canUpload = useCan("upload");
@@ -174,7 +175,7 @@ export default function PatientDetails() {
 
   const handleUploadItemClick = (item) => {
     if (item === "Upload PDF") setUploadModalMode("pdf");
-    if (item === "Upload Scan PDF") setUploadModalMode("scan");
+    if (item === "Upload Image") setUploadModalMode("scan");
   };
 
   const handlePlanItemClick = (item) => {
@@ -262,11 +263,11 @@ export default function PatientDetails() {
           </button>
           {canDocuments && (
             <DropdownButton
-              label="Documents"
+              label={documentsLabel}
               items={DOCUMENT_ITEMS}
               onItemClick={handleDocumentClick}
-              open={openDropdown === "Documents"}
-              onToggle={() => toggleDropdown("Documents")}
+              open={openDropdown === documentsLabel}
+              onToggle={() => toggleDropdown(documentsLabel)}
               onClose={() => setOpenDropdown(null)}
             />
           )}
@@ -411,7 +412,7 @@ export default function PatientDetails() {
               onClick={() => setActivePanel("timeline")}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
-              Patient Timeline
+              Patient journey
             </button>
           )}
 

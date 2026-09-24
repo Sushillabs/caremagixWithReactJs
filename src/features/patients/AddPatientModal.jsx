@@ -306,7 +306,7 @@ export default function AddPatientModal({ onClose }) {
                       uploadMode === m ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"
                     }`}
                   >
-                    {m === "pdf" ? "Upload PDF" : "Upload Scan PDF"}
+                    {m === "pdf" ? "Upload PDF" : "Upload Image"}
                   </button>
                 ))}
               </div>

@@ -784,7 +784,7 @@ export default function CarePlanDetailPage() {
             <div className="space-y-4 p-4">
               <div className="flex items-start gap-2 text-sm text-gray-700">
                 <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />
-                <p>Save the care plan first. The PDF is created from the saved version.</p>
+                <p>Save the care plan first to generate the pdf.</p>
               </div>
               <div className="flex gap-2">
                 <button

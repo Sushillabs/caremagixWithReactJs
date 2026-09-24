@@ -1,6 +1,8 @@
 // Shared between UploadPlanModal (existing patient) and AddPatientModal's
 // upload step (brand-new patient) — same two backend endpoints, same field
 // contracts, different source for patient_name/email/mobile.
+const PLAN_OPTIONS = ["Discharge Plan", "Nursing Plan", "Medication Adherence", "OASIS Form", "Care Plan", "Prescription"];
+
 export const MODE_CONFIG = {
   pdf: {
     title: "Upload Patient's Plan",
@@ -9,16 +11,16 @@ export const MODE_CONFIG = {
     fileErrorMsg: "Please choose a PDF file.",
     idleLabel: "Upload",
     pendingLabel: "Uploading...",
-    planOptions: ["Discharge Plan", "Nursing Plan", "Medication Adherence", "OASIS Form"],
+    planOptions: PLAN_OPTIONS,
   },
   scan: {
-    title: "Upload Scan PDF",
+    title: "Upload Image",
     accept: ".pdf,.jpg,.jpeg,.png",
     allowedExt: [".pdf", ".jpg", ".jpeg", ".png"],
     fileErrorMsg: "Please choose a PDF or image file.",
-    idleLabel: "Scan",
-    pendingLabel: "Starting scan...",
-    planOptions: ["Care Plan", "Prescription"],
+    idleLabel: "Upload",
+    pendingLabel: "Uploading...",
+    planOptions: PLAN_OPTIONS,
   },
 };
 
