@@ -154,31 +154,29 @@ export const getWellnessCaregiverDashboard = (patientName) =>
   http.get(`/hf-wellness/caregiver/dashboard?patient_name=${encodeURIComponent(patientName)}`, { withAuth: true }).then((res) => res.data);
 
 // Wellness Check-in question editor — physician and caregiver share these
-// routes; the backend scopes each list to the caller's own patients (see
-// heart_failure_wellness/routes.py, wellness_clinician_*). patient_key values
-// always come back from getClinicianWellnessPatients() — never built on the client.
+// routes; the backend scopes each list to the caller's own patients and
+// resolves the patient from patient_name (the same string /retrieve-patient-name
+// returns), so no patient_key lookup is needed anywhere on the client.
+const CLINICIAN_QUESTIONS = "/hf-wellness/clinician/questions";
+
 export const getClinicianWellnessPatients = () =>
   http.get("/hf-wellness/clinician/patients", { withAuth: true }).then((res) => res.data);
-export const getClinicianWellnessQuestions = (patientKey) =>
-  http.get(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions`, { withAuth: true }).then((res) => res.data);
-export const addClinicianWellnessQuestion = (patientKey, body) =>
-  http.post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions`, body, { withAuth: true }).then((res) => res.data);
-export const updateClinicianWellnessQuestion = (patientKey, questionId, body) =>
+export const getClinicianWellnessQuestions = (patientName) =>
+  http.get(`${CLINICIAN_QUESTIONS}?patient_name=${encodeURIComponent(patientName)}`, { withAuth: true }).then((res) => res.data);
+export const addClinicianWellnessQuestion = (patientName, body) =>
+  http.post(CLINICIAN_QUESTIONS, { ...body, patient_name: patientName }, { withAuth: true }).then((res) => res.data);
+export const updateClinicianWellnessQuestion = (patientName, questionId, body) =>
+  http.patch(`${CLINICIAN_QUESTIONS}/${questionId}`, { ...body, patient_name: patientName }, { withAuth: true }).then((res) => res.data);
+export const deleteClinicianWellnessQuestion = (patientName, questionId) =>
   http
-    .patch(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/${questionId}`, body, { withAuth: true })
+    .delete(`${CLINICIAN_QUESTIONS}/${questionId}?patient_name=${encodeURIComponent(patientName)}`, { withAuth: true })
     .then((res) => res.data);
-export const deleteClinicianWellnessQuestion = (patientKey, questionId) =>
+export const reorderClinicianWellnessQuestions = (patientName, questionIds) =>
   http
-    .delete(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/${questionId}`, { withAuth: true })
+    .post(`${CLINICIAN_QUESTIONS}/reorder`, { patient_name: patientName, question_ids: questionIds }, { withAuth: true })
     .then((res) => res.data);
-export const reorderClinicianWellnessQuestions = (patientKey, questionIds) =>
-  http
-    .post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/reorder`, { question_ids: questionIds }, { withAuth: true })
-    .then((res) => res.data);
-export const resetClinicianWellnessQuestions = (patientKey) =>
-  http
-    .post(`/hf-wellness/clinician/patients/${encodeURIComponent(patientKey)}/questions/reset`, {}, { withAuth: true })
-    .then((res) => res.data);
+export const resetClinicianWellnessQuestions = (patientName) =>
+  http.post(`${CLINICIAN_QUESTIONS}/reset`, { patient_name: patientName }, { withAuth: true }).then((res) => res.data);
 export const getWellnessQuestionTemplates = () =>
   http.get("/hf-wellness/question-templates", { withAuth: true }).then((res) => res.data);
 

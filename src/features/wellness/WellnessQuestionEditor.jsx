@@ -3,7 +3,6 @@ import { ChevronDown, ChevronUp, Pencil, Plus, RotateCcw, Trash2, X } from "luci
 import {
   addClinicianWellnessQuestion,
   deleteClinicianWellnessQuestion,
-  getClinicianWellnessPatients,
   getClinicianWellnessQuestions,
   reorderClinicianWellnessQuestions,
   resetClinicianWellnessQuestions,
@@ -12,8 +11,8 @@ import {
 
 // Physician + caregiver question editor for one patient's Wellness Check-in.
 // Same backend routes for both roles (/hf-wellness/clinician/*); the list is
-// already scoped server-side. Selects the patient open in PatientDetails by
-// matching patient_display_name — no match means no data is shown.
+// already scoped server-side and the patient is resolved from the name
+// PatientDetails already holds, so no patient_key lookup happens here.
 
 // Backend always gets the raw key (see ANSWER_TYPES below) — these are only
 // the friendly labels shown in the UI. "integer" is a valid backend type but
@@ -26,9 +25,30 @@ const ANSWER_TYPE_LABELS = {
 };
 const ANSWER_TYPES = ["text", "enum", "boolean", "number"];
 
+const ZONE_CHOICES = [
+  { key: "green", label: "Green", on: "bg-emerald-600 text-white border-emerald-600", off: "border-gray-200 text-gray-500 hover:bg-emerald-50" },
+  { key: "yellow", label: "Yellow", on: "bg-amber-500 text-white border-amber-500", off: "border-gray-200 text-gray-500 hover:bg-amber-50" },
+  { key: "red", label: "Red", on: "bg-red-600 text-white border-red-600", off: "border-gray-200 text-gray-500 hover:bg-red-50" },
+];
+const OPERATORS = [">=", "<=", ">", "<", "=="];
+const MAX_ZONE_VALUES = 12;
+const MAX_ZONE_VALUE_LEN = 80;
+
 const apiMessage = (err) => err?.response?.data?.message || err?.message || "Something went wrong";
-const norm = (s) => (s || "").trim().toLowerCase().replace(/\s+/g, " ");
 const titleCase = (s) => (s || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const optionList = (text) =>
+  (text || "")
+    .split("\n")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+// Number zones travel as one operator+value string, e.g. ">=2" or "<88".
+const parseRule = (list) => {
+  const raw = (list || [])[0] || "";
+  const m = raw.match(/^\s*(>=|<=|==|=|>|<)\s*(-?\d+(?:\.\d+)?)\s*$/);
+  return m ? { op: m[1] === "=" ? "==" : m[1], value: m[2] } : { op: ">=", value: "" };
+};
+const ruleToList = (rule) => (rule.value.trim() === "" ? [] : [`${rule.op}${rule.value.trim()}`]);
 
 const blankDraft = (diagnosisKey = "") => ({
   prompt: "",
@@ -37,9 +57,14 @@ const blankDraft = (diagnosisKey = "") => ({
   is_core: false,
   field_key: "",
   diagnosis_key: diagnosisKey || "",
+  yellow_answers: [],
+  red_answers: [],
+  yellow_rule: { op: ">=", value: "" },
+  red_rule: { op: ">=", value: "" },
 });
 
 function draftFromQuestion(q) {
+  const isNumber = q.answer_type === "number" || q.answer_type === "integer";
   return {
     prompt: q.prompt || "",
     answer_type: q.answer_type || "text",
@@ -47,11 +72,16 @@ function draftFromQuestion(q) {
     is_core: !!q.is_core,
     field_key: q.field_key || "",
     diagnosis_key: q.diagnosis_key || "",
+    yellow_answers: q.yellow_answers || [],
+    red_answers: q.red_answers || [],
+    yellow_rule: isNumber ? parseRule(q.yellow_answers) : { op: ">=", value: "" },
+    red_rule: isNumber ? parseRule(q.red_answers) : { op: ">=", value: "" },
   };
 }
 
 // Draft -> request body. Options only travel for enum/boolean; empty strings
-// become null so the backend clears rather than rejects them.
+// become null so the backend clears rather than rejects them. Zone lists are
+// always sent in full — the backend replaces them, so [] clears a zone.
 function draftToBody(draft) {
   const body = {
     prompt: draft.prompt.trim(),
@@ -61,15 +91,56 @@ function draftToBody(draft) {
     diagnosis_key: draft.diagnosis_key || null,
   };
   if (draft.answer_type === "enum" || draft.answer_type === "boolean") {
-    const opts = draft.options
-      .split("\n")
-      .map((o) => o.trim())
-      .filter(Boolean);
+    const opts = optionList(draft.options);
     body.options = opts.length ? opts : null;
+    body.yellow_answers = draft.yellow_answers.filter((a) => opts.includes(a));
+    body.red_answers = draft.red_answers.filter((a) => opts.includes(a));
+  } else if (draft.answer_type === "number" || draft.answer_type === "integer") {
+    body.options = null;
+    body.yellow_answers = ruleToList(draft.yellow_rule);
+    body.red_answers = ruleToList(draft.red_rule);
   } else {
     body.options = null;
+    body.yellow_answers = draft.yellow_answers;
+    body.red_answers = draft.red_answers;
   }
   return body;
+}
+
+function zoneError(body) {
+  for (const key of ["yellow_answers", "red_answers"]) {
+    const list = body[key] || [];
+    const zone = key === "yellow_answers" ? "yellow" : "red";
+    if (list.length > MAX_ZONE_VALUES) return `At most ${MAX_ZONE_VALUES} ${zone} answers are allowed.`;
+    if (list.some((v) => v.length > MAX_ZONE_VALUE_LEN)) return `Each ${zone} answer must be ${MAX_ZONE_VALUE_LEN} characters or fewer.`;
+  }
+  return null;
+}
+
+function ZoneRuleRow({ label, rule, onChange, tone }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`w-16 text-[11px] font-medium ${tone}`}>{label}</span>
+      <select
+        value={rule.op}
+        onChange={(e) => onChange({ ...rule, op: e.target.value })}
+        className="rounded-md border border-gray-200 px-1.5 py-1 text-xs"
+      >
+        {OPERATORS.map((op) => (
+          <option key={op} value={op}>
+            {op}
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        value={rule.value}
+        onChange={(e) => onChange({ ...rule, value: e.target.value })}
+        placeholder="leave blank for none"
+        className="w-36 rounded-md border border-gray-200 px-2 py-1 text-xs"
+      />
+    </div>
+  );
 }
 
 function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, busy, submitLabel }) {
@@ -78,6 +149,16 @@ function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, b
     setDraft((d) => ({ ...d, [key]: value }));
   };
   const showOptions = draft.answer_type === "enum" || draft.answer_type === "boolean";
+  const isNumber = draft.answer_type === "number" || draft.answer_type === "integer";
+  const opts = useMemo(() => optionList(draft.options), [draft.options]);
+
+  const zoneOf = (opt) => (draft.red_answers.includes(opt) ? "red" : draft.yellow_answers.includes(opt) ? "yellow" : "green");
+  const setZone = (opt, zone) =>
+    setDraft((d) => ({
+      ...d,
+      yellow_answers: zone === "yellow" ? [...d.yellow_answers.filter((a) => a !== opt), opt] : d.yellow_answers.filter((a) => a !== opt),
+      red_answers: zone === "red" ? [...d.red_answers.filter((a) => a !== opt), opt] : d.red_answers.filter((a) => a !== opt),
+    }));
 
   return (
     <div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
@@ -134,6 +215,50 @@ function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, b
         </label>
       )}
 
+      {(showOptions || isNumber) && (
+        <div className="space-y-1.5 rounded-md border border-gray-200 bg-white p-2">
+          <p className="text-[11px] text-gray-600">
+            Mark which answers put this patient in the yellow or red zone. A yellow or red answer will offer an urgent physician visit in the
+            patient's wellness check-in.
+          </p>
+
+          {showOptions &&
+            (opts.length === 0 ? (
+              <p className="text-[11px] text-gray-400">Add options above to mark their zones.</p>
+            ) : (
+              opts.map((opt) => (
+                <div key={opt} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-xs text-gray-700">{opt}</span>
+                  <div className="flex shrink-0 gap-1">
+                    {ZONE_CHOICES.map((z) => (
+                      <button
+                        key={z.key}
+                        type="button"
+                        onClick={() => setZone(opt, z.key)}
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${zoneOf(opt) === z.key ? z.on : z.off}`}
+                      >
+                        {z.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ))}
+
+          {isNumber && (
+            <div className="space-y-1.5">
+              <ZoneRuleRow
+                label="Yellow if"
+                tone="text-amber-600"
+                rule={draft.yellow_rule}
+                onChange={(rule) => setDraft((d) => ({ ...d, yellow_rule: rule }))}
+              />
+              <ZoneRuleRow label="Red if" tone="text-red-600" rule={draft.red_rule} onChange={(rule) => setDraft((d) => ({ ...d, red_rule: rule }))} />
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
           <input type="checkbox" checked={draft.is_core} onChange={set("is_core")} />
@@ -169,6 +294,16 @@ function QuestionForm({ draft, setDraft, diagnosisOptions, onSubmit, onCancel, b
 }
 
 function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy }) {
+  const yellow = q.yellow_answers || [];
+  const red = q.red_answers || [];
+  const isNumber = q.answer_type === "number" || q.answer_type === "integer";
+  const pillClass = (opt) =>
+    red.includes(opt)
+      ? "border-red-300 bg-red-50 text-red-700"
+      : yellow.includes(opt)
+        ? "border-amber-300 bg-amber-50 text-amber-700"
+        : "border-gray-200 text-gray-500";
+
   return (
     <div className="flex items-start gap-2 rounded-md border border-gray-100 p-2 text-xs">
       <div className="flex flex-col">
@@ -197,8 +332,18 @@ function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy
           {q.is_core && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">Required</span>}
           {q.field_key && <span className="text-[10px] text-gray-400">{q.field_key}</span>}
           {(q.options || []).map((opt) => (
-            <span key={opt} className="rounded-full border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-500">
+            <span key={opt} className={`rounded-full border px-1.5 py-0.5 text-[10px] ${pillClass(opt)}`}>
               {opt}
+            </span>
+          ))}
+          {isNumber && yellow.map((r) => (
+            <span key={`y-${r}`} className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
+              Yellow {r}
+            </span>
+          ))}
+          {isNumber && red.map((r) => (
+            <span key={`r-${r}`} className="rounded-full border border-red-300 bg-red-50 px-1.5 py-0.5 text-[10px] text-red-700">
+              Red {r}
             </span>
           ))}
         </div>
@@ -216,7 +361,6 @@ function QuestionRow({ q, canMoveUp, canMoveDown, onEdit, onDelete, onMove, busy
 }
 
 export default function WellnessQuestionEditor({ patientName }) {
-  const [patientKey, setPatientKey] = useState(null);
   const [payload, setPayload] = useState(null);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,40 +373,16 @@ export default function WellnessQuestionEditor({ patientName }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(blankDraft());
 
-  // 1. Load the patients this clinician may edit, then auto-match by name.
+  // The backend resolves the patient from the name PatientDetails already has.
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setError(null);
-    setForbidden(false);
-    getClinicianWellnessPatients()
-      .then((data) => {
-        if (!alive) return;
-        const list = data?.patients || [];
-        const match = list.find((p) => norm(p.patient_display_name) === norm(patientName));
-        setPatientKey(match ? match.patient_key : null);
-      })
-      .catch((err) => {
-        if (!alive) return;
-        if (err?.response?.status === 403) setForbidden(true);
-        else setError(apiMessage(err));
-      })
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, [patientName]);
-
-  // 2. Load the selected patient's question list.
-  useEffect(() => {
-    if (!patientKey) return;
+    if (!patientName) return;
     let alive = true;
     setLoading(true);
     setError(null);
     setForbidden(false);
     setEditingId(null);
     setAdding(false);
-    getClinicianWellnessQuestions(patientKey)
+    getClinicianWellnessQuestions(patientName)
       .then((data) => {
         if (!alive) return;
         setPayload(data);
@@ -277,7 +397,7 @@ export default function WellnessQuestionEditor({ patientName }) {
     return () => {
       alive = false;
     };
-  }, [patientKey]);
+  }, [patientName]);
 
   const diagnosisOptions = useMemo(() => {
     const seen = new Map();
@@ -305,7 +425,7 @@ export default function WellnessQuestionEditor({ patientName }) {
     setFormError(null);
     try {
       const data = await reorderClinicianWellnessQuestions(
-        patientKey,
+        patientName,
         nextRows.map((q) => q.id)
       );
       setPayload(data);
@@ -328,10 +448,13 @@ export default function WellnessQuestionEditor({ patientName }) {
   };
 
   const saveEdit = async () => {
+    const body = draftToBody(draft);
+    const invalid = zoneError(body);
+    if (invalid) return setFormError(invalid);
     setBusy(true);
     setFormError(null);
     try {
-      const { question } = await updateClinicianWellnessQuestion(patientKey, editingId, draftToBody(draft));
+      const { question } = await updateClinicianWellnessQuestion(patientName, editingId, body);
       setRows((prev) => prev.map((q) => (q.id === question.id ? question : q)));
       setEditingId(null);
     } catch (err) {
@@ -342,10 +465,13 @@ export default function WellnessQuestionEditor({ patientName }) {
   };
 
   const saveAdd = async () => {
+    const body = draftToBody(draft);
+    const invalid = zoneError(body);
+    if (invalid) return setFormError(invalid);
     setBusy(true);
     setFormError(null);
     try {
-      const { question } = await addClinicianWellnessQuestion(patientKey, draftToBody(draft));
+      const { question } = await addClinicianWellnessQuestion(patientName, body);
       setRows((prev) => [...prev, question]);
       setAdding(false);
     } catch (err) {
@@ -360,7 +486,7 @@ export default function WellnessQuestionEditor({ patientName }) {
     setBusy(true);
     setFormError(null);
     try {
-      await deleteClinicianWellnessQuestion(patientKey, id);
+      await deleteClinicianWellnessQuestion(patientName, id);
       setRows((prev) => prev.filter((q) => q.id !== id));
     } catch (err) {
       setFormError(apiMessage(err));
@@ -370,11 +496,16 @@ export default function WellnessQuestionEditor({ patientName }) {
   };
 
   const resetAll = async () => {
-    if (!window.confirm("This restores the default questions for this patient's diagnoses and removes questions you added. Continue?")) return;
+    if (
+      !window.confirm(
+        "This restores the default questions and the default yellow/red zones for this patient's diagnoses, and removes questions you added. Continue?"
+      )
+    )
+      return;
     setBusy(true);
     setFormError(null);
     try {
-      const data = await resetClinicianWellnessQuestions(patientKey);
+      const data = await resetClinicianWellnessQuestions(patientName);
       setPayload(data);
       setRows(data?.questions || []);
       setEditingId(null);
@@ -403,12 +534,8 @@ export default function WellnessQuestionEditor({ patientName }) {
   if (loading) return <p className="p-4 text-sm text-gray-400">Loading questions...</p>;
   if (error) return <p className="p-4 text-sm text-red-600">Error: {error}</p>;
 
-  if (!patientKey) {
-    return (
-      <p className="p-4 text-xs text-gray-500">
-        Check-in questions aren't available for {patientName || "this patient"}.
-      </p>
-    );
+  if (!patientName) {
+    return <p className="p-4 text-xs text-gray-500">Select a patient to edit their check-in questions.</p>;
   }
 
   return (
