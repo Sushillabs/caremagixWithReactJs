@@ -101,6 +101,8 @@ export default function AppointmentsPanel({ initialTab }) {
   });
 
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const bookingConfirmedRef = useRef(false);
+  bookingConfirmedRef.current = bookingConfirmed;
 
   const [physicians, setPhysicians] = useState([]);
   // True when the patient has no pre-matched physician yet — mirrors
@@ -184,7 +186,8 @@ export default function AppointmentsPanel({ initialTab }) {
       }
     } finally {
       if (speakAbortRef.current === controller) speakAbortRef.current = null;
-      voice.resumeAfterTurn();
+      if (bookingConfirmedRef.current) voice.stop();
+      else voice.resumeAfterTurn();
     }
   };
 
@@ -204,6 +207,12 @@ export default function AppointmentsPanel({ initialTab }) {
     if (lastResponse?.message) speak(lastResponse.message);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
+
+  // Covers a confirmation with no spoken reply to wait for.
+  useEffect(() => {
+    if (bookingConfirmed && voice.isActive && voice.state !== "speaking") voice.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingConfirmed, voice.state, voice.isActive]);
 
   const handleConfirmBooking = async () => {
     if (pending || bookingConfirmed || !sessionId) return;
