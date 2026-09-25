@@ -186,7 +186,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     return () => setAssistantHidden?.(false);
   }, [setAssistantHidden]);
 
-  const { turns, lastResponse, pending, error, send, hydrateHistory, historyLoaded, reset } = useAgentChat({
+  const { turns, lastResponse, pending, error, errorStatus, send, hydrateHistory, historyLoaded, reset } = useAgentChat({
     sendMessage: wellnessChat,
     loadHistory: wellnessHistory,
     clearSession: wellnessClear,
@@ -197,6 +197,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   const [dashboard, setDashboard] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState(null);
+  const [authExpired, setAuthExpired] = useState(false);
 
   const refreshDashboard = () => {
     setDashboardLoading(true);
@@ -205,7 +206,10 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
         setDashboard(data);
         setDashboardError(null);
       })
-      .catch((err) => setDashboardError(err?.message || "Could not load your wellness data"))
+      .catch((err) => {
+        if (err?.response?.status === 401) setAuthExpired(true);
+        setDashboardError(err?.message || "Could not load your wellness data");
+      })
       .finally(() => setDashboardLoading(false));
   };
 
@@ -244,6 +248,13 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
       if (!pendingRef.current) voice.resumeAfterTurn();
     }
   };
+
+  const stopVoice = voice.stop;
+  useEffect(() => {
+    if (errorStatus !== 401 && !authExpired) return;
+    speakAbortRef.current?.abort();
+    stopVoice();
+  }, [errorStatus, authExpired, stopVoice]);
 
   const handleTalkNow = () => {
     speakAbortRef.current?.abort();

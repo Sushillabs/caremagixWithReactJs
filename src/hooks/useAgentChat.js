@@ -11,6 +11,7 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
   const [lastResponse, setLastResponse] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  const [errorStatus, setErrorStatus] = useState(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const sessionIdRef = useRef(null);
   sessionIdRef.current = sessionId;
@@ -28,6 +29,7 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
     async (action) => {
       if (pending) return null;
       setError(null);
+      setErrorStatus(null);
       setPending(true);
       try {
         const response = await action();
@@ -37,6 +39,7 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
         return response;
       } catch (err) {
         setError(err?.message || "Something went wrong");
+        setErrorStatus(err?.response?.status ?? null);
         throw err;
       } finally {
         setPending(false);
@@ -75,6 +78,7 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
       return res;
     } catch (err) {
       setError(err?.message || "Could not load history");
+      setErrorStatus(err?.response?.status ?? null);
       return null;
     }
   }, [loadHistory]);
@@ -93,9 +97,10 @@ export default function useAgentChat({ sendMessage, loadHistory, clearSession } 
     setTurns([]);
     setLastResponse(null);
     setError(null);
+    setErrorStatus(null);
     historyLoadedRef.current = false;
     setHistoryLoaded(false);
   }, [clearSession]);
 
-  return { sessionId, turns, lastResponse, pending, error, historyLoaded, send, runAction, hydrateHistory, reset };
+  return { sessionId, turns, lastResponse, pending, error, errorStatus, historyLoaded, send, runAction, hydrateHistory, reset };
 }
