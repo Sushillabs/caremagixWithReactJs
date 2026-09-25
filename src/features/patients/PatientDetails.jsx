@@ -109,7 +109,6 @@ export default function PatientDetails() {
   // view" idiom VisitNotesAI already uses for ?kind=.
   const [searchParams] = useSearchParams();
   const [activePanel, setActivePanel] = useState(() => searchParams.get("panel"));
-  const initialPanelTab = searchParams.get("tab");
 
   // ?tab= stays in the URL after a deep link, so the Wellness Check-in button
   // needs its own tab state plus a remount key — otherwise it re-lands on the
@@ -121,6 +120,17 @@ export default function PatientDetails() {
     setActivePanel("wellness");
     setWellnessTab("checkin");
     setWellnessKey((k) => k + 1);
+  };
+
+  // Same stale-?tab= issue as Wellness: Book Physician Visit must always
+  // land on "book", not whatever tab a prior deep link left in the URL.
+  const [appointmentsTab, setAppointmentsTab] = useState(() => searchParams.get("tab"));
+  const [appointmentsKey, setAppointmentsKey] = useState(0);
+
+  const openBookAppointment = () => {
+    setActivePanel("appointments");
+    setAppointmentsTab("book");
+    setAppointmentsKey((k) => k + 1);
   };
 
   const [homeKey, setHomeKey] = useState(0);
@@ -139,7 +149,7 @@ export default function PatientDetails() {
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
-  const documentsLabel = role === "patient" ? "Documents" : "Pre-Visits";
+  const documentsLabel = role === "patient" ? "Documents" : "Pre-Visit Summaries";
   const canPlan = useCan("plan");
   const canForms = useCan("forms");
   const canUpload = useCan("upload");
@@ -399,7 +409,7 @@ export default function PatientDetails() {
           {canBookAppointment && (
             <button
               type="button"
-              onClick={() => setActivePanel("appointments")}
+              onClick={openBookAppointment}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Book Physician Visit
@@ -461,10 +471,10 @@ export default function PatientDetails() {
         <WellnessCheckInPanel
           key={wellnessKey}
           initialTab={wellnessTab}
-          onRequestVisit={canBookAppointment ? () => setActivePanel("appointments") : undefined}
+          onRequestVisit={canBookAppointment ? openBookAppointment : undefined}
         />
       ) : activePanel === "appointments" ? (
-        <AppointmentsPanel initialTab={initialPanelTab} />
+        <AppointmentsPanel key={appointmentsKey} initialTab={appointmentsTab} />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
       ) : activePanel === "wellnessQuestions" ? (

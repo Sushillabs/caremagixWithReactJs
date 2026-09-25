@@ -14,7 +14,7 @@ export const FEATURE_ROLES = {
   medicationAlerts: ["caregiver"],
   medication: ["caregiver", "patient"],
   patientJourney: ["caregiver"],
-  createCarePlan: ["caregiver"],
+  createCarePlan: ["caregiver", "physician"],
   wellnessCheckIn: ["patient"],
   bookAppointment: ["patient"],
   wellnessCheckInReport: ["caregiver"],
