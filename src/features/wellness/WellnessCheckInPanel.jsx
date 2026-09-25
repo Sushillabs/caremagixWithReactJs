@@ -176,6 +176,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   // own dashboard fetch below, not blocked by this.
   const [started, setStarted] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [checklistCleared, setChecklistCleared] = useState(false);
   const { setAssistantHidden } = useOutletContext() || {};
 
   // This panel has its own composer (below) instead of the shared
@@ -309,7 +310,8 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   const dismissedAlertIdsRef = useRef(new Set());
 
   useEffect(() => {
-    if (dashboard?.appointment_handoff) setActiveHandoff((h) => h || dashboard.appointment_handoff);
+    const dashHandoff = dashboard?.appointment_handoff;
+    if (dashHandoff && !dismissedAlertIdsRef.current.has(dashHandoff.alert_id)) setActiveHandoff((h) => h || dashHandoff);
     if (activeAlertId) return;
     const openAlert = dashboard?.open_alerts?.[0];
     if (openAlert?.id && !dismissedAlertIdsRef.current.has(openAlert.id)) setActiveAlertId(openAlert.id);
@@ -338,6 +340,10 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     if (pending) return;
     speakAbortRef.current?.abort();
     setConversationStarted(true);
+    setChecklistCleared(true);
+    setActiveAlertId(null);
+    setActiveHandoff(null);
+    setDashboard((d) => (d ? { ...d, open_alerts: [], appointment_handoff: undefined } : d));
     if (voice.isActive) voice.stop();
     await reset();
     voice.start()?.catch(() => {});
@@ -412,7 +418,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
               <ZoneBanner zone={lastResponse?.zone} />
               <ProgressChecklist
                 questions={dashboard?.questions?.questions}
-                checkIn={lastResponse?.check_in || (dashboard?.checked_in_today ? dashboard?.latest_check_in : null)}
+                checkIn={lastResponse?.check_in || (!checklistCleared && dashboard?.checked_in_today ? dashboard?.latest_check_in : null)}
               />
               {showHandoff && (
                 <div className="mx-2 mt-2">
