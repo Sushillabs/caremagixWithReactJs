@@ -45,7 +45,7 @@ function physicianLabel(p) {
   return label;
 }
 
-function ConfirmBookingPanel({ booking, pending, onConfirm }) {
+function ConfirmBookingPanel({ booking, pending, onConfirm, onCancel }) {
   if (!booking) return null;
   return (
     <div className="mt-2 space-y-1 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-900">
@@ -63,14 +63,24 @@ function ConfirmBookingPanel({ booking, pending, onConfirm }) {
           <span className="font-medium">Reason:</span> {booking.reason}
         </p>
       )}
-      <button
-        type="button"
-        onClick={onConfirm}
-        disabled={pending}
-        className="mt-1 rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Confirm booking
-      </button>
+      <div className="mt-1 flex gap-2">
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={pending}
+          className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Confirm booking
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={pending}
+          className="rounded-md border border-emerald-300 px-3 py-1 font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Cancel booking
+        </button>
+      </div>
     </div>
   );
 }
@@ -323,7 +333,12 @@ export default function AppointmentsPanel({ initialTab }) {
               liveText={voice.transcript}
               renderExtra={(meta) =>
                 meta?.status === "ready_to_book" && !bookingConfirmed ? (
-                  <ConfirmBookingPanel booking={meta.proposed_booking} pending={pending} onConfirm={handleConfirmBooking} />
+                  <ConfirmBookingPanel
+                    booking={meta.proposed_booking}
+                    pending={pending}
+                    onConfirm={handleConfirmBooking}
+                    onCancel={handleStartOver}
+                  />
                 ) : null
               }
             />
