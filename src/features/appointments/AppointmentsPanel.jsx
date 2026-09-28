@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { CalendarPlus, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
+import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
@@ -94,7 +95,7 @@ export default function AppointmentsPanel({ initialTab }) {
   // flow (patient_appointment.js) never calls GET /physician-appointment/history
   // at all. Every open/"New chat" is always a clean slate (resetChatSession()
   // + sendChatMessage() directly), so there's no prior session to resume.
-  const { sessionId, turns, lastResponse, pending, error, send, runAction, reset } = useAgentChat({
+  const { sessionId, turns, lastResponse, pending, error, errorStatus, send, runAction, reset } = useAgentChat({
     sendMessage: appointmentChat,
     loadHistory: appointmentHistory,
     clearSession: appointmentClear,
@@ -190,6 +191,8 @@ export default function AppointmentsPanel({ initialTab }) {
       else voice.resumeAfterTurn();
     }
   };
+
+  useStopVoiceOnAuthError(voice, errorStatus, () => speakAbortRef.current?.abort());
 
   const handleTalkNow = () => {
     speakAbortRef.current?.abort();

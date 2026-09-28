@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { HeartPulse, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useVoiceTurnLock from "../../hooks/useVoiceTurnLock";
+import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
@@ -233,6 +234,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   // base64 clip on genuine failure (not on a user-triggered interrupt).
   // Replies stay text-only while the check-in is stopped.
   const speakAbortRef = useRef(null);
+  const abortSpeech = useCallback(() => speakAbortRef.current?.abort(), []);
   const speak = async (text, { force = false } = {}) => {
     if (!text || (!force && !micOnRef.current)) return;
     const controller = new AbortController();
@@ -257,15 +259,10 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     }
   };
 
-  const stopVoice = voice.stop;
-  useEffect(() => {
-    if (errorStatus !== 401 && !authExpired) return;
-    speakAbortRef.current?.abort();
-    stopVoice();
-  }, [errorStatus, authExpired, stopVoice]);
+  useStopVoiceOnAuthError(voice, [errorStatus, authExpired], abortSpeech);
 
   const handleTalkNow = () => {
-    speakAbortRef.current?.abort();
+    abortSpeech();
     voice.interruptSpeech();
   };
 

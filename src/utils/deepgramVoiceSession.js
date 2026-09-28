@@ -120,7 +120,13 @@ export default class DeepgramVoiceSession {
       await this._openSocket(tokenInfo);
     } catch (err) {
       this.stop();
-      const msg = err?.name === "NotAllowedError" ? "Microphone permission denied" : err?.message || "Could not start voice mode";
+      const status = err?.response?.status;
+      const msg =
+        err?.name === "NotAllowedError"
+          ? "Microphone permission denied"
+          : status === 401 || status === 403
+          ? "Your session has expired. Please sign in again."
+          : err?.message || "Could not start voice mode";
       this._error(msg);
       throw err;
     }

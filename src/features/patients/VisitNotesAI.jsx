@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
+import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
@@ -157,6 +158,7 @@ export default function VisitNotesAI() {
     lastResponse,
     pending,
     error,
+    errorStatus,
     send,
     stopAndGenerate,
     hydrateHistory,
@@ -173,6 +175,8 @@ export default function VisitNotesAI() {
     fetchToken: fetchVoiceToken,
     onUtterance: (text) => send(text),
   });
+
+  useStopVoiceOnAuthError(voice, errorStatus, () => speakAbortRef.current?.abort());
 
   // Streams the question's audio as it's generated (falls back to a plain
   // base64 clip if streaming fails or is aborted for any other reason), then

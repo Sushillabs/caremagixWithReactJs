@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import useDeepgramVoice from "./useDeepgramVoice";
+import useStopVoiceOnAuthError from "./useStopVoiceOnAuthError";
 import { getPhysicianAmbientVoiceToken, physicianAmbientStart, physicianAmbientStop, physicianAmbientSave } from "../api/hospitalApi";
 
 // Matches the labels ambient_ai/agent.py's format_note_text writes — query_api.py's
@@ -40,6 +41,7 @@ export default function usePhysicianAmbientSession() {
   const [noteText, setNoteText] = useState("");
   const [transcriptPreview, setTranscriptPreview] = useState("");
   const [error, setError] = useState(null);
+  const [errorStatus, setErrorStatus] = useState(null);
   const [saveResult, setSaveResult] = useState(null);
 
   // Authoritative accumulator read by stopAndGenerate — a ref so the value used
@@ -61,7 +63,10 @@ export default function usePhysicianAmbientSession() {
     onUtterance: pushUtterance,
   });
 
-  const errorMessage = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
+  const errorMessage = (err, fallback) => {
+    setErrorStatus(err?.response?.status ?? null);
+    return err?.response?.data?.message || err?.message || fallback;
+  };
 
   const beginSession = useCallback(async () => {
     setError(null);
@@ -163,8 +168,11 @@ export default function usePhysicianAmbientSession() {
     setTranscriptPreview("");
     setSaveResult(null);
     setError(null);
+    setErrorStatus(null);
     setPhase("idle");
   }, [voice]);
+
+  useStopVoiceOnAuthError(voice, errorStatus);
 
   return {
     phase,
@@ -174,6 +182,7 @@ export default function usePhysicianAmbientSession() {
     soap,
     transcriptPreview,
     error,
+    errorStatus,
     saveResult,
     beginSession,
     pause,
