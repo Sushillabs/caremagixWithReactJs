@@ -2,12 +2,12 @@ export const ALL_ROLES = ["caregiver", "physician", "patient"];
 // const CLINICIAN_ROLES = ["caregiver", "physician"];
 
 export const FEATURE_ROLES = {
-  addPatient: ["caregiver"],
+  addPatient: ["caregiver", "physician"],
   notes: ["caregiver", "physician"],
   documents: ALL_ROLES,
   plan: ["caregiver", "patient"],
   forms: ["caregiver"],
-  upload: ["caregiver", "patient"],
+  upload: ALL_ROLES,
   mmta: ["caregiver"],
   registerCall: ["caregiver"],
   // medicationAlerts: ["caregiver", "physician"],
@@ -15,6 +15,8 @@ export const FEATURE_ROLES = {
   medication: ["caregiver", "patient"],
   patientJourney: ["caregiver"],
   createCarePlan: ["caregiver", "physician"],
+  carePlanHistory: ["caregiver"],
+  regenerateCarePlan: ["caregiver"],
   wellnessCheckIn: ["patient"],
   bookAppointment: ["patient"],
   wellnessCheckInReport: ["caregiver"],

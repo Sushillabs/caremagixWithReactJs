@@ -199,18 +199,26 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   const [dashboardError, setDashboardError] = useState(null);
   const [authExpired, setAuthExpired] = useState(false);
 
+  const dashboardReqRef = useRef(0);
+
   const refreshDashboard = () => {
+    const reqId = ++dashboardReqRef.current;
     setDashboardLoading(true);
-    wellnessDashboard()
+    return wellnessDashboard()
       .then((data) => {
+        if (reqId !== dashboardReqRef.current) return data;
         setDashboard(data);
         setDashboardError(null);
+        return data;
       })
       .catch((err) => {
+        if (reqId !== dashboardReqRef.current) return;
         if (err?.response?.status === 401) setAuthExpired(true);
         setDashboardError(err?.message || "Could not load your wellness data");
       })
-      .finally(() => setDashboardLoading(false));
+      .finally(() => {
+        if (reqId === dashboardReqRef.current) setDashboardLoading(false);
+      });
   };
 
   const voice = useDeepgramVoice({
@@ -303,41 +311,33 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   useEffect(() => {
     if (lastResponse?.message) speak(lastResponse.message);
     else if (lastResponse) voice.resumeAfterTurn();
-    if (lastResponse?.check_in) refreshDashboard();
+    const alertMayChange = lastResponse?.zone === "red" || lastResponse?.zone === "yellow" || !!lastResponse?.alert;
+    if (lastResponse?.check_in || alertMayChange) refreshDashboard();
     // The zone (and so the offer) is decided by the backend from the
     // clinician's yellow/red answers — the card only mirrors what it sends.
-    const handoff = lastResponse?.appointment_handoff;
-    if (handoff) setActiveHandoff(handoff);
-    if ((lastResponse?.handoff || handoff) && lastResponse?.alert?.id) setActiveAlertId(lastResponse.alert.id);
+    // const handoff = lastResponse?.appointment_handoff;
+    // if (handoff) setActiveHandoff(handoff);
+    // if (lastResponse?.alert?.id) setActiveAlertId(lastResponse.alert.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
-  // Stays up once set, across later chat turns and across reopening the
-  // check-in — only "Request urgent visit"/"Not now" clear it, not the next
-  // unrelated reply. dismissedAlertIdsRef stops a stale dashboard snapshot
-  // (fetched before the dismiss round-trips) from bringing it straight back.
-  const [activeAlertId, setActiveAlertId] = useState(null);
   const [activeHandoff, setActiveHandoff] = useState(null);
-  const dismissedAlertIdsRef = useRef(new Set());
+
+  const activeAlert = dashboard?.open_alerts?.[0] || null;
+  const activeAlertId = activeAlert?.id || null;
+  const showHandoff = !!activeAlertId;
 
   useEffect(() => {
     const dashHandoff = dashboard?.appointment_handoff;
-    if (dashHandoff && !dismissedAlertIdsRef.current.has(dashHandoff.alert_id)) setActiveHandoff((h) => h || dashHandoff);
-    if (activeAlertId) return;
-    const openAlert = dashboard?.open_alerts?.[0];
-    if (openAlert?.id && !dismissedAlertIdsRef.current.has(openAlert.id)) setActiveAlertId(openAlert.id);
-  }, [dashboard, activeAlertId]);
-
-  const showHandoff = !!activeAlertId;
-  const activeAlert =
-    dashboard?.open_alerts?.find((a) => a.id === activeAlertId) || (lastResponse?.alert?.id === activeAlertId ? lastResponse.alert : null);
+    if (dashHandoff) setActiveHandoff((h) => h || dashHandoff);
+  }, [dashboard]);
 
   const closeHandoff = (status) => {
     setActiveHandoff(null);
     if (!activeAlertId) return;
-    dismissedAlertIdsRef.current.add(activeAlertId);
-    wellnessAlertAction(activeAlertId, { status }).catch(() => {});
-    setActiveAlertId(null);
+    wellnessAlertAction(activeAlertId, { status })
+      .then(() => refreshDashboard())
+      .catch(() => {});
   };
 
   const handleRequestVisit = () => {
@@ -352,8 +352,8 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
     speakAbortRef.current?.abort();
     setConversationStarted(true);
     setChecklistCleared(true);
-    setActiveAlertId(null);
     setActiveHandoff(null);
+    dashboardReqRef.current += 1;
     setDashboard((d) => (d ? { ...d, open_alerts: [], appointment_handoff: undefined } : d));
     if (voice.isActive) voice.stop();
     await reset();
@@ -401,12 +401,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
                   />
                 )}
                 {conversationStarted && (
-                  <ConversationHoldToggle
-                    voice={voice}
-                    showWhenIdle
-                    speaking={voice.isActive && !voice.isPaused}
-                    onToggle={handleHoldToggle}
-                  />
+                  <ConversationHoldToggle voice={voice} showWhenIdle speaking={voice.isActive && !voice.isPaused} onToggle={handleHoldToggle} />
                 )}
                 <button
                   type="button"
@@ -433,11 +428,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
               />
               {showHandoff && (
                 <div className="mx-2 mt-2">
-                  <HandoffPanel
-                    message={activeAlert?.message}
-                    onRequestVisit={handleRequestVisit}
-                    onDismiss={() => closeHandoff("dismissed")}
-                  />
+                  <HandoffPanel message={activeAlert?.message} onRequestVisit={handleRequestVisit} onDismiss={() => closeHandoff("dismissed")} />
                 </div>
               )}
               <AgentChatThread
