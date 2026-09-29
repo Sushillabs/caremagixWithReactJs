@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import useCarePlanStatus from "../../hooks/useCarePlanStatus";
 import useCarePlan from "../../hooks/useCarePlan";
-import useCan from "../../hooks/useCan";
 import { getPatientKey, getCarePlanLookupName } from "../../utils/buildPatientPayload";
 import { getCarePlanDashboard, getCarePlanDashboardByPatient } from "../../api/hospitalApi";
 import CarePlanDashboard from "./CarePlanDashboard";
@@ -21,8 +20,6 @@ export default function CarePlan() {
   const patientKey = getPatientKey(singleData?.patient_name, singleData?.patient_type);
   const { status, progress, carePlanId } = useCarePlanStatus(patientKey);
   const { generate, regenerate, isStarting } = useCarePlan();
-  const canHistory = useCan("carePlanHistory");
-  const canRegenerate = useCan("regenerateCarePlan");
 
   const backendCheck = useQuery({
     queryKey: ["care-plan-dashboard-by-patient", patientKey],
@@ -83,7 +80,7 @@ export default function CarePlan() {
           {updatedAtLabel && <span className="text-[11px] text-gray-500">Last updated: {updatedAtLabel}</span>}
         </div>
         <div className="flex items-center gap-2">
-          {effectiveStatus === "done" && canHistory && (
+          {effectiveStatus === "done" && (
             <button
               type="button"
               onClick={() => navigate("history")}
@@ -93,7 +90,7 @@ export default function CarePlan() {
             </button>
           )}
 
-          {effectiveStatus === "done" && canRegenerate && (
+          {effectiveStatus === "done" && (
             <button
               type="button"
               onClick={handleRegenerate}
