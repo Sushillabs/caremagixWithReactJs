@@ -127,10 +127,20 @@ export default function PatientDetails() {
   const [appointmentsTab, setAppointmentsTab] = useState(() => searchParams.get("tab"));
   const [appointmentsKey, setAppointmentsKey] = useState(0);
 
-  const openBookAppointment = () => {
+  // Set only when the wellness alert sent the patient to booking, so a
+  // confirmed booking hands them back to the check-in they left.
+  const [cameFromWellness, setCameFromWellness] = useState(false);
+
+  const openBookAppointment = (fromWellness = false) => {
+    setCameFromWellness(fromWellness === true);
     setActivePanel("appointments");
     setAppointmentsTab("book");
     setAppointmentsKey((k) => k + 1);
+  };
+
+  const handleBooked = () => {
+    setCameFromWellness(false);
+    openWellnessCheckIn();
   };
 
   const [homeKey, setHomeKey] = useState(0);
@@ -471,10 +481,14 @@ export default function PatientDetails() {
         <WellnessCheckInPanel
           key={wellnessKey}
           initialTab={wellnessTab}
-          onRequestVisit={canBookAppointment ? openBookAppointment : undefined}
+          onRequestVisit={canBookAppointment ? () => openBookAppointment(true) : undefined}
         />
       ) : activePanel === "appointments" ? (
-        <AppointmentsPanel key={appointmentsKey} initialTab={appointmentsTab} />
+        <AppointmentsPanel
+          key={appointmentsKey}
+          initialTab={appointmentsTab}
+          onBooked={cameFromWellness ? handleBooked : undefined}
+        />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
       ) : activePanel === "wellnessQuestions" ? (

@@ -88,7 +88,7 @@ function ConfirmBookingPanel({ booking, pending, onConfirm, onCancel }) {
 // initialTab: which TABS key to land on — set by PatientDetails from ?tab=
 // (e.g. the dashboard's Your Appointments card links straight to "myAppointments"
 // instead of the booking chat). Falls back to the default "book" tab otherwise.
-export default function AppointmentsPanel({ initialTab }) {
+export default function AppointmentsPanel({ initialTab, onBooked }) {
   const [activeTab, setActiveTab] = useState(TABS.some((t) => t.key === initialTab) ? initialTab : "book");
   // Gates the Book Appointment tab's chat behind a tap-to-start mic screen,
   // same pattern as VisitNotesAI/Wellness — My Appointments stays
@@ -227,6 +227,52 @@ export default function AppointmentsPanel({ initialTab }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingConfirmed, voice.state, voice.isActive]);
 
+  // Hand back to whoever sent the patient here (the wellness check-in), once
+  // the spoken confirmation has finished.
+  const [returning, setReturning] = useState(false);
+  const returnedRef = useRef(false);
+  // Held in a ref: the parent rebuilds this callback every render, and a
+  // changing dependency would clear the timer before it ever fires.
+  const onBookedRef = useRef(onBooked);
+  onBookedRef.current = onBooked;
+  const canReturn = !!onBooked;
+
+  // Timers live in refs and are cleared only on unmount: any dependency change
+  // (voice.state flips several times right after a booking) would otherwise
+  // cancel the hand-back before it fires.
+  const returnTimerRef = useRef(null);
+  const failsafeTimerRef = useRef(null);
+
+  const startReturn = (delay) => {
+    if (returnedRef.current) return;
+    returnedRef.current = true;
+    setReturning(true);
+    returnTimerRef.current = setTimeout(() => onBookedRef.current?.(), delay);
+  };
+
+  useEffect(() => {
+    if (!canReturn || !bookingConfirmed || returnedRef.current) return;
+    if (voice.state === "speaking") return;
+    startReturn(1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingConfirmed, voice.state, canReturn]);
+
+  // Audio that never reports finishing would otherwise strand the patient in
+  // the booking chat, so hand back after this cap whatever the voice is doing.
+  useEffect(() => {
+    if (!canReturn || !bookingConfirmed) return;
+    failsafeTimerRef.current = setTimeout(() => startReturn(1000), 8000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingConfirmed, canReturn]);
+
+  useEffect(
+    () => () => {
+      clearTimeout(returnTimerRef.current);
+      clearTimeout(failsafeTimerRef.current);
+    },
+    []
+  );
+
   const handleConfirmBooking = async () => {
     if (pending || bookingConfirmed || !sessionId) return;
     try {
@@ -351,6 +397,12 @@ export default function AppointmentsPanel({ initialTab }) {
           </div>
         )}
       </div>
+
+      {activeTab === "book" && returning && (
+        <div className="shrink-0 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+          Appointment booked — taking you back to your check-in…
+        </div>
+      )}
 
       {activeTab === "book" && started && voice.state === "speaking" && (
         <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
