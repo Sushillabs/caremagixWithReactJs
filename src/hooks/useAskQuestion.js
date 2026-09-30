@@ -1,5 +1,5 @@
 // hooks/useAskQuestion.js
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { addQconversation , setAskPending} from '../redux/chatSlice';
 import { askAPI } from '../api/hospitalApi'; 
@@ -7,6 +7,7 @@ import { askAPI } from '../api/hospitalApi';
 const useAskQuestion = () => {
   const dispatch = useDispatch();
   const store = useStore();
+  const queryClient = useQueryClient();
   const singleDate = useSelector((state) => state?.patientsingledata?.value);
   const get_conversation = useSelector(state => state.askQ.value); 
 
@@ -25,6 +26,7 @@ const useAskQuestion = () => {
       // dispatch(addQPayload(variables));
       dispatch(addQconversation(latestConversation));
       dispatch(setAskPending(false));
+      queryClient.invalidateQueries({ queryKey: ["chatHistory"] });
     },
     onSettled: () => {
       dispatch(setAskPending(false));

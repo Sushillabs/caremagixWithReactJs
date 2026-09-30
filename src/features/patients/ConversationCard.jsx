@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useQuery } from "@tanstack/react-query";
+import { getChatHistory } from "../../api/hospitalApi";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Download } from "lucide-react";
@@ -35,6 +37,11 @@ const SOURCE_LABELS = {
   "CPT-Codes": "CPT Codes",
 };
 
+function formatChatTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
   patient: ["progress notes for last 7 days", "h & p", "h&p", "hhrg", "icd"],
 };
@@ -63,6 +70,30 @@ export default function ConversationCard() {
     if (isMedication && activeTab === "summary") setActiveTab("conversation");
   }, [isMedication, activeTab]);
   const latestExchange = conversation.slice(-2);
+
+  // EHR sources are scoped by collection, everything else by document label —
+  // mirrors resolve_chat_scope() in the backend.
+  const isEhrSource = ["PCC", "epic", "EHR", "metriport"].includes(singleData?.patient_type);
+  const historyParams = {
+    patient_name: singleData?.patient_name || "",
+    patient_type: singleData?.patient_type || "",
+    ...(isEhrSource
+      ? { patient_collection: singleData?.patient_collection || "Consolidated Med Summary" }
+      : { dates: singleData?.dates || "Consolidated Med Summary" }),
+  };
+
+  const {
+    data: historyData,
+    isLoading: historyLoading,
+    error: historyError,
+  } = useQuery({
+    queryKey: ["chatHistory", historyParams],
+    queryFn: () => getChatHistory(historyParams),
+    enabled: activeTab === "history" && !!singleData?.patient_name,
+    staleTime: 0,
+  });
+
+  const historyChats = historyData?.chats || [];
 
   const latestAnswerId = [...conversation].reverse().find((m) => m.role !== "user" && m.id)?.id;
 
@@ -166,8 +197,22 @@ export default function ConversationCard() {
             <p className="mt-3 px-2 text-sm text-gray-400">No summary available yet.</p>
           )
         ) : activeTab === "history" ? (
-          conversation.length > 0 ? (
-            <div className="mt-3 space-y-3 px-2 text-sm">{conversation.map((msg, i) => renderMessage(msg, i, false))}</div>
+          historyLoading ? (
+            <Spinner />
+          ) : historyError ? (
+            <p className="mt-3 px-2 text-sm text-gray-500">
+              {historyError?.response?.data?.error || historyError?.message || "Could not load chat history."}
+            </p>
+          ) : historyChats.length > 0 ? (
+            <div className="mt-3 space-y-4 px-2 text-sm">
+              {historyChats.map((chat) => (
+                <div key={chat.id} className="space-y-3">
+                  {renderMessage({ role: "user", content: chat.question }, `${chat.id}-q`, false)}
+                  {renderMessage({ role: "assistant", content: chat.answer, id: chat.question_id }, `${chat.id}-a`, false)}
+                  {chat.created_at && <p className="text-[10px] text-gray-400">{formatChatTime(chat.created_at)}</p>}
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="mt-3 px-2 text-sm text-gray-400">No questions asked yet.</p>
           )

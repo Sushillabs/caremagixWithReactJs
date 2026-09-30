@@ -46,6 +46,10 @@ export const getDashboardActiveCarePlans = (patientName) =>
 export const getPatientChat = (data) => http.post("/generate_questions", data, { withAuth: true });
 export const askAPI = (data) => http.post("/ask", data, { withAuth: true });
 export const getDocRef = (data) => http.post("/doc-ref", data, { withAuth: true });
+// Stored chat for one document/collection — EHR sources scope by
+// patient_collection, everything else by dates (query_api.py: /chat-history).
+export const getChatHistory = (params) =>
+  http.get(`/chat-history?${new URLSearchParams(params)}`, { withAuth: true });
 export const uploadEFaxConfig = (data) => http.post("/getfax", data, { withAuth: true });
 export const uploadPlan = (data) => http.post("/upload", data, { withAuth: true, isMultipart: true });
 export const uploadPatientImage = (data) => http.post("/ocr-upload", data, { withAuth: true, isMultipart: true });
