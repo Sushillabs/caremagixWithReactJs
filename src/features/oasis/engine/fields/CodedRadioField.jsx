@@ -16,6 +16,7 @@ export default function CodedRadioField({ field }) {
             <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Code</span>
             <input
               type="text"
+              name={field.fieldId}
               maxLength={field.maxLength ?? 2}
               value={value ?? ""}
               onChange={(e) => onChange(e.target.value)}

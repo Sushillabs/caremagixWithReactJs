@@ -14,11 +14,11 @@ export default function OasisPatientDetailPage() {
     patient_name: searchParams.get("patient_name") || "",
   };
 
-  const openForm = (formType, mode) => {
+  const openReview = (formType) => {
     const params = new URLSearchParams({
       patient_id: patient.patient_id,
       patient_name: patient.patient_name,
-      mode,
+      mode: "review",
     });
     navigate(`/app/oasis/${formType.toLowerCase()}?${params.toString()}`);
   };
@@ -53,14 +53,9 @@ export default function OasisPatientDetailPage() {
             </div>
             <div className="mb-3 text-xs text-gray-400">{f.label}</div>
             {f.built && (
-              <div className="flex gap-3">
-                <button type="button" onClick={() => openForm(f.formType, "fill")} className="text-xs font-medium text-blue-600 hover:underline">
-                  Fill
-                </button>
-                <button type="button" onClick={() => openForm(f.formType, "review")} className="text-xs font-medium text-emerald-600 hover:underline">
-                  Review
-                </button>
-              </div>
+              <button type="button" onClick={() => openReview(f.formType)} className="text-xs font-medium text-emerald-600 hover:underline">
+                Review
+              </button>
             )}
           </div>
         ))}

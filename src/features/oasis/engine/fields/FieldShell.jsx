@@ -1,10 +1,12 @@
 import { useFieldErrors } from "../ValidationContext";
+import { fieldLeafIds } from "../payload";
 
 export default function FieldShell({ field, children, headerRight }) {
   const fieldErrors = useFieldErrors(field);
 
   return (
     <div
+      data-oasis-leaves={fieldLeafIds(field).join(" ")}
       className={
         "rounded-lg border bg-white p-4 " + (fieldErrors.length ? "border-red-300" : "border-gray-200")
       }

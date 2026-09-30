@@ -1,45 +1,62 @@
 import { useState } from "react";
 
-// Reviewer email + "Send for Review" action (§1.11) — appears once per form, not a
-// clinical data field. Presentational only here; wiring to the actual send-for-review
-// API is Phase 5 (§H) — this stub takes an `onSend` callback so that wiring is additive.
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const STATUS_STYLES = {
+  sending: "border-blue-200 bg-blue-50 text-blue-800",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  error: "border-red-200 bg-red-50 text-red-700",
+};
+
 export default function EmailActionField({ field, onSend }) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState(null); // null | "sending" | "success" | "error"
+  const [status, setStatus] = useState(null);
 
   const handleSend = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) return setStatus({ kind: "error", text: "Please enter a reviewer email address." });
+    if (!EMAIL_RX.test(trimmed)) {
+      return setStatus({ kind: "error", text: "Please enter a valid email address (e.g. name@agency.org)." });
+    }
     if (!onSend) return;
-    setStatus("sending");
+
+    setStatus({ kind: "sending", text: `Sending assessment to ${trimmed}…` });
     try {
-      await onSend(email);
-      setStatus("success");
-    } catch {
-      setStatus("error");
+      await onSend(trimmed);
+      setStatus({
+        kind: "success",
+        text: `Assessment sent successfully to ${trimmed}. The reviewer will receive an email to review it.`,
+      });
+    } catch (err) {
+      setStatus({ kind: "error", text: err?.response?.data?.error || err?.message || "Could not send. Please try again." });
     }
   };
 
+  const sending = status?.kind === "sending";
+
   return (
-    <div className="py-3 border-t mt-4">
-      <label className="block text-sm font-medium mb-1">{field.label ?? "Send for Review"}</label>
-      <div className="flex items-center gap-2">
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <p className="mb-3 text-sm font-medium text-gray-800">{field.label ?? "Send for Review"}</p>
+      <div className="flex flex-wrap items-center gap-2">
         <input
           type="email"
           placeholder="reviewer@agency.org"
           value={email}
           onChange={(e) => { setEmail(e.target.value); setStatus(null); }}
-          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <button
           type="button"
           onClick={handleSend}
-          disabled={status === "sending" || !email}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+          disabled={sending}
+          className="h-10 shrink-0 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
         >
-          {status === "sending" ? "Sending…" : "Send for Review ↗"}
+          {sending ? "Sending…" : "Send for Review"}
         </button>
       </div>
-      {status === "success" && <p className="text-sm text-green-600 mt-1">Sent for review.</p>}
-      {status === "error" && <p className="text-sm text-red-500 mt-1">Couldn't send — try again.</p>}
+      {status && (
+        <p className={`mt-2 rounded-md border px-2.5 py-2 text-xs ${STATUS_STYLES[status.kind]}`}>{status.text}</p>
+      )}
     </div>
   );
 }

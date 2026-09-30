@@ -18,6 +18,7 @@ export default function GgMatrixField({ field }) {
                 <span className="flex-1 text-[13px] text-gray-700">{row.label}</span>
                 <input
                   type="text"
+                  name={row.fieldId}
                   maxLength={2}
                   placeholder="—"
                   value={value ?? ""}

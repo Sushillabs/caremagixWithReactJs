@@ -5,9 +5,9 @@ const OasisModeContext = createContext({ mode: "fill", isReview: false });
 
 /**
  * Fill vs review, read from the same `?mode=review` URL flag legacy uses — no server
- * status field exists (aerial-view doc §E/§H). Per §G this is intentionally cosmetic:
- * review does NOT lock clinical fields, only what consumes `isReview` (the Form Shell's
- * patient-name field + badge, Phase 1) chooses to gate — matching legacy exactly.
+ * status field exists (aerial-view doc §E/§H). Review does NOT lock clinical fields;
+ * `isReview` only drives the badge and whether the Form Shell applies saved answers
+ * on open (fill always starts blank).
  */
 export function OasisModeProvider({ children }) {
   const [searchParams] = useSearchParams();

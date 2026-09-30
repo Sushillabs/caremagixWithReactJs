@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { ArrowLeft, Download, MoreVertical } from "lucide-react";
+import { ArrowLeft, Download, Trash2, Upload } from "lucide-react";
 import OasisField from "../engine/fields";
 import SectionNavigator from "../engine/SectionNavigator";
 import { filterVisibleFields } from "../engine/skipLogic";
@@ -10,7 +10,7 @@ import { useOasisSaveLoad } from "../engine/saveLoad";
 import { buildExportData, exportFileName, collectPayload } from "../engine/payload";
 import { applySkipMarks } from "../engine/skipLogic";
 import { requestOasisXml, fetchOasisXmlBlob } from "../api/oasisApi";
-import { indexErrors, classifyApiError } from "../engine/validation";
+import { indexErrors, classifyApiError, errorFieldKeys } from "../engine/validation";
 import { ValidationProvider } from "../engine/ValidationContext";
 import ValidationErrorPanel from "../engine/ValidationErrorPanel";
 import { OasisModeProvider, useOasisMode } from "../engine/ModeContext";
@@ -37,10 +37,10 @@ function OasisFormShell({ schema }) {
   const [loading, setLoading] = useState(true);
 
   const fileInputRef = useRef(null);
+  const scrollRef = useRef(null);
   const [validation, setValidation] = useState({ errors: [], headline: "", topLevel: null });
   const [patientDetails, setPatientDetails] = useState(null);
   const [exportingXml, setExportingXml] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const { status, saveToServer, loadFromServer, clearOnServer } = useOasisSaveLoad({
     formKey: schema.formKey,
@@ -49,8 +49,7 @@ function OasisFormShell({ schema }) {
     schema,
   });
 
-  // Always fetch on open (normalized across all 6 forms, aerial-view doc §B) — no
-  // skip-fetch-in-fill-mode branch like legacy's SOC/DAH/TRN had.
+  // Fill still fetches for patient_details (XML export needs it) but never applies saved answers.
   useEffect(() => {
     if (!patientId) {
       setLoading(false);
@@ -61,7 +60,7 @@ function OasisFormShell({ schema }) {
     loadFromServer()
       .then(({ values, patientDetails: details }) => {
         if (cancelled) return;
-        if (values) methods.reset(values);
+        if (values && isReview) methods.reset(values);
         setPatientDetails(details);
       })
       .catch(() => {
@@ -74,7 +73,18 @@ function OasisFormShell({ schema }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId, schema.formKey]);
+  }, [patientId, schema.formKey, isReview]);
+
+  useEffect(() => {
+    const subscription = methods.watch((_, { name }) => {
+      if (!name) return;
+      setValidation((current) => {
+        const errors = current.errors.filter((error) => !errorFieldKeys(error).includes(name));
+        return errors.length === current.errors.length ? current : { ...current, errors };
+      });
+    });
+    return () => subscription.unsubscribe();
+  }, [methods]);
 
   const answers = methods.watch();
   const activeSection = schema.sections.find((s) => s.id === activeSectionId) ?? schema.sections[0];
@@ -88,6 +98,12 @@ function OasisFormShell({ schema }) {
       toast.error(err.message || "Save failed — please retry.");
     }
   });
+
+  const handleSendForReview = async (email) => {
+    if (!patientName) throw new Error("Patient name is required before sending.");
+    if (!patientId) throw new Error("Patient id is required before sending.");
+    await saveToServer(methods.getValues(), { patientDetails, reviewerEmail: email });
+  };
 
   const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob);
@@ -129,7 +145,10 @@ function OasisFormShell({ schema }) {
     } catch (err) {
       const classified = classifyApiError(err);
       if (classified.kind === "unknown") toast.error(`XML export failed: ${classified.message}`);
-      else setValidation(classified);
+      else {
+        setValidation(classified);
+        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } finally {
       setExportingXml(false);
     }
@@ -158,11 +177,12 @@ function OasisFormShell({ schema }) {
   const jumpToField = (fieldId, sectionId) => {
     if (sectionId) setActiveSectionId(sectionId);
     setTimeout(() => {
-      const el = document.getElementsByName(fieldId)[0] ?? document.getElementById(fieldId);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.focus?.();
-      }
+      const named = document.getElementsByName(fieldId)[0];
+      const shell = document.querySelector(`[data-oasis-leaves~="${CSS.escape(fieldId)}"]`);
+      const el = named ?? shell;
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      (named ?? shell.querySelector("input, button, select, textarea"))?.focus({ preventScroll: true });
     }, 150);
   };
 
@@ -222,43 +242,30 @@ function OasisFormShell({ schema }) {
             {exportingXml ? "Exporting…" : "Export XML"}
           </button>
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
-            >
-              <MoreVertical size={15} />
-            </button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 z-30 mt-1 w-44 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                  <button
-                    type="button"
-                    onClick={() => { setMenuOpen(false); handleExportJson(); }}
-                    className="block w-full px-3 py-2 text-left text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    Export JSON
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMenuOpen(false); fileInputRef.current?.click(); }}
-                    className="block w-full px-3 py-2 text-left text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    Import JSON
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMenuOpen(false); handleClearAll(); }}
-                    className="block w-full border-t border-gray-100 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <Download size={13} />
+            Export JSON
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          >
+            <Upload size={13} />
+            Import JSON
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+          >
+            <Trash2 size={13} />
+            Clear All
+          </button>
 
           <button
             type="button"
@@ -281,7 +288,7 @@ function OasisFormShell({ schema }) {
       {loading ? (
         <div className="p-6 text-sm text-gray-500">Loading…</div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-3">
             <SectionNavigator
               sections={schema.sections}
@@ -306,7 +313,11 @@ function OasisFormShell({ schema }) {
                 {schema.sections.map((section) => (
                   <div key={section.id} hidden={section.id !== activeSection.id} className="flex flex-col gap-3">
                     {filterVisibleFields(section.items, answers).map((field) => (
-                      <OasisField key={field.fieldId ?? field.itemCode ?? field.label} field={field} />
+                      <OasisField
+                        key={field.fieldId ?? field.itemCode ?? field.label}
+                        field={field}
+                        onSend={handleSendForReview}
+                      />
                     ))}
                   </div>
                 ))}

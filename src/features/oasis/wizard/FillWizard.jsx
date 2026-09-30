@@ -34,8 +34,14 @@ export default function FillWizard({ onClose }) {
 
   const handlePickExisting = async (patient) => {
     setLoadingExisting(true);
+    let hasSavedForm = false;
     try {
-      const data = await getOasisForm({ patient_id: patient.patient_id, patient_name: patient.patient_name });
+      const data = await getOasisForm({
+        patient_id: patient.patient_id,
+        patient_name: patient.patient_name,
+        form_name: formOption.formKey,
+      });
+      hasSavedForm = Object.values(data?.mapped_data || {}).some((v) => v !== "" && v != null);
       const pd = data?.patient_details || {};
       setWizardState({
         patient_id: patient.patient_id,
@@ -65,10 +71,9 @@ export default function FillWizard({ onClose }) {
         is_existing: true,
         prefill_data: {},
       });
-    } finally {
-      setLoadingExisting(false);
-      setStep("prefill");
     }
+    setLoadingExisting(false);
+    setStep(hasSavedForm ? "confirmReplace" : "prefill");
   };
 
   const handleAddNew = () => {
@@ -132,6 +137,33 @@ export default function FillWizard({ onClose }) {
         {step === "picker" && <PatientPicker onPickExisting={handlePickExisting} onAddNew={handleAddNew} />}
 
         {loadingExisting && <p className="py-6 text-center text-sm text-gray-500">Loading patient data…</p>}
+
+        {step === "confirmReplace" && wizardState && (
+          <div>
+            <p className="mb-3 text-sm font-semibold text-gray-800">Replace saved {formOption.formType}?</p>
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+              <span className="font-medium">{wizardState.patient_name}</span> already has a saved {formOption.label}.
+              Starting a new assessment will replace it when you save. To see or change the saved one, open Review
+              from the patient page instead.
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setStep("picker")}
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep("prefill")}
+                className="flex-1 rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700"
+              >
+                Start new and replace
+              </button>
+            </div>
+          </div>
+        )}
 
         {step === "otp" && !loadingExisting && <OtpVerify onVerified={handleVerified} onBack={() => setStep("picker")} />}
 

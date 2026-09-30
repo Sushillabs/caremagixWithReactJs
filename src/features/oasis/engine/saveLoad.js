@@ -5,16 +5,21 @@ import { collectPayload } from "./payload";
 
 const AUTOSAVE_DEBOUNCE_MS = 1500;
 
+const FORM_META = {
+  spec_version: "3.02.0",
+  omb_control: "0938-1279",
+  omb_expiration: "12/31/2028",
+  effective_date: "04/01/2026",
+};
+
 function draftKey(formKey, patientId) {
   return `oasis_draft_${formKey}_${patientId}`;
 }
 
 /**
  * Local draft (debounced, every change) + server save/load for one OASIS form
- * instance. Load-on-open is normalized across all 6 forms (aerial-view doc §B) —
- * always fetch, unlike legacy where SOC/DAH/TRN skipped it in fill mode. This hook
- * only exposes `loadFromServer`; when to call it (mount, mode, etc.) is the Form
- * Shell's decision (Phase 1), not this hook's.
+ * instance. This hook only exposes `loadFromServer`; when to call it and whether
+ * to apply the saved answers (review only) is the Form Shell's decision.
  */
 export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
   const [status, setStatus] = useState("idle"); // idle | saving | saved | error
@@ -48,7 +53,7 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
   );
 
   const saveToServer = useCallback(
-    async (values, { patientDetails } = {}) => {
+    async (values, { patientDetails, reviewerEmail } = {}) => {
       // Backend requires patient_id to update (aerial-view doc §I) — mirror legacy's
       // client-side block so a save never fires a request we know will 400.
       if (!patientId) {
@@ -66,6 +71,7 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
           raw_data: payload,
           mapped_data: payload,
           ...(patientDetails ? { patient_details: patientDetails } : {}),
+          ...(reviewerEmail ? { reviewer_email: reviewerEmail, form_meta: { form: formKey, ...FORM_META } } : {}),
         });
         setStatus("saved");
       } catch (err) {
