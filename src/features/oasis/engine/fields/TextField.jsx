@@ -9,8 +9,9 @@ export default function TextField({ field }) {
       <input
         type="text"
         maxLength={field.maxLength}
+        placeholder={field.placeholder}
         {...register(field.fieldId)}
-        className="w-full max-w-xs border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="h-10 w-full max-w-xs rounded-lg border border-gray-300 px-3 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
     </FieldShell>
   );

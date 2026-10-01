@@ -15,11 +15,14 @@ export default function GgMatrixField({ field }) {
             defaultValue=""
             render={({ field: { value, onChange } }) => (
               <div className="flex min-h-[46px] items-center gap-3 py-2">
-                <span className="flex-1 text-[13px] text-gray-700">{row.label}</span>
+                <span className="flex-1 text-[13px] text-gray-700">
+                  {row.label}
+                  {row.hint && <span className="mt-0.5 block text-[11px] text-gray-400">{row.hint}</span>}
+                </span>
                 <input
                   type="text"
                   name={row.fieldId}
-                  maxLength={2}
+                  maxLength={row.maxLength ?? 2}
                   placeholder="—"
                   value={value ?? ""}
                   onChange={(e) => onChange(e.target.value)}

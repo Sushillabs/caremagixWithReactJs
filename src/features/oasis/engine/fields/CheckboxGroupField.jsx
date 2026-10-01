@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { Check } from "lucide-react";
 import FieldShell from "./FieldShell";
@@ -25,33 +26,40 @@ export default function CheckboxGroupField({ field }) {
     <FieldShell field={field} headerRight={count}>
       <div className={gridClass}>
         {options.map((opt) => (
-          <Controller
-            key={opt.fieldId}
-            name={opt.fieldId}
-            control={control}
-            defaultValue={false}
-            render={({ field: { value, onChange } }) => (
-              <button
-                type="button"
-                onClick={() => onChange(!value)}
-                className={
-                  "flex min-h-[46px] w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors " +
-                  (value
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50")
-                }
-              >
-                {value ? (
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-emerald-600">
-                    <Check size={11} strokeWidth={3} className="text-white" />
-                  </span>
-                ) : (
-                  <span className="h-4 w-4 shrink-0 rounded border-2 border-gray-300" />
-                )}
-                <span className={"text-xs " + (value ? "text-emerald-900" : "text-gray-600")}>{opt.label}</span>
-              </button>
+          <Fragment key={opt.fieldId}>
+            {opt.groupLabel && (
+              <p className="col-span-full mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400 first:mt-0">
+                {opt.groupLabel}
+              </p>
             )}
-          />
+            <Controller
+              name={opt.fieldId}
+              control={control}
+              defaultValue={false}
+              render={({ field: { value, onChange } }) => (
+                <button
+                  type="button"
+                  name={opt.fieldId}
+                  onClick={() => onChange(!value)}
+                  className={
+                    "flex min-h-[46px] w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors " +
+                    (value
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50")
+                  }
+                >
+                  {value ? (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-emerald-600">
+                      <Check size={11} strokeWidth={3} className="text-white" />
+                    </span>
+                  ) : (
+                    <span className="h-4 w-4 shrink-0 rounded border-2 border-gray-300" />
+                  )}
+                  <span className={"text-xs " + (value ? "text-emerald-900" : "text-gray-600")}>{opt.label}</span>
+                </button>
+              )}
+            />
+          </Fragment>
         ))}
       </div>
     </FieldShell>

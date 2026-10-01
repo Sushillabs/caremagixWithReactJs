@@ -23,7 +23,7 @@ export const PAY_SOURCES = [
 
 export const OASIS_FORM_OPTIONS = [
   { formType: "SOC", formKey: "OASIS-E2-SOC", label: "Start of Care (SOC)", built: false },
-  { formType: "ROC", formKey: "OASIS-E2-ROC", label: "Resumption of Care (ROC)", built: false },
+  { formType: "ROC", formKey: "OASIS-E2-ROC", label: "Resumption of Care (ROC)", built: true },
   { formType: "FU", formKey: "OASIS-E2-FU", label: "Follow-up (FU)", built: true },
   { formType: "DC", formKey: "OASIS-E2-DC", label: "Discharge (DC)", built: false },
   { formType: "DAH", formKey: "OASIS-E2-DAH", label: "Death at Home (DAH)", built: false },

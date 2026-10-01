@@ -8,7 +8,18 @@ export function fieldLeaves(field) {
     return field.checkboxOptions.map((o) => ({ id: o.fieldId, kind: "checkbox" }));
   }
   if (field.rows) {
-    return field.rows.map((r) => ({ id: r.fieldId, kind: "text" }));
+    const kind = field.widget === FIELD_WIDGETS.COUNT_GRID ? "number" : "text";
+    return field.rows.map((r) => ({ id: r.fieldId, kind }));
+  }
+  if (field.tableRows) {
+    const kind = field.widget === FIELD_WIDGETS.CHECKBOX_TABLE ? "checkbox" : "text";
+    return field.tableRows.flatMap((r) => r.fieldIds.filter(Boolean).map((id) => ({ id, kind })));
+  }
+  if (field.diagnosisRows) {
+    return field.diagnosisRows.flatMap((r) => [
+      { id: r.icdFieldId, kind: "text" },
+      { id: r.severityFieldId, kind: "text" },
+    ]);
   }
 
   const leaves = [];
@@ -21,7 +32,7 @@ export function fieldLeaves(field) {
       );
     }
   } else if (field.fieldId) {
-    leaves.push({ id: field.fieldId, kind: "text" });
+    leaves.push({ id: field.fieldId, kind: field.widget === FIELD_WIDGETS.NUMERIC ? "number" : "text" });
   }
 
   if (field.pairedField?.fieldId) {
@@ -47,7 +58,26 @@ export function collectPayload(schema, values) {
     const value = values?.[leaf.id];
     payload[leaf.id] = leaf.kind === "checkbox" ? !!value : value ?? "";
   }
+  for (const section of schema?.sections ?? []) {
+    for (const field of section.items ?? []) {
+      if (!field.radioAlias) continue;
+      const value = payload[field.fieldId];
+      if (field.options?.some((opt) => opt.value === value)) payload[field.radioAlias] = value;
+    }
+  }
   return payload;
+}
+
+// A number input drops any non-numeric value the browser is handed (legacy reloads "^" as blank).
+export function normalizeLoadedValues(schema, values) {
+  if (!values) return values;
+  const normalized = { ...values };
+  for (const leaf of schemaLeaves(schema)) {
+    if (leaf.kind !== "number") continue;
+    const value = normalized[leaf.id];
+    if (value !== undefined && value !== "" && Number.isNaN(Number(value))) normalized[leaf.id] = "";
+  }
+  return normalized;
 }
 
 // Legacy's collectData(): carries _meta and, unlike the save payload, no skip marks.

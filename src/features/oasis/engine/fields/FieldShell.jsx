@@ -26,7 +26,9 @@ export default function FieldShell({ field, children, headerRight }) {
 
       {children}
 
-      {field.skipWhen?.note && <p className="mt-2 text-xs italic text-gray-500">{field.skipWhen.note}</p>}
+      {(field.note ?? field.skipWhen?.note) && (
+        <p className="mt-2 text-xs italic text-gray-500">{field.note ?? field.skipWhen.note}</p>
+      )}
 
       {fieldErrors.map(({ fieldId, error }, i) => (
         <div

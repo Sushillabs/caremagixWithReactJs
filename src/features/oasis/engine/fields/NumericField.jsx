@@ -7,13 +7,17 @@ export default function NumericField({ field }) {
   const { register } = useFormContext();
   return (
     <FieldShell field={field}>
-      <input
-        type="number"
-        min={field.range?.min}
-        max={field.range?.max}
-        {...register(field.fieldId)}
-        className="w-24 border rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          min={field.range?.min}
+          max={field.range?.max}
+          placeholder={field.placeholder}
+          {...register(field.fieldId)}
+          className="h-10 w-24 rounded-lg border border-gray-300 px-3 text-center text-sm font-semibold text-gray-800 placeholder:font-normal placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+      </div>
     </FieldShell>
   );
 }

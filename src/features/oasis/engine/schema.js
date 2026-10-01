@@ -31,6 +31,9 @@ export const FIELD_WIDGETS = {
   LIVING_GRID: 'living-grid',       // M1100 row×column radio grid, ROC only (§b)
   AI_ASSIST_TRIGGER: 'ai-assist-trigger', // non-data-bearing plugin trigger, e.g. SOC coding assistant (§1.16)
   NOTICE: 'notice',                 // static prose block, no data field (PRA notice, GG code legend)
+  CODE_TABLE: 'code-table',         // rows × columns of code boxes, e.g. D0150 PHQ
+  CHECKBOX_TABLE: 'checkbox-table', // rows × columns of checkboxes, e.g. N0415
+  DIAGNOSIS_TABLE: 'diagnosis-table', // ICD code + severity buttons per row, M1021/M1023
 };
 
 /**
@@ -101,6 +104,13 @@ export const FIELD_WIDGETS = {
  * @property {SkipCondition} [skipWhen]
  * @property {number} [maxLength]
  * @property {{min: number, max: number}} [range] - numeric widgets only
+ * @property {string} [radioAlias] - CODED_RADIO only: extra payload key that repeats the value
+ *   when it matches an option (legacy radio `name` differs from the code box's `data-field`)
+ * @property {{label: string, hint?: string, maxLength?: number}[]} [columns] - CODE_TABLE / CHECKBOX_TABLE
+ * @property {{label: string, fieldIds: (string|null)[]}[]} [tableRows] - CODE_TABLE / CHECKBOX_TABLE,
+ *   one field id per column, null for an empty cell
+ * @property {{label: string, note?: string, icdFieldId: string, severityFieldId: string}[]} [diagnosisRows]
+ *   DIAGNOSIS_TABLE only
  */
 
 /**

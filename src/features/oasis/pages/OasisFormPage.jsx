@@ -7,7 +7,7 @@ import OasisField from "../engine/fields";
 import SectionNavigator from "../engine/SectionNavigator";
 import { filterVisibleFields } from "../engine/skipLogic";
 import { useOasisSaveLoad } from "../engine/saveLoad";
-import { buildExportData, exportFileName, collectPayload } from "../engine/payload";
+import { buildExportData, exportFileName, collectPayload, normalizeLoadedValues } from "../engine/payload";
 import { applySkipMarks } from "../engine/skipLogic";
 import { requestOasisXml, fetchOasisXmlBlob } from "../api/oasisApi";
 import { indexErrors, classifyApiError, errorFieldKeys } from "../engine/validation";
@@ -15,13 +15,14 @@ import { ValidationProvider } from "../engine/ValidationContext";
 import ValidationErrorPanel from "../engine/ValidationErrorPanel";
 import { OasisModeProvider, useOasisMode } from "../engine/ModeContext";
 import fuSchema from "../schemas/fu.schema";
+import rocSchema from "../schemas/roc.schema";
 
 // Phase 1 Step 2: the real Form Shell, proven end-to-end on FU. formType -> schema
 // map is intentionally tiny right now (Phase 3/4 add SOC/ROC/DC/DAH/TRN here, nothing
 // else in this file changes). Patient identity comes from the URL, same contract
 // legacy used (?patient_id=&patient_name=&mode=fill|review) — Phase 2's wizard/landing
 // grid is what will actually construct that URL; this page doesn't care who does.
-const FORM_SCHEMAS = { FU: fuSchema };
+const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema };
 
 function OasisFormShell({ schema }) {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ function OasisFormShell({ schema }) {
     loadFromServer()
       .then(({ values, patientDetails: details }) => {
         if (cancelled) return;
-        if (values && isReview) methods.reset(values);
+        if (values && isReview) methods.reset(normalizeLoadedValues(schema, values));
         setPatientDetails(details);
       })
       .catch(() => {
@@ -159,7 +160,7 @@ function OasisFormShell({ schema }) {
     event.target.value = "";
     if (!file) return;
     try {
-      const imported = JSON.parse(await file.text());
+      const imported = normalizeLoadedValues(schema, JSON.parse(await file.text()));
       methods.reset(imported);
       await saveToServer(imported);
       toast.success("Data imported successfully.");

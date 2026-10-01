@@ -14,6 +14,8 @@ import GgMatrixField from "./GgMatrixField";
 import LivingGridField from "./LivingGridField";
 import AiAssistTriggerField from "./AiAssistTriggerField";
 import NoticeField from "./NoticeField";
+import TableField from "./TableField";
+import DiagnosisTableField from "./DiagnosisTableField";
 
 // One component per widget kind (§(a) of the field inventory) — the field registry
 // the schema-driven engine dispatches against. Adding a 14th widget kind means adding
@@ -34,6 +36,9 @@ export const FIELD_COMPONENTS = {
   [FIELD_WIDGETS.LIVING_GRID]: LivingGridField,
   [FIELD_WIDGETS.AI_ASSIST_TRIGGER]: AiAssistTriggerField,
   [FIELD_WIDGETS.NOTICE]: NoticeField,
+  [FIELD_WIDGETS.CODE_TABLE]: TableField,
+  [FIELD_WIDGETS.CHECKBOX_TABLE]: TableField,
+  [FIELD_WIDGETS.DIAGNOSIS_TABLE]: DiagnosisTableField,
 };
 
 // Dispatcher every section renderer uses: <OasisField field={fieldDef} />.
