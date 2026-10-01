@@ -3,9 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-// Epic's OAuth callback sends the browser back with ?epic=connected|error.
+const PROVIDERS = [
+  { param: "epic", label: "Epic", queryKey: ["epic-connection"] },
+  { param: "pcc", label: "PointClickCare", queryKey: ["pcc-connection"] },
+];
+
+// The OAuth callback sends the browser back with ?epic=|?pcc=connected|error.
 // The app has fully reloaded by then, so this runs on boot, not in the modal.
-export default function useEpicConnectReturn() {
+export default function useConnectReturn() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -13,18 +18,19 @@ export default function useEpicConnectReturn() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const result = params.get("epic");
-    if (!result || handledRef.current) return;
+    const provider = PROVIDERS.find((p) => params.get(p.param));
+    if (!provider || handledRef.current) return;
     handledRef.current = true;
 
-    if (result === "connected") {
-      toast.success("Epic connected", { id: "epic-connect-toast" });
-      queryClient.invalidateQueries({ queryKey: ["epic-connection"] });
+    const toastId = `${provider.param}-connect-toast`;
+    if (params.get(provider.param) === "connected") {
+      toast.success(`${provider.label} connected`, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: provider.queryKey });
     } else {
-      toast.error(params.get("message") || "Epic connect failed", { id: "epic-connect-toast" });
+      toast.error(params.get("message") || `${provider.label} connect failed`, { id: toastId });
     }
 
-    params.delete("epic");
+    params.delete(provider.param);
     params.delete("message");
     const rest = params.toString();
     navigate(`${location.pathname}${rest ? `?${rest}` : ""}`, { replace: true });

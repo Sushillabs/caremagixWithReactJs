@@ -7,7 +7,7 @@ import DockedAssistant from "./DockedAssistant";
 import { getSectionByPath } from "../../config/sections";
 import useJobsTracker from "../../hooks/useJobsTracker";
 import useNotifications from "../../hooks/useNotifications";
-import useEpicConnectReturn from "../../hooks/useEpicConnectReturn";
+import useConnectReturn from "../../hooks/useConnectReturn";
 
 export default function AppShell() {
   const location = useLocation();
@@ -35,7 +35,7 @@ export default function AppShell() {
   // if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
   useJobsTracker();
-  useEpicConnectReturn();
+  useConnectReturn();
 
   const isSectionDetail = Boolean(section) && location.pathname !== section.path;
   const showSearch = section?.key === "patients" && !isSectionDetail;
