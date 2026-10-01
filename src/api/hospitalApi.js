@@ -74,6 +74,7 @@ export const getEpicPullStatus = (jobId) => http.get(`/ehr_pull/status/${jobId}`
 // Separate from /ehr_pull above, which uses the shared backend-services app.
 export const getEpicConnectConfig = () => http.get("/v1/epic/config", { withAuth: true });
 export const getEpicConnection = () => http.get("/v1/epic/connection", { withAuth: true });
+export const saveEpicSettings = (data) => http.put("/v1/epic/settings", data, { withAuth: true });
 // Backend defaults the return URL to the old caregiver-view.html, so always pass ours.
 export const startEpicConnect = (frontendRedirect) =>
   http.get(`/v1/epic/connect/start?frontend_redirect=${encodeURIComponent(frontendRedirect)}`, { withAuth: true });
