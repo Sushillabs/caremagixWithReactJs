@@ -7,6 +7,7 @@ export const FEATURE_ROLES = {
   documents: ALL_ROLES,
   plan: ["caregiver", "patient"],
   forms: ["caregiver"],
+  cms485: ["caregiver"],
   upload: ALL_ROLES,
   mmta: ["caregiver"],
   registerCall: ["caregiver"],

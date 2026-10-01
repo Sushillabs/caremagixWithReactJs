@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux";
 import useProgress from "../../hooks/useProgress";
 import useExternalJobsProgress from "../../hooks/useExternalJobsProgress";
+import useCms485Progress from "../cms485/useCms485Progress";
 
 const TYPE_LABELS = {
   "ocr-job": "Scan PDF",
@@ -24,9 +25,8 @@ const normalizeExternalStatus = (status) => {
 };
 
 export default function JobsPage() {
-  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, pccUserJobs, epicJobs, epicUserJobs, metriportJobs } = useSelector(
-    (state) => state.jobsId
-  );
+  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, pccUserJobs, epicJobs, epicUserJobs, metriportJobs, cms485Jobs } =
+    useSelector((state) => state.jobsId);
   const finalJobs = useSelector((state) => state.finalJobStatus.finalJobs);
 
   const jobs = [
@@ -85,7 +85,30 @@ export default function JobsPage() {
     })
     .reverse();
 
-  const allRows = [...externalRows, ...rows];
+  const cms485List = Array.isArray(cms485Jobs) ? cms485Jobs : [];
+  const cms485Queries = useCms485Progress(cms485List);
+
+  const cms485Rows = cms485List
+    .map((job, i) => {
+      const query = cms485Queries[i];
+      const live = query?.data;
+      const errorMsg = query?.isError ? query.error?.response?.data?.error || query.error?.message || "Progress lookup failed" : null;
+      const status = errorMsg ? "FAILED" : live?.status || (query?.isLoading ? "LOADING" : "INPROGRESS");
+
+      return {
+        jobId: job.job_id,
+        type: "Plan of Care (485)",
+        patientName: job.patient_name || "—",
+        fileName: "—",
+        status,
+        progress: status === "COMPLETED" ? 100 : status === "FAILED" ? 0 : live?.progress ?? 0,
+        message: errorMsg || live?.message || (query?.isLoading ? "Loading..." : "Waiting..."),
+        formLink: status === "COMPLETED" ? live?.form_link : null,
+      };
+    })
+    .reverse();
+
+  const allRows = [...cms485Rows, ...externalRows, ...rows];
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
@@ -121,7 +144,20 @@ export default function JobsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-gray-600">{row.progress}%</td>
-                  <td className="max-w-[280px] truncate px-4 py-2 text-gray-500">{row.message}</td>
+                  <td className="max-w-[280px] truncate px-4 py-2 text-gray-500">
+                    {row.formLink ? (
+                      <a
+                        href={row.formLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-emerald-700 hover:underline"
+                      >
+                        Open Form
+                      </a>
+                    ) : (
+                      row.message
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

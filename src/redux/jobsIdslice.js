@@ -14,6 +14,7 @@ const jobsIdSlice = createSlice({
         epicJobs: [],
         epicUserJobs: [],
         metriportJobs: [],
+        cms485Jobs: [],
     },
     reducers: {
         setJobsId: (state, action) => {
@@ -48,6 +49,10 @@ const jobsIdSlice = createSlice({
             if (action.payload?.metriportJobs && typeof action.payload.metriportJobs === "object") {
                 state.metriportJobs.push(action.payload.metriportJobs);
             }
+
+            if (action.payload?.cms485Jobs && typeof action.payload.cms485Jobs === "object") {
+                state.cms485Jobs.push(action.payload.cms485Jobs);
+            }
         },
         clearJobsId: (state) => {
             state.eFaxJobs = [];
@@ -58,6 +63,7 @@ const jobsIdSlice = createSlice({
             state.epicJobs = [];
             state.epicUserJobs = [];
             state.metriportJobs = [];
+            state.cms485Jobs = [];
         }
     }
 });
