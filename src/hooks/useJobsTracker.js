@@ -17,8 +17,22 @@ export default function useJobsTracker() {
   const jobProgressQueries = useProgress(jobs);
 
   useEffect(() => {
-    jobProgressQueries.forEach((q) => {
-      if (q.isLoading || q.isError || q.data?.status === "INPROGRESS") return;
+    jobProgressQueries.forEach((q, i) => {
+      if (q.isError) {
+        const failedId = jobs[i]?.job_id;
+        if (!failedId || dispatchedJobsRef.current.has(failedId)) return;
+        dispatchedJobsRef.current.add(failedId);
+        dispatch(
+          saveFinalJobStatus({
+            jobId: failedId,
+            status: "FAILED",
+            message: q.error?.response?.data?.message || q.error?.message || "Could not check job status",
+            patientKey: jobs[i]?.patientKey,
+          })
+        );
+        return;
+      }
+      if (q.isLoading || q.data?.status === "INPROGRESS") return;
 
       const jobId = q.data?.job_id;
       const status = q.data?.status;

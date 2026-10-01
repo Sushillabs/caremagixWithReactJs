@@ -68,8 +68,12 @@ export default function JobsPage() {
 
   const externalRows = externalJobs
     .map((job, i) => {
-      const live = externalQueries[i]?.data;
-      const status = normalizeExternalStatus(live?.status);
+      const query = externalQueries[i];
+      const live = query?.data;
+      const errorMsg = query?.isError
+        ? query.error?.response?.data?.message || query.error?.message || "Could not check job status"
+        : null;
+      const status = errorMsg ? "FAILED" : normalizeExternalStatus(live?.status);
       const total = Number(live?.patients_total);
       const runningPct = total > 0 ? Math.round((Number(live?.patients_done) / total) * 100) : 50;
 
@@ -80,7 +84,7 @@ export default function JobsPage() {
         fileName: "—",
         status,
         progress: status === "COMPLETED" ? 100 : status === "FAILED" ? 0 : runningPct,
-        message: live?.message || live?.error || "Waiting...",
+        message: errorMsg || live?.message || live?.error || "Waiting...",
       };
     })
     .reverse();

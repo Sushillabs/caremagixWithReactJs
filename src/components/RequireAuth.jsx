@@ -1,8 +1,10 @@
 import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
+import useSessionExpiry from "../hooks/useSessionExpiry";
 const RequireAuth = ({ roles, children }) => {
   const location = useLocation();
   const user = useSelector((state) => state.auth.value);
+  useSessionExpiry();
 
   if (!user?.token) {
     localStorage.clear();
