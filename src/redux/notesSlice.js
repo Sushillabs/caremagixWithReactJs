@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { dischargePlan } from '../api/hospitalApi';
+import uuid from '../utils/uuid';
 
 export const fetchDischargePlan = createAsyncThunk('notes/fetchDischargePlan', async (payload, { rejectWithValue }) => {
     try {
@@ -41,13 +42,13 @@ const notesSlice = createSlice({
         },
         addInputAns: (state, action) => {
             state.pendingChat = {
-                id: crypto.randomUUID(),
+                id: uuid(),
                 answer: action.payload,
             };
         },
         addLocalTurn: (state, action) => {
             state.notes_chat.push({
-                id: crypto.randomUUID(),
+                id: uuid(),
                 answer: action.payload.answer,
                 question: action.payload.question,
             });
