@@ -36,6 +36,8 @@ export default function ConnectEpicModal({ onClose }) {
     isLoading: isLoadingConnection,
     isError: connectionFailed,
     error: connectionError,
+    refetch: refetchConnection,
+    isFetching: isFetchingConnection,
   } = useQuery({
     queryKey: ["epic-connection"],
     queryFn: getEpicConnection,
@@ -171,12 +173,20 @@ export default function ConnectEpicModal({ onClose }) {
             <CheckCircle2 size={32} className="text-emerald-600" />
             <p className="text-sm font-medium text-gray-700">Pull finished — taking you to the Jobs page...</p>
           </div>
-        ) : configured === false ? (
+        ) : connectionFailed ? (
           <div className="space-y-4 p-4">
             <div className="flex items-start gap-2 rounded-md bg-red-50 p-2 text-xs text-red-600">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-              Epic connect is not set up on this server. Contact support@caremagix.com to enable it for your facility.
+              {msgOf(connectionError, "Could not check Epic status.")}
             </div>
+            <button
+              type="button"
+              onClick={() => refetchConnection()}
+              disabled={isFetchingConnection}
+              className="w-full rounded-md border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {isFetchingConnection ? "Checking..." : "Retry"}
+            </button>
           </div>
         ) : view === "confirmDisconnect" ? (
           <div className="space-y-4 p-4">
@@ -212,8 +222,6 @@ export default function ConnectEpicModal({ onClose }) {
               Enter the Epic FHIR address of the hospital your facility works with. It is saved for every caregiver
               at this facility, so this only needs to be done once.
             </div>
-
-            {connectionFailed && <p className="text-xs text-red-600">{msgOf(connectionError, "Could not check Epic status.")}</p>}
 
             <div className="space-y-3">
               <div>
@@ -482,20 +490,27 @@ export default function ConnectEpicModal({ onClose }) {
               </button>
             </div>
 
-            {connectionFailed && <p className="text-xs text-red-600">{msgOf(connectionError, "Could not check Epic status.")}</p>}
             {connectError && <p className="text-xs text-red-600">{msgOf(connectError, "Could not start Epic connect.")}</p>}
             {pullError && <p className="text-xs text-red-600">{pullError}</p>}
 
             <hr className="border-gray-100" />
 
-            <button
-              type="button"
-              onClick={() => connect()}
-              disabled={isConnecting}
-              className="w-full rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-            >
-              {isConnecting ? "Taking you to Epic..." : "Connect Epic"}
-            </button>
+            {configured === false ? (
+              <div className="flex items-start gap-2 rounded-md bg-red-50 p-2 text-xs text-red-600">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                Epic connect is not available on this server yet. Contact support@caremagix.com to enable it for your
+                facility.
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => connect()}
+                disabled={isConnecting}
+                className="w-full rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {isConnecting ? "Taking you to Epic..." : "Connect Epic"}
+              </button>
+            )}
           </div>
         )}
       </div>
