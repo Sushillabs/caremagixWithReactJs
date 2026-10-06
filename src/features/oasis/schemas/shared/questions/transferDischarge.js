@@ -32,7 +32,7 @@ export const m2310 = (keys) =>
     { description: "Check all that apply" }
   );
 
-export const m2410 = (fieldId, extra = {}) =>
+export const m2410 = (fieldId, { withNA = false, ...extra } = {}) =>
   coded(
     "M2410",
     fieldId,
@@ -42,8 +42,72 @@ export const m2410 = (fieldId, extra = {}) =>
       ["2", "Rehabilitation facility"],
       ["3", "Nursing home"],
       ["4", "Hospice"],
+      ...(withNA ? [["NA", "No inpatient facility admission"]] : []),
     ],
     extra
+  );
+
+export const m2420 = (fieldId, extra = {}) =>
+  coded(
+    "M2420",
+    fieldId,
+    "Discharge Disposition — Where is the patient after discharge from your agency? (Choose only one answer.)",
+    [
+      ["1", "Patient remained in the community (without skilled services from a Medicare Certified HHA or non-institutional hospice) → Skip to A2123"],
+      ["2", "Patient remained in the community (with skilled services from a Medicare Certified HHA) → Continue to A2121"],
+      ["3", "Patient transferred to a non-institutional hospice → Continue to A2121"],
+      ["4", "Unknown because patient moved to a geographic location not served by this agency → Skip to A2123"],
+      ["UK", "Other unknown → Skip to A2123"],
+    ],
+    extra
+  );
+
+export const a2121 = (fieldId, extra = {}) =>
+  coded(
+    "A2121",
+    fieldId,
+    "Provision of Current Reconciled Medication List to Subsequent Provider at Discharge",
+    [
+      ["0", "No — Skip to B1300"],
+      ["1", "Yes — Continue to A2122"],
+    ],
+    {
+      description:
+        "At the time of discharge to another provider, did your agency provide the patient's current reconciled medication list to the subsequent provider?",
+      ...extra,
+    }
+  );
+
+export const a2123 = (fieldId, extra = {}) =>
+  coded(
+    "A2123",
+    fieldId,
+    "Provision of Current Reconciled Medication List to Patient at Discharge",
+    [
+      ["0", "No — Skip to B1300"],
+      ["1", "Yes — Continue to A2124"],
+    ],
+    {
+      description:
+        "At the time of discharge, did your agency provide the patient's current reconciled medication list to the patient, family, or caregiver?",
+      ...extra,
+    }
+  );
+
+// keys in order A–E.
+export const a2124 = (keys) =>
+  checks(
+    "A2124",
+    "Route of Current Reconciled Medication List Transmission to Patient",
+    keys,
+    [
+      "A. Electronic Health Record",
+      "B. Health Information Exchange",
+      "C. Verbal (in-person, telephone, video conferencing)",
+      "D. Paper-based (fax, copies, printouts)",
+      "E. Other Methods (texting, email, CDs)",
+    ],
+    { description: "Check all that apply" }
   );
 
 export const a2120 = (fieldId, extra = {}) =>

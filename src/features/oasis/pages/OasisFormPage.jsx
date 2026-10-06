@@ -25,13 +25,14 @@ import fuSchema from "../schemas/fu.schema";
 import rocSchema from "../schemas/roc.schema";
 import dahSchema from "../schemas/dah.schema";
 import trnSchema from "../schemas/trn.schema";
+import dcSchema from "../schemas/dc.schema";
 
 // Phase 1 Step 2: the real Form Shell, proven end-to-end on FU. formType -> schema
 // map is intentionally tiny right now (Phase 3/4 add SOC/ROC/DC/DAH/TRN here, nothing
 // else in this file changes). Patient identity comes from the URL, same contract
 // legacy used (?patient_id=&patient_name=&mode=fill|review) — Phase 2's wizard/landing
 // grid is what will actually construct that URL; this page doesn't care who does.
-const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema, DAH: dahSchema, TRN: trnSchema };
+const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema, DAH: dahSchema, TRN: trnSchema, DC: dcSchema };
 
 function OasisFormShell({ schema }) {
   const navigate = useNavigate();
@@ -327,7 +328,7 @@ function OasisFormShell({ schema }) {
                   <div key={section.id} hidden={section.id !== activeSection.id} className="flex flex-col gap-3">
                     {filterVisibleFields(section.items, answers).map((field) => (
                       <OasisField
-                        key={field.fieldId ?? field.itemCode ?? field.label}
+                        key={`${field.itemCode ?? ""}:${field.fieldId ?? field.label ?? ""}`}
                         field={field}
                         onSend={handleSendForReview}
                       />

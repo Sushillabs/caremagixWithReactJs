@@ -28,6 +28,49 @@ export const m1311 = (keys) => ({
   ].map((label, i) => ({ fieldId: keys[i], itemCode: keys[i], label })),
 });
 
+// Discharge version: each stage has a count and a "present at SOC/ROC" box.
+// keys in order A1, A2, B1, B2, … F1, F2.
+export const m1311WithSocRoc = (keys) => ({
+  itemCode: "M1311",
+  label: "Current Number of Unhealed Pressure Ulcers/Injuries at Each Stage",
+  widget: W.COUNT_GRID,
+  range: { min: 0 },
+  rows: [
+    "A1. Stage 2 — Count",
+    "A2. Stage 2 present at SOC/ROC",
+    "B1. Stage 3 — Count",
+    "B2. Stage 3 present at SOC/ROC",
+    "C1. Stage 4 — Count",
+    "C2. Stage 4 present at SOC/ROC",
+    "D1. Unstageable (non-removable dressing)",
+    "D2. D1 present at SOC/ROC",
+    "E1. Unstageable (slough/eschar)",
+    "E2. E1 present at SOC/ROC",
+    "F1. Unstageable (deep tissue injury)",
+    "F2. F1 present at SOC/ROC",
+  ].map((label, i) => ({ fieldId: keys[i], itemCode: keys[i], label })),
+});
+
+export const m1307 = (fieldId) =>
+  coded(
+    "M1307",
+    fieldId,
+    "The Oldest Stage 2 Pressure Ulcer that is present at discharge",
+    [
+      ["1", "Was present at the most recent SOC/ROC assessment"],
+      ["2", "Developed since the most recent SOC/ROC assessment. Record date pressure ulcer first identified below."],
+      ["NA", "No Stage 2 pressure ulcers are present at discharge"],
+    ],
+    { maxLength: 2 }
+  );
+
+export const m1307Date = (fieldId) => ({
+  itemCode: "M1307-DATE",
+  fieldId,
+  label: "M1307 — Date pressure ulcer first identified",
+  widget: W.SPLIT_DATE,
+});
+
 export const m1322 = (fieldId) =>
   coded(
     "M1322",

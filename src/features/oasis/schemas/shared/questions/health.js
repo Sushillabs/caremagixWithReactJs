@@ -164,20 +164,27 @@ export const m1060Weight = (fieldId) =>
     unit: "pounds",
   });
 
+const K0520_ROWS = [
+  ["A", "A. Parenteral/IV feeding"],
+  ["B", "B. Feeding tube (e.g., nasogastric or abdominal (PEG))"],
+  ["C", "C. Mechanically altered diet — require change in texture of food or liquids (e.g., pureed food, thickened liquids)"],
+  ["D", "D. Therapeutic diet (e.g., low salt, diabetic, low cholesterol)"],
+  ["Z", "Z. None of the above"],
+];
+
 export const k0520 = (keys, { label, description }) =>
-  checks(
-    "K0520",
-    label,
-    keys,
-    [
-      "A. Parenteral/IV feeding",
-      "B. Feeding tube (e.g., nasogastric or abdominal (PEG))",
-      "C. Mechanically altered diet — require change in texture of food or liquids (e.g., pureed food, thickened liquids)",
-      "D. Therapeutic diet (e.g., low salt, diabetic, low cholesterol)",
-      "Z. None of the above",
-    ],
-    { description }
-  );
+  checks("K0520", label, keys, K0520_ROWS.map(([, text]) => text), { description });
+
+// Discharge version: two columns per row. keyFor(letter, column) where column is 0 or 1.
+export const k0520Columns = (keyFor, { label, description, columns }) => ({
+  itemCode: "K0520",
+  label,
+  description,
+  widget: W.CHECKBOX_TABLE,
+  rowHeader: "Approach",
+  columns: columns.map((col) => ({ label: col })),
+  tableRows: K0520_ROWS.map(([letter, text]) => ({ label: text, fieldIds: [keyFor(letter, 0), keyFor(letter, 1)] })),
+});
 
 export const m1870 = (fieldId) =>
   coded(

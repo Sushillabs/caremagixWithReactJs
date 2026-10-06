@@ -36,7 +36,8 @@ await build({
       import roc from "./schemas/roc.schema";
       import dah from "./schemas/dah.schema";
       import trn from "./schemas/trn.schema";
-      export const SCHEMAS = { FU: fu, ROC: roc, DAH: dah, TRN: trn };
+      import dc from "./schemas/dc.schema";
+      export const SCHEMAS = { FU: fu, ROC: roc, DAH: dah, TRN: trn, DC: dc };
       export { FIELD_WIDGETS } from "./engine/schema";
       export {
         fieldLeaves, collectPayload, normalizeLoadedValues, applyDefaults,
@@ -232,11 +233,10 @@ function installHelpers() {
       } else {
         el.value = value;
       }
-    } else if (kind === "coded" && mode === "click") {
-      const radio = document.querySelector(`input[type="radio"][name="${el.id || key}"][value="${value}"]`);
-      if (!radio) return `no radio ${el.id || key}=${value}`;
-      radio.click();
+    } else if (kind === "coded" && mode === "click" && document.querySelector(`input[type="radio"][name="${el.id || key}"][value="${value}"]`)) {
+      document.querySelector(`input[type="radio"][name="${el.id || key}"][value="${value}"]`).click();
     } else {
+      // Typed values, and answers the legacy page has no radio for (DC M2102), go into the box.
       el.value = value;
       if (kind === "coded") fire(el, "input");
     }

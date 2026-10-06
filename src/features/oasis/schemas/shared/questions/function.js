@@ -32,23 +32,32 @@ export const m1100 = (fieldId) => ({
   ),
 });
 
+const M2102_OPTIONS = [
+  ["0", "No assistance needed — patient is independent or does not have needs in this area"],
+  ["1", "Non-agency caregiver(s) currently provide assistance"],
+  ["2", "Non-agency caregiver(s) need training/supportive services to provide assistance"],
+  ["3", "Non-agency caregiver(s) are not likely to provide assistance OR it is unclear if they will provide assistance"],
+  ["4", "Assistance needed, but no non-agency caregiver(s) available"],
+];
+const M2102_CODES =
+  "Codes: 0=No assistance needed, 1=Non-agency caregiver(s) currently provide assistance, 2=Caregiver(s) need training/supportive services, 3=Caregiver(s) not likely to provide or unclear, 4=Assistance needed but no caregiver available";
+const M2102_LABELS = {
+  a: "a. ADL assistance",
+  c: "c. Medication administration",
+  d: "d. Medical procedures/treatments",
+  f: "f. Supervision and safety (due to cognitive impairment)",
+};
+
 export const m2102f = (fieldId) =>
-  coded(
-    "M2102f",
-    fieldId,
-    "Types and Sources of Assistance — f. Supervision and safety (due to cognitive impairment)",
-    [
-      ["0", "No assistance needed — patient is independent or does not have needs in this area"],
-      ["1", "Non-agency caregiver(s) currently provide assistance"],
-      ["2", "Non-agency caregiver(s) need training/supportive services to provide assistance"],
-      ["3", "Non-agency caregiver(s) are not likely to provide assistance OR it is unclear if they will provide assistance"],
-      ["4", "Assistance needed, but no non-agency caregiver(s) available"],
-    ],
-    {
-      description:
-        "Codes: 0=No assistance needed, 1=Non-agency caregiver(s) currently provide assistance, 2=Caregiver(s) need training/supportive services, 3=Caregiver(s) not likely to provide or unclear, 4=Assistance needed but no caregiver available",
-    }
-  );
+  coded("M2102f", fieldId, `Types and Sources of Assistance — ${M2102_LABELS.f}`, M2102_OPTIONS, {
+    description: M2102_CODES,
+  });
+
+// letter: "a" | "c" | "d" | "f"
+export const m2102 = (letter, fieldId) =>
+  coded(`M2102${letter}`, fieldId, `Types and Sources of Assistance — ${M2102_LABELS[letter]}`, M2102_OPTIONS, {
+    description: M2102_CODES,
+  });
 
 const G_ITEMS = {
   M1800: [
@@ -242,7 +251,8 @@ const GG0170_ROWS = [
   ["SS1", "SS1. Indicate the type of wheelchair or scooter used — 150 feet", { hint: WHEELCHAIR_TYPE_HINT }],
 ];
 
-export const gg0170 = (keyFor, { label, columnLabel }) => ({
+// maxLengths: per-row overrides, e.g. { RR1: 1, SS1: 1 } for DC.
+export const gg0170 = (keyFor, { label, columnLabel, maxLengths = {} }) => ({
   itemCode: "GG0170",
   label,
   widget: W.GG_MATRIX,
@@ -252,20 +262,26 @@ export const gg0170 = (keyFor, { label, columnLabel }) => ({
     itemCode: `GG0170${letter}`,
     label: rowLabel,
     ...extra,
+    ...(maxLengths[letter] ? { maxLength: maxLengths[letter] } : {}),
   })),
 });
 
-export const m1600 = (fieldId) =>
+const withoutUnknown = (pairs, withUnknown) => (withUnknown ? pairs : pairs.filter(([value]) => value !== "UK"));
+
+export const m1600 = (fieldId, { withUnknown = true } = {}) =>
   coded(
     "M1600",
     fieldId,
     "Has this patient been treated for a Urinary Tract Infection in the past 14 days?",
-    [
-      ["0", "No"],
-      ["1", "Yes"],
-      ["NA", "Patient on prophylactic treatment"],
-      ["UK", "Unknown"],
-    ],
+    withoutUnknown(
+      [
+        ["0", "No"],
+        ["1", "Yes"],
+        ["NA", "Patient on prophylactic treatment"],
+        ["UK", "Unknown"],
+      ],
+      withUnknown
+    ),
     { maxLength: 2 }
   );
 
@@ -276,21 +292,24 @@ export const m1610 = (fieldId) =>
     ["2", "Patient requires a urinary catheter (specifically: external, indwelling, intermittent, or suprapubic)"],
   ]);
 
-export const m1620 = (fieldId) =>
+export const m1620 = (fieldId, { withUnknown = true } = {}) =>
   coded(
     "M1620",
     fieldId,
     "Bowel Incontinence Frequency",
-    [
-      ["0", "Very rarely or never has bowel incontinence"],
-      ["1", "Less than once weekly"],
-      ["2", "One to three times weekly"],
-      ["3", "Four to six times weekly"],
-      ["4", "On a daily basis"],
-      ["5", "More often than once daily"],
-      ["NA", "Patient has ostomy for bowel elimination"],
-      ["UK", "Unknown"],
-    ],
+    withoutUnknown(
+      [
+        ["0", "Very rarely or never has bowel incontinence"],
+        ["1", "Less than once weekly"],
+        ["2", "One to three times weekly"],
+        ["3", "Four to six times weekly"],
+        ["4", "On a daily basis"],
+        ["5", "More often than once daily"],
+        ["NA", "Patient has ostomy for bowel elimination"],
+        ["UK", "Unknown"],
+      ],
+      withUnknown
+    ),
     { maxLength: 2 }
   );
 

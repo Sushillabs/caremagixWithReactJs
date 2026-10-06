@@ -51,7 +51,7 @@ export const a1110b = (fieldId, extra = {}) =>
 // The rule-engine forms (SOC, DAH, TRN) send these codes zero-padded: "01" instead of "1".
 const padCodes = (pairs) => pairs.map(([value, ...rest]) => [value.padStart(2, "0"), ...rest]);
 
-export const m0080 = (fieldId, { twoDigitCodes = false } = {}) => {
+export const m0080 = (fieldId, { twoDigitCodes = false, ...extra } = {}) => {
   const pairs = [
     ["1", "RN"],
     ["2", "PT"],
@@ -59,8 +59,8 @@ export const m0080 = (fieldId, { twoDigitCodes = false } = {}) => {
     ["4", "OT"],
   ];
   return twoDigitCodes
-    ? coded("M0080", fieldId, "Discipline of Person Completing Assessment", padCodes(pairs), { maxLength: 2 })
-    : coded("M0080", fieldId, "Discipline of Person Completing Assessment", pairs);
+    ? coded("M0080", fieldId, "Discipline of Person Completing Assessment", padCodes(pairs), { maxLength: 2, ...extra })
+    : coded("M0080", fieldId, "Discipline of Person Completing Assessment", pairs, extra);
 };
 
 export const m0090 = (fieldId) => splitDate("M0090", fieldId, "Date Assessment Completed");

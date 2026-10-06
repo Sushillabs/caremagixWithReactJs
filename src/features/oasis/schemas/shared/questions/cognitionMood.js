@@ -40,13 +40,14 @@ const FREQUENCY_0_TO_4_DECLINE = [
   ["8", "Patient unable to respond"],
 ];
 
-export const b1300 = (fieldId) =>
+export const b1300 = (fieldId, extra = {}) =>
   coded("B1300", fieldId, "Health Literacy (From Creative Commons ©)", FREQUENCY_0_TO_4_DECLINE, {
     description:
       "How often do you need to have someone help you when you read instructions, pamphlets, or other written material from your doctor or pharmacy?",
+    ...extra,
   });
 
-export const c0100 = (fieldId) =>
+export const c0100 = (fieldId, extra = {}) =>
   coded(
     "C0100",
     fieldId,
@@ -55,12 +56,12 @@ export const c0100 = (fieldId) =>
       ["0", "No (patient is rarely/never understood) → Skip to C1310"],
       ["1", "Yes → Continue to C0200"],
     ],
-    { description: "Attempt to conduct interview with all patients." }
+    { description: "Attempt to conduct interview with all patients.", ...extra }
   );
 
 export const bimsHeading = () => notice("BIMS-HEADING", "Brief Interview for Mental Status (BIMS)");
 
-export const c0200 = (fieldId) =>
+export const c0200 = (fieldId, extra = {}) =>
   coded(
     "C0200",
     fieldId,
@@ -74,6 +75,7 @@ export const c0200 = (fieldId) =>
     {
       description:
         'Ask patient: "I am going to say three words for you to remember. Please repeat the words after I have said all three. The words are: sock, blue, and bed. Now tell me the three words." Number of words repeated after first attempt:',
+      ...extra,
     }
   );
 
