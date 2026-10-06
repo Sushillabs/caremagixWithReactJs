@@ -156,6 +156,23 @@ export const m2003 = (fieldId) =>
     }
   );
 
+export const m2005 = (fieldId, extra = {}) =>
+  coded(
+    "M2005",
+    fieldId,
+    "Medication Intervention",
+    [
+      ["0", "No"],
+      ["1", "Yes"],
+      ["9", "NA — No clinically significant medication issues OR patient not taking any medications"],
+    ],
+    {
+      description:
+        "Did the agency contact and complete physician-prescribed/recommended actions by midnight of the next calendar day each time potential clinically significant medication issues were identified since SOC/ROC?",
+      ...extra,
+    }
+  );
+
 export const m2010 = (fieldId) =>
   coded(
     "M2010",

@@ -1,7 +1,7 @@
 import { FIELD_WIDGETS as W } from "../../../engine/schema";
 import { coded, checks, splitDate, pairedCheckbox, notice } from "./helpers";
 
-export const coverNotices = ({ title, pages }) => [
+export const coverNotices = ({ title, pages, formNote }) => [
   notice("COVER-HEADER", title, [
     "Outcome and Assessment Information Set · Version E2",
     "Effective: 04/01/2026",
@@ -19,6 +19,7 @@ export const coverNotices = ({ title, pages }) => [
     ],
     { variant: "warn" }
   ),
+  ...(formNote ? [notice("FORM-NOTE", undefined, [formNote], { variant: "warn" })] : []),
 ];
 
 export const m0032 = (fieldId, naFieldId) =>
@@ -47,33 +48,42 @@ export const a1110b = (fieldId, extra = {}) =>
     extra
   );
 
-export const m0080 = (fieldId) =>
-  coded("M0080", fieldId, "Discipline of Person Completing Assessment", [
+// The rule-engine forms (SOC, DAH, TRN) send these codes zero-padded: "01" instead of "1".
+const padCodes = (pairs) => pairs.map(([value, ...rest]) => [value.padStart(2, "0"), ...rest]);
+
+export const m0080 = (fieldId, { twoDigitCodes = false } = {}) => {
+  const pairs = [
     ["1", "RN"],
     ["2", "PT"],
     ["3", "SLP/ST"],
     ["4", "OT"],
-  ]);
+  ];
+  return twoDigitCodes
+    ? coded("M0080", fieldId, "Discipline of Person Completing Assessment", padCodes(pairs), { maxLength: 2 })
+    : coded("M0080", fieldId, "Discipline of Person Completing Assessment", pairs);
+};
 
 export const m0090 = (fieldId) => splitDate("M0090", fieldId, "Date Assessment Completed");
 
-export const m0100 = (fieldId) =>
-  coded(
+export const m0100 = (fieldId, { twoDigitCodes = false, ...extra } = {}) => {
+  const pairs = [
+    ["1", "Start of care — further visits planned", "Start/Resumption of Care"],
+    ["3", "Resumption of Care (after inpatient stay)"],
+    ["4", "Recertification (follow-up) reassessment", "Follow-up"],
+    ["5", "Other follow-up"],
+    ["6", "Transferred to an inpatient facility — patient not discharged from agency", "Transfer to an Inpatient Facility"],
+    ["7", "Transferred to an inpatient facility — patient discharged from agency"],
+    ["8", "Death at home", "Discharge from Agency"],
+    ["9", "Discharge from agency"],
+  ];
+  return coded(
     "M0100",
     fieldId,
     "This Assessment is Currently Being Completed for the Following Reason",
-    [
-      ["1", "Start of care — further visits planned", "Start/Resumption of Care"],
-      ["3", "Resumption of Care (after inpatient stay)"],
-      ["4", "Recertification (follow-up) reassessment", "Follow-up"],
-      ["5", "Other follow-up"],
-      ["6", "Transferred to an inpatient facility — patient not discharged from agency", "Transfer to an Inpatient Facility"],
-      ["7", "Transferred to an inpatient facility — patient discharged from agency"],
-      ["8", "Death at home", "Discharge from Agency"],
-      ["9", "Discharge from agency"],
-    ],
-    { maxLength: 2 }
+    twoDigitCodes ? padCodes(pairs) : pairs,
+    { maxLength: 2, ...extra }
   );
+};
 
 export const m0102 = (fieldId, naFieldId) =>
   splitDate("M0102", fieldId, "Date of Physician-ordered Start of Care (Resumption of Care)", {
@@ -129,3 +139,5 @@ export const m1005 = (fieldId, ukFieldId) =>
   splitDate("M1005", fieldId, "Inpatient Discharge Date (most recent)", {
     pairedField: pairedCheckbox(ukFieldId, "UK — Unknown or Not Available"),
   });
+
+export const m0906 = (fieldId) => splitDate("M0906", fieldId, "Discharge/Transfer/Death Date");

@@ -124,6 +124,32 @@ export const m1400 = (fieldId) =>
     ["4", "At rest (during day or night)"],
   ]);
 
+export const j1800 = (fieldId, extra = {}) =>
+  coded(
+    "J1800",
+    fieldId,
+    "Any Falls Since SOC/ROC, whichever is more recent",
+    [
+      ["0", "No → Skip to M2005, Medication Intervention"],
+      ["1", "Yes → Continue to J1900"],
+    ],
+    extra
+  );
+
+// keyFor maps the row letter ("A") to this form's field key.
+export const j1900 = (keyFor) => ({
+  itemCode: "J1900",
+  label: "Number of Falls Since SOC/ROC, whichever is more recent",
+  description: "Codes: 0 = None, 1 = One, 2 = Two or more",
+  widget: W.GG_MATRIX,
+  columnLabel: "Code",
+  rows: [
+    ["A", "A. No injury — No evidence of injury, no pain, no behavior change after fall"],
+    ["B", "B. Injury (except major) — As described in OASIS manual"],
+    ["C", "C. Major injury — As described in OASIS manual"],
+  ].map(([letter, label]) => ({ fieldId: keyFor(letter), itemCode: `J1900${letter}`, label, maxLength: 1 })),
+});
+
 export const m1060Height = (fieldId) =>
   numeric("M1060A", fieldId, "Height (inches) — most recent since SOC/ROC", { min: 0, max: 120 }, {
     description: "While measuring, if the number is X.1–X.4 round down; X.5 or greater round up.",

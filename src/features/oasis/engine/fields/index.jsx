@@ -16,6 +16,7 @@ import AiAssistTriggerField from "./AiAssistTriggerField";
 import NoticeField from "./NoticeField";
 import TableField from "./TableField";
 import DiagnosisTableField from "./DiagnosisTableField";
+import RadioTableField from "./RadioTableField";
 
 // One component per widget kind (§(a) of the field inventory) — the field registry
 // the schema-driven engine dispatches against. Adding a 14th widget kind means adding
@@ -39,6 +40,7 @@ export const FIELD_COMPONENTS = {
   [FIELD_WIDGETS.CODE_TABLE]: TableField,
   [FIELD_WIDGETS.CHECKBOX_TABLE]: TableField,
   [FIELD_WIDGETS.DIAGNOSIS_TABLE]: DiagnosisTableField,
+  [FIELD_WIDGETS.RADIO_TABLE]: RadioTableField,
 };
 
 // Dispatcher every section renderer uses: <OasisField field={fieldDef} />.

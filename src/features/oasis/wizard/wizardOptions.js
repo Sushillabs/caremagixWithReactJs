@@ -26,8 +26,8 @@ export const OASIS_FORM_OPTIONS = [
   { formType: "ROC", formKey: "OASIS-E2-ROC", label: "Resumption of Care (ROC)", built: true },
   { formType: "FU", formKey: "OASIS-E2-FU", label: "Follow-up (FU)", built: true },
   { formType: "DC", formKey: "OASIS-E2-DC", label: "Discharge (DC)", built: false },
-  { formType: "DAH", formKey: "OASIS-E2-DAH", label: "Death at Home (DAH)", built: false },
-  { formType: "TRN", formKey: "OASIS-E2-TRN", label: "Transfer (TRN)", built: false },
+  { formType: "DAH", formKey: "OASIS-E2-DAH", label: "Death at Home (DAH)", built: true },
+  { formType: "TRN", formKey: "OASIS-E2-TRN", label: "Transfer (TRN)", built: true },
 ];
 
 const ymdToISO = (ymd) => (ymd && ymd.length === 8 ? `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}` : "");

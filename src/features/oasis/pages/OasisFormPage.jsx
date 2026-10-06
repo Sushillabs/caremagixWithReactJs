@@ -7,7 +7,14 @@ import OasisField from "../engine/fields";
 import SectionNavigator from "../engine/SectionNavigator";
 import { filterVisibleFields } from "../engine/skipLogic";
 import { useOasisSaveLoad } from "../engine/saveLoad";
-import { buildExportData, exportFileName, collectPayload, normalizeLoadedValues } from "../engine/payload";
+import {
+  applyDefaults,
+  blankValues,
+  buildExportData,
+  exportFileName,
+  collectPayload,
+  normalizeLoadedValues,
+} from "../engine/payload";
 import { applySkipMarks } from "../engine/skipLogic";
 import { requestOasisXml, fetchOasisXmlBlob } from "../api/oasisApi";
 import { indexErrors, classifyApiError, errorFieldKeys } from "../engine/validation";
@@ -16,13 +23,15 @@ import ValidationErrorPanel from "../engine/ValidationErrorPanel";
 import { OasisModeProvider, useOasisMode } from "../engine/ModeContext";
 import fuSchema from "../schemas/fu.schema";
 import rocSchema from "../schemas/roc.schema";
+import dahSchema from "../schemas/dah.schema";
+import trnSchema from "../schemas/trn.schema";
 
 // Phase 1 Step 2: the real Form Shell, proven end-to-end on FU. formType -> schema
 // map is intentionally tiny right now (Phase 3/4 add SOC/ROC/DC/DAH/TRN here, nothing
 // else in this file changes). Patient identity comes from the URL, same contract
 // legacy used (?patient_id=&patient_name=&mode=fill|review) — Phase 2's wizard/landing
 // grid is what will actually construct that URL; this page doesn't care who does.
-const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema };
+const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema, DAH: dahSchema, TRN: trnSchema };
 
 function OasisFormShell({ schema }) {
   const navigate = useNavigate();
@@ -61,11 +70,14 @@ function OasisFormShell({ schema }) {
     loadFromServer()
       .then(({ values, patientDetails: details }) => {
         if (cancelled) return;
-        if (values && isReview) methods.reset(normalizeLoadedValues(schema, values));
+        const loaded = isReview && values ? normalizeLoadedValues(schema, values) : {};
+        methods.reset(applyDefaults(schema, { ...blankValues(schema), ...loaded }));
         setPatientDetails(details);
       })
       .catch(() => {
-        if (!cancelled) toast.error("Could not load saved OASIS data — starting blank.");
+        if (cancelled) return;
+        methods.reset(applyDefaults(schema, blankValues(schema)));
+        toast.error("Could not load saved OASIS data — starting blank.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -121,7 +133,7 @@ function OasisFormShell({ schema }) {
     const blob = new Blob([JSON.stringify(buildExportData(schema, methods.getValues()), null, 2)], {
       type: "application/json",
     });
-    downloadBlob(blob, exportFileName(schema));
+    downloadBlob(blob, exportFileName(schema, patientName));
   };
 
   const handleExportXml = async () => {
@@ -189,7 +201,7 @@ function OasisFormShell({ schema }) {
 
   const handleClearAll = async () => {
     if (!window.confirm("Are you sure you want to clear all data? This cannot be undone.")) return;
-    methods.reset({});
+    methods.reset(blankValues(schema));
     dismissValidation();
     try {
       await clearOnServer();

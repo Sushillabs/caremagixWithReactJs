@@ -1,4 +1,7 @@
-import { FIELD_WIDGETS } from "./schema";
+import { FIELD_WIDGETS, LEGACY_ENGINES } from "./schema";
+import { applySkipMarks } from "./skipLogic";
+
+const isRuleEngine = (schema) => schema?.legacyEngine === LEGACY_ENGINES.RULE;
 
 // Legacy walks every [data-field] in the DOM, so untouched fields still ship as "".
 // Deriving the same set from the schema keeps that guarantee without depending on
@@ -20,6 +23,9 @@ export function fieldLeaves(field) {
       { id: r.icdFieldId, kind: "text" },
       { id: r.severityFieldId, kind: "text" },
     ]);
+  }
+  if (field.radioRows) {
+    return field.radioRows.map((r) => ({ id: r.fieldId, kind: "radio" }));
   }
 
   const leaves = [];
@@ -52,11 +58,22 @@ export function schemaLeaves(schema) {
   return (schema?.sections ?? []).flatMap((section) => (section.items ?? []).flatMap(fieldLeaves));
 }
 
+const isBlank = (value) => value === undefined || value === null || value === "";
+
+// Checkboxes: the core engine sends true/false, the rule engines "1"/"0".
+// Radio-only rows (no code box) are read from checked radios, so unanswered rows send no key.
 export function collectPayload(schema, values) {
   const payload = {};
+  const ruleEngine = isRuleEngine(schema);
   for (const leaf of schemaLeaves(schema)) {
     const value = values?.[leaf.id];
-    payload[leaf.id] = leaf.kind === "checkbox" ? !!value : value ?? "";
+    if (leaf.kind === "checkbox") {
+      payload[leaf.id] = ruleEngine ? (value ? "1" : "0") : !!value;
+    } else if (leaf.kind === "radio") {
+      if (!isBlank(value)) payload[leaf.id] = value;
+    } else {
+      payload[leaf.id] = value ?? "";
+    }
   }
   for (const section of schema?.sections ?? []) {
     for (const field of section.items ?? []) {
@@ -68,26 +85,60 @@ export function collectPayload(schema, values) {
   return payload;
 }
 
-// A number input drops any non-numeric value the browser is handed (legacy reloads "^" as blank).
+// Mirrors legacy applyData(): a checkbox is ticked only by true / "true" / 1 / "1" (so a saved
+// "0" or "^" loads unticked), and a number input drops any non-numeric value ("^" reloads blank).
 export function normalizeLoadedValues(schema, values) {
   if (!values) return values;
   const normalized = { ...values };
   for (const leaf of schemaLeaves(schema)) {
-    if (leaf.kind !== "number") continue;
     const value = normalized[leaf.id];
-    if (value !== undefined && value !== "" && Number.isNaN(Number(value))) normalized[leaf.id] = "";
+    if (value === undefined) continue;
+    if (leaf.kind === "checkbox") {
+      normalized[leaf.id] = value === true || value === "true" || value === 1 || value === "1";
+    } else if (leaf.kind === "number" && value !== "" && Number.isNaN(Number(value))) {
+      normalized[leaf.id] = "";
+    }
   }
   return normalized;
 }
 
-// Legacy's collectData(): carries _meta and, unlike the save payload, no skip marks.
+// An explicit blank for every input. reset({}) alone leaves register()-ed inputs (dates, text,
+// numbers) showing their old value, which react-hook-form then reads back from the DOM.
+export function blankValues(schema) {
+  return Object.fromEntries(schemaLeaves(schema).map((leaf) => [leaf.id, leaf.kind === "checkbox" ? false : ""]));
+}
+
+export function applyDefaults(schema, values) {
+  const withDefaults = { ...values };
+  for (const section of schema?.sections ?? []) {
+    for (const field of section.items ?? []) {
+      if (field.defaultValue === undefined || !field.fieldId) continue;
+      const value = withDefaults[field.fieldId];
+      if (value === undefined || value === null || value === "") withDefaults[field.fieldId] = field.defaultValue;
+    }
+  }
+  return withDefaults;
+}
+
+// mapped_data for save_oasis_json (Save and Send for Review). The rule engines append _meta.
+export function buildSavePayload(schema, values, now = new Date()) {
+  const payload = applySkipMarks(schema, collectPayload(schema, values));
+  if (!isRuleEngine(schema)) return payload;
+  return { ...payload, _meta: { savedAt: now.toISOString(), form: schema.formKey } };
+}
+
+// Core engine exports collectData(): _meta, no skip marks. Rule engines export
+// getRawFormData(): skip marks, no _meta.
 export function buildExportData(schema, values) {
+  if (isRuleEngine(schema)) return applySkipMarks(schema, collectPayload(schema, values));
   return {
     _meta: { savedAt: new Date().toISOString(), form: schema?.formKey ?? "OASIS-E2" },
     ...collectPayload(schema, values),
   };
 }
 
-export function exportFileName(schema, now = new Date()) {
-  return `${schema?.formKey ?? "OASIS-E2"}_${now.toISOString().slice(0, 10)}.json`;
+export function exportFileName(schema, patientName, now = new Date()) {
+  const formKey = schema?.formKey ?? "OASIS-E2";
+  if (isRuleEngine(schema)) return `${formKey}_${(patientName?.trim() || "patient").replace(/\s+/g, "_")}.json`;
+  return `${formKey}_${now.toISOString().slice(0, 10)}.json`;
 }

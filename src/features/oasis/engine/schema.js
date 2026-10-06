@@ -34,6 +34,15 @@ export const FIELD_WIDGETS = {
   CODE_TABLE: 'code-table',         // rows × columns of code boxes, e.g. D0150 PHQ
   CHECKBOX_TABLE: 'checkbox-table', // rows × columns of checkboxes, e.g. N0415
   DIAGNOSIS_TABLE: 'diagnosis-table', // ICD code + severity buttons per row, M1021/M1023
+  RADIO_TABLE: 'radio-table',       // one radio set per row, no code box, e.g. M2401
+};
+
+// Which legacy script a form ran on. CORE = oasis-core.js (FU, ROC, DC); RULE = the
+// oasis-*-rule.js copies (SOC, DAH, TRN), which put different things in the saved and
+// exported JSON.
+export const LEGACY_ENGINES = {
+  CORE: 'core',
+  RULE: 'rule',
 };
 
 /**
@@ -111,6 +120,8 @@ export const FIELD_WIDGETS = {
  *   one field id per column, null for an empty cell
  * @property {{label: string, note?: string, icdFieldId: string, severityFieldId: string}[]} [diagnosisRows]
  *   DIAGNOSIS_TABLE only
+ * @property {{label: string, description?: string, fieldId: string}[]} [radioRows] - RADIO_TABLE only;
+ *   with `options` as the shared columns. An unanswered row sends no key at all.
  */
 
 /**
@@ -124,5 +135,6 @@ export const FIELD_WIDGETS = {
  * @typedef {Object} OasisFormSchema
  * @property {string} formKey - e.g. "OASIS-E2-FU", matches legacy's `data-form-key`
  * @property {string} formType - "SOC" | "ROC" | "FU" | "DC" | "DAH" | "TRN"
+ * @property {'core'|'rule'} [legacyEngine] - LEGACY_ENGINES value, CORE when omitted
  * @property {OasisSectionDef[]} sections
  */

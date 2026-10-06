@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveOasisForm, getOasisForm, clearOasisForm } from "../api/oasisApi";
-import { applySkipMarks } from "./skipLogic";
-import { collectPayload } from "./payload";
+import { buildSavePayload } from "./payload";
 
 const AUTOSAVE_DEBOUNCE_MS = 1500;
 
@@ -61,7 +60,7 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
         throw new Error("Patient id is required to save.");
       }
       setStatus("saving");
-      const payload = applySkipMarks(schema, collectPayload(schema, values));
+      const payload = buildSavePayload(schema, values);
       try {
         await saveOasisForm({
           patient_name: patientName,
