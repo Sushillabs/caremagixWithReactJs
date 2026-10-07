@@ -142,6 +142,7 @@ export const SECTIONS = {
 
     children: [
       { key: "pullPcc", label: "Pull PCC Data", roles: ["caregiver"] },
+      { key: "connectPcc", label: "Connect PCC (My Login)", roles: ["caregiver"] },
       { key: "connectMetriport", label: "Connect HIE", roles: ["caregiver"] },
       { key: "pullMetriport", label: "Pull HIE Data", roles: ["caregiver"] },
       { key: "pullEpic", label: "Pull Epic Data", roles: ["caregiver"] },

@@ -60,7 +60,9 @@ export default function useJobPull({ startFn, statusFn, toastId, defaultMsg, job
 
     if (currentStatus === "failed") return;
 
-    setSoftPct((prev) => Math.min(90, prev < 5 ? 5 : prev + 8));
+    const total = Number(statusData.patients_total);
+    if (total > 0) setSoftPct(Math.max(5, Math.min(99, Math.round((Number(statusData.patients_done) / total) * 100))));
+    else setSoftPct((prev) => Math.min(90, prev < 5 ? 5 : prev + 8));
     setMessage(statusData.message || defaultMsg);
   }, [jobId, statusData, defaultMsg]);
 

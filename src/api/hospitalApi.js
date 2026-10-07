@@ -74,6 +74,7 @@ export const getEpicPullStatus = (jobId) => http.get(`/ehr_pull/status/${jobId}`
 // Separate from /ehr_pull above, which uses the shared backend-services app.
 export const getEpicConnectConfig = () => http.get("/v1/epic/config", { withAuth: true });
 export const getEpicConnection = () => http.get("/v1/epic/connection", { withAuth: true });
+export const saveEpicSettings = (data) => http.put("/v1/epic/settings", data, { withAuth: true });
 // Backend defaults the return URL to the old caregiver-view.html, so always pass ours.
 export const startEpicConnect = (frontendRedirect) =>
   http.get(`/v1/epic/connect/start?frontend_redirect=${encodeURIComponent(frontendRedirect)}`, { withAuth: true });
@@ -89,7 +90,22 @@ export const searchEpicPatients = ({ family, given, birthdate, name, _count = 20
 };
 export const startEpicUserPull = (body = {}) => http.post("/v1/epic/pull", body, { withAuth: true });
 export const getEpicUserPullStatus = (jobId) => http.get(`/v1/epic/pull/${jobId}`, { withAuth: true });
-export const getMetriportFacility = () => http.get("/get-facility", { withAuth: true });
+export const getPccConnectConfig = () => http.get("/v1/pcc/config", { withAuth: true });
+export const getPccActivations = () => http.get("/v1/pcc/activations", { withAuth: true });
+export const getPccConnection = () => http.get("/v1/pcc/connection", { withAuth: true });
+export const savePccSettings = (data) => http.put("/v1/pcc/settings", data, { withAuth: true });
+export const startPccConnect = (frontendRedirect) =>
+  http.get(`/v1/pcc/connect/start?frontend_redirect=${encodeURIComponent(frontendRedirect)}`, { withAuth: true });
+export const disconnectPcc = () => http.delete("/v1/pcc/connection", { withAuth: true });
+export const getPccFacilities = () => http.get("/v1/pcc/facilities", { withAuth: true });
+export const searchPccPatients = ({ name, patient_status = "Current" } = {}) => {
+  const params = new URLSearchParams({ patient_status });
+  if (name) params.set("name", name);
+  return http.get(`/v1/pcc/patients?${params.toString()}`, { withAuth: true });
+};
+export const startPccUserPull = (body = {}) => http.post("/v1/pcc/pull", body, { withAuth: true });
+export const getPccUserPullStatus = (jobId) => http.get(`/v1/pcc/pull/${jobId}`, { withAuth: true });
+export const getMetriportFacility =() => http.get("/get-facility", { withAuth: true });
 export const createMetriportFacility = (data) => http.post("/create-facility", data, { withAuth: true });
 export const updateMetriportFacility = (data) => http.put("/update-facility", data, { withAuth: true });
 export const deleteMetriportFacility = () => http.delete("/delete-facility", { withAuth: true, data: {} });

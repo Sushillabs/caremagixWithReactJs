@@ -10,6 +10,7 @@ const jobsIdSlice = createSlice({
         // Group B/C jobs (PCC, Epic, Metriport) — own status_url per job,
         // polled separately from Group A's shared /ocr-progress endpoint.
         pccJobs: [],
+        pccUserJobs: [],
         epicJobs: [],
         epicUserJobs: [],
         metriportJobs: [],
@@ -32,6 +33,10 @@ const jobsIdSlice = createSlice({
                 state.pccJobs.push(action.payload.pccJobs);
             }
 
+            if (action.payload?.pccUserJobs && typeof action.payload.pccUserJobs === "object") {
+                state.pccUserJobs.push(action.payload.pccUserJobs);
+            }
+
             if (action.payload?.epicJobs && typeof action.payload.epicJobs === "object") {
                 state.epicJobs.push(action.payload.epicJobs);
             }
@@ -49,6 +54,7 @@ const jobsIdSlice = createSlice({
             state.ocrJobs = [];
             state.carePlanJobs = [];
             state.pccJobs = [];
+            state.pccUserJobs = [];
             state.epicJobs = [];
             state.epicUserJobs = [];
             state.metriportJobs = [];

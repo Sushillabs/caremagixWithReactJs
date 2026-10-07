@@ -24,7 +24,9 @@ const normalizeExternalStatus = (status) => {
 };
 
 export default function JobsPage() {
-  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, epicJobs, epicUserJobs, metriportJobs } = useSelector((state) => state.jobsId);
+  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, pccUserJobs, epicJobs, epicUserJobs, metriportJobs } = useSelector(
+    (state) => state.jobsId
+  );
   const finalJobs = useSelector((state) => state.finalJobStatus.finalJobs);
 
   const jobs = [
@@ -57,6 +59,7 @@ export default function JobsPage() {
 
   const externalJobs = [
     ...(Array.isArray(pccJobs) ? pccJobs.map((j) => ({ ...j, type: "PCC" })) : []),
+    ...(Array.isArray(pccUserJobs) ? pccUserJobs.map((j) => ({ ...j, type: "PointClickCare (my login)" })) : []),
     ...(Array.isArray(epicJobs) ? epicJobs.map((j) => ({ ...j, type: "Epic" })) : []),
     ...(Array.isArray(epicUserJobs) ? epicUserJobs.map((j) => ({ ...j, type: "Epic (my login)" })) : []),
     ...(Array.isArray(metriportJobs) ? metriportJobs.map((j) => ({ ...j, type: "Metriport" })) : []),
@@ -67,6 +70,8 @@ export default function JobsPage() {
     .map((job, i) => {
       const live = externalQueries[i]?.data;
       const status = normalizeExternalStatus(live?.status);
+      const total = Number(live?.patients_total);
+      const runningPct = total > 0 ? Math.round((Number(live?.patients_done) / total) * 100) : 50;
 
       return {
         jobId: job.job_id,
@@ -74,7 +79,7 @@ export default function JobsPage() {
         patientName: "—",
         fileName: "—",
         status,
-        progress: status === "COMPLETED" ? 100 : status === "FAILED" ? 0 : 50,
+        progress: status === "COMPLETED" ? 100 : status === "FAILED" ? 0 : runningPct,
         message: live?.message || live?.error || "Waiting...",
       };
     })

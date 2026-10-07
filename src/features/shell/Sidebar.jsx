@@ -12,6 +12,7 @@ import PullEpicModal from "../configuration/PullEpicModal";
 import ConnectMetriportModal from "../configuration/ConnectMetriportModal";
 import PullMetriportModal from "../configuration/PullMetriportModal";
 import ConnectEpicModal from "../configuration/ConnectEpicModal";
+import ConnectPccModal from "../configuration/ConnectPccModal";
 import EditTemplate from "../../components/EditTemplate";
 
 // Same component as "Edit Visit Template" — only title + note_kind differ per role.
@@ -31,6 +32,7 @@ function PullEhrModal(props) {
 
 const CHILD_MODALS = {
   pullPcc: PullPccModal,
+  connectPcc: ConnectPccModal,
   connectMetriport: ConnectMetriportModal,
   pullMetriport: PullMetriportModal,
   pullEpic: PullEpicModal,
