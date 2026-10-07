@@ -21,6 +21,7 @@ import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
 import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
 import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
+import Cms485Modal from "../cms485/Cms485Modal";
 
 let DOCUMENT_ITEMS = [];
 
@@ -178,6 +179,8 @@ export default function PatientDetails() {
   const canTimeline = useCan("timeline");
   const canSendMessage = useCan("sendMessage");
   const canAmbientVisitNotes = useCan("ambientVisitNotes");
+  const canCms485 = useCan("cms485");
+  const [showCms485Modal, setShowCms485Modal] = useState(false);
 
   if (type === "Uploaded") {
     DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
@@ -331,6 +334,16 @@ export default function PatientDetails() {
               onToggle={() => toggleDropdown("Upload")}
               onClose={() => setOpenDropdown(null)}
             />
+          )}
+          {canCms485 && (
+            <button
+              type="button"
+              onClick={() => setShowCms485Modal(true)}
+              disabled={!singleData?.patient_name}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Plan of Care (485)
+            </button>
           )}
           {canMmta && (
             <button
@@ -510,6 +523,16 @@ export default function PatientDetails() {
       {showTransitionCareModal && <TransitionCarePlanModal patientName={patient?.name} onClose={() => setShowTransitionCareModal(false)} />}
       {showEditTemplateModal && <EditTemplate onClose={() => setShowEditTemplateModal(false)} />}
       {showSendMessageModal && <SendMessageModal onClose={() => setShowSendMessageModal(false)} />}
+      {showCms485Modal && (
+        <Cms485Modal
+          patient={{
+            patient_name: singleData?.patient_name,
+            patient_type: singleData?.patient_type,
+            dates: "Consolidated Med Summary",
+          }}
+          onClose={() => setShowCms485Modal(false)}
+        />
+      )}
     </div>
   );
 }

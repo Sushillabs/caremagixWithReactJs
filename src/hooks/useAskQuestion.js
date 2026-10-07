@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { addQconversation , setAskPending} from '../redux/chatSlice';
 import { askAPI } from '../api/hospitalApi'; 
+import uuid from '../utils/uuid';
 
 const useAskQuestion = () => {
   const dispatch = useDispatch();
@@ -38,7 +39,7 @@ const useAskQuestion = () => {
   });
 
   const askQuestion = (questionContent, overrides = {}) => {
-    const newId = crypto.randomUUID();
+    const newId = uuid();
     const parts = [{ content: questionContent, role: 'user' }];
 
     const askQPayload = {

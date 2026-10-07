@@ -1,6 +1,8 @@
 // src/api/httpClient.js
 import axios from 'axios';
 
+export const SESSION_EXPIRED_EVENT = 'caremagix:session-expired';
+
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
@@ -33,8 +35,9 @@ http.interceptors.response.use(
 
     switch (status) {
       case 401:
-        console.warn('Unauthorized: forcing logout soon...');
-        // Optionally: trigger logout()
+        if ((err.config?.withAuth || err.config?.rawAuth) && localStorage.getItem('token')) {
+          window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+        }
         break;
 
       case 409:

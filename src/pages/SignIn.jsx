@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { forgotPasswordAPI, signInAPI } from "../api/hospitalApi";
@@ -17,9 +17,9 @@ function SignIn() {
     reset,
   } = useForm();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.value);
-  console.log("user", user);
 
   const redirectByRole = (role) => {
     switch (role) {
@@ -32,15 +32,14 @@ function SignIn() {
     }
   };
 
+  const fromPath = location.state?.from?.pathname?.startsWith("/app")
+    ? `${location.state.from.pathname}${location.state.from.search || ""}`
+    : null;
+
   const onSignIn = async (signInData) => {
-    console.log("sign-in data", signInData);
     try {
       const res = await signInAPI(signInData);
-      console.log("sign-in res", res);
       localStorage.setItem("token", res.token);
-
-      navigate(redirectByRole(res.role));
-
       dispatch(setAuth(res));
       reset();
     } catch (error) {
@@ -48,9 +47,12 @@ function SignIn() {
     }
   };
 
-  if (user?.token && user?.role) {
-    navigate(redirectByRole(user?.role));
-  }
+  useEffect(() => {
+    if (!user?.token || !user?.role) return;
+    const target = redirectByRole(user.role);
+    navigate(target === "/app" && fromPath ? fromPath : target, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token, user?.role]);
 
   const onSignInReset = async (resetEmail) => {
     console.log("resetEmail", resetEmail);

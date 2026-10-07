@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getPatients } from "../api/hospitalApi";
 import { addPatientNames } from "../redux/patientListSlice";
 import useMyQuery from "./useMyQuery";
+import uuid from "../utils/uuid";
 
 const EXTRA_SOURCE_KEYS = ["pcc_data", "epic_data", "metriport_data"];
 
@@ -26,7 +27,7 @@ export default function usePatientRecords() {
 
     const { data: patientsList_api, ...rest } = data;
     const fromApi = (patientsList_api || []).map((p) => ({
-      id: crypto.randomUUID(),
+      id: uuid(),
       type: "Uploaded",
       name: p.name,
       raw: p,
@@ -39,7 +40,7 @@ export default function usePatientRecords() {
       if (type === "metriport") type = "HIE";
       type = type.charAt(0).toUpperCase() + type.slice(1);
       return Object.entries(source.details).map(([name, detailsArray]) => ({
-        id: crypto.randomUUID(),
+        id: uuid(),
         type,
         name,
         details: detailsArray,
