@@ -107,10 +107,10 @@ export default function OtpVerify({ onVerified, onBack }) {
 
       <label className="mb-1 block text-xs font-medium text-gray-600">Patient Name *</label>
       <div className="mb-3 flex gap-2">
-        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First" className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm" />
-        <input value={mi} onChange={(e) => setMi(e.target.value)} placeholder="MI" maxLength={1} className="w-12 rounded-md border border-gray-300 px-3 py-2 text-sm" />
-        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last" className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm" />
-        <input value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="Suf" maxLength={4} className="w-14 rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First" className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input value={mi} onChange={(e) => setMi(e.target.value)} placeholder="MI" maxLength={1} className="w-12 shrink-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm" />
+        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last" className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="Suf" maxLength={4} className="w-16 shrink-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm" />
       </div>
 
       <div className="mb-3 rounded-md border border-dashed border-gray-300 bg-gray-50 p-3 text-center">

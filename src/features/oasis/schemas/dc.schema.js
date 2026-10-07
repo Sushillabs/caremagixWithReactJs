@@ -148,62 +148,58 @@ export const dcSchema = {
         health.m1400("M1400"),
       ],
     },
-    // {
-    //   id: "K",
-    //   label: "K · Nutrition",
-    //   items: [
-    //     health.k0520Columns((letter, column) => `K0520_${letter}_${column === 0 ? "7" : "dc"}`, {
-    //       label: "Nutritional Approaches",
-    //       description: "Check all nutritional approaches received. Column 4 = Last 7 days. Column 5 = At discharge.",
-    //       columns: ["4. Last 7 Days", "5. At Discharge"],
-    //     }),
-    //     health.m1870("M1870"),
-    //   ],
-    // },
-    // {
-    //   id: "M",
-    //   label: "M · Skin",
-    //   items: [
-    //     skin.m1306("M1306"),
-    //     skin.m1307("M1307"),
-    //     skin.m1307Date("M1307"),
-    //     skin.m1311WithSocRoc(M1311_KEYS),
-    //     skin.m1324("M1324"),
-    //     skin.m1330("M1330"),
-    //     skin.m1334("M1334"),
-    //     skin.m1340("M1340"),
-    //     skin.m1342("M1342"),
-    //   ],
-    // },
-    // {
-    //   id: "N",
-    //   label: "N · Medications",
-    //   items: [
-    //     skin.n0415((letter, column) => `N0415_${letter}_${column}`, "N0415_Z"),
-    //     skin.m2005("M2005"),
-    //     skin.m2020("M2020"),
-    //   ],
-    // },
-    // {
-    //   id: "O",
-    //   label: "O · Special Tx",
-    //   items: [
-    //     skin.o0110((code) => `O0110_${code}`, {
-    //       label: "Special Treatments, Procedures, and Programs",
-    //       description: "Check all of the following treatments, procedures, and programs that apply on discharge.",
-    //     }),
-    //     td.m1041("M1041"),
-    //     td.m1046("M1046"),
-    //   ],
-    // },
-    // {
-    //   id: "Q",
-    //   label: "Q · Interventions",
-    //   items: [
-    //     td.m2401(keysOf("M2401_", ["b", "c", "d", "e", "f"])),
-    //     { itemCode: null, label: "Send for Review", widget: FIELD_WIDGETS.EMAIL_ACTION },
-    //   ],
-    // },
+    {
+      id: "K",
+      label: "K · Nutrition",
+      items: [
+        health.k0520Columns((letter, column) => `K0520_${letter}_${column === 0 ? "7" : "dc"}`, {
+          label: "Nutritional Approaches",
+          description: "Check all nutritional approaches received. Column 4 = Last 7 days. Column 5 = At discharge.",
+          columns: ["4. Last 7 Days", "5. At Discharge"],
+        }),
+        health.m1870("M1870"),
+      ],
+    },
+    {
+      id: "M",
+      label: "M · Skin",
+      items: [
+        skin.m1306("M1306"),
+        skin.m1307("M1307"),
+        skin.m1307Date("M1307"),
+        skin.m1311WithSocRoc(M1311_KEYS),
+        skin.m1324("M1324"),
+        skin.m1330("M1330"),
+        skin.m1334("M1334"),
+        skin.m1340("M1340"),
+        skin.m1342("M1342"),
+      ],
+    },
+    {
+      id: "N",
+      label: "N · Medications",
+      items: [skin.n0415((letter, column) => `N0415_${letter}_${column}`, "N0415_Z"), skin.m2005("M2005"), skin.m2020("M2020")],
+    },
+    {
+      id: "O",
+      label: "O · Special Tx",
+      items: [
+        skin.o0110((code) => `O0110_${code}`, {
+          label: "Special Treatments, Procedures, and Programs",
+          description: "Check all of the following treatments, procedures, and programs that apply on discharge.",
+        }),
+        td.m1041("M1041"),
+        td.m1046("M1046"),
+      ],
+    },
+    {
+      id: "Q",
+      label: "Q · Interventions",
+      items: [
+        td.m2401(keysOf("M2401_", ["b", "c", "d", "e", "f"])),
+        { itemCode: null, label: "Send for Review", widget: FIELD_WIDGETS.EMAIL_ACTION },
+      ],
+    },
   ],
 };
 

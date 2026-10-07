@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { PAY_SOURCES, US_STATES, ymdToISO, isoToYMD } from "./wizardOptions";
 
-const inputCls = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400";
+const nameInputCls = "rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400";
+const inputCls = `w-full ${nameInputCls}`;
 const labelCls = "mb-1 block text-xs font-medium text-gray-600";
 const cbRowCls = "mt-1 flex items-center gap-1.5 text-xs text-gray-600";
 
@@ -127,10 +128,10 @@ export default function PrefillDemographics({ formLabel, isExisting, initialName
 
       <label className={labelCls}>Patient Name *</label>
       <div className="mb-3 flex gap-2">
-        <input value={firstName} disabled={readOnly} onChange={(e) => setFirstName(e.target.value)} placeholder="First" className={`${inputCls} flex-1`} />
-        <input value={mi} disabled={readOnly} onChange={(e) => setMi(e.target.value)} placeholder="MI" maxLength={1} className={`${inputCls} w-12`} />
-        <input value={lastName} disabled={readOnly} onChange={(e) => setLastName(e.target.value)} placeholder="Last" className={`${inputCls} flex-1`} />
-        <input value={suffix} disabled={readOnly} onChange={(e) => setSuffix(e.target.value)} placeholder="Suf" maxLength={4} className={`${inputCls} w-14`} />
+        <input value={firstName} disabled={readOnly} onChange={(e) => setFirstName(e.target.value)} placeholder="First" className={`${nameInputCls} min-w-0 flex-1`} />
+        <input value={mi} disabled={readOnly} onChange={(e) => setMi(e.target.value)} placeholder="MI" maxLength={1} className={`${nameInputCls} w-12 shrink-0 text-center`} />
+        <input value={lastName} disabled={readOnly} onChange={(e) => setLastName(e.target.value)} placeholder="Last" className={`${nameInputCls} min-w-0 flex-1`} />
+        <input value={suffix} disabled={readOnly} onChange={(e) => setSuffix(e.target.value)} placeholder="Suf" maxLength={4} className={`${nameInputCls} w-16 shrink-0 text-center`} />
       </div>
 
       <hr className="my-3 border-gray-200" />
