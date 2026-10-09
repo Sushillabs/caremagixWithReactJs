@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronDown, Home, User } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
@@ -182,10 +182,12 @@ export default function PatientDetails() {
   const canCms485 = useCan("cms485");
   const [showCms485Modal, setShowCms485Modal] = useState(false);
 
+  if (!patient) return <Navigate to="/app/dashboard" replace />;
+
   if (type === "Uploaded") {
-    DOCUMENT_ITEMS = patient?.raw?.data.map((item) => item?.dates);
+    DOCUMENT_ITEMS = patient?.raw?.data?.map((item) => item?.dates) || [];
   } else {
-    DOCUMENT_ITEMS = [...patient?.details];
+    DOCUMENT_ITEMS = [...(patient.details || [])];
   }
 
   const handleHome = () => {
