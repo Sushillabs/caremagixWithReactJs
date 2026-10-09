@@ -183,7 +183,7 @@ export default function VisitNotesAI() {
   // hands the mic back. speakAbortRef lets "Talk now" cut the fetch itself,
   // not just the playback.
   const speakAbortRef = useRef(null);
-  const speak = async (text) => {
+  const speak = async (text, { endSession = false } = {}) => {
     if (!text) return;
     const controller = new AbortController();
     speakAbortRef.current = controller;
@@ -202,7 +202,8 @@ export default function VisitNotesAI() {
       }
     } finally {
       if (speakAbortRef.current === controller) speakAbortRef.current = null;
-      voice.resumeAfterTurn();
+      if (endSession) voice.stop();
+      else voice.resumeAfterTurn();
     }
   };
 
@@ -217,8 +218,14 @@ export default function VisitNotesAI() {
     send(SKIP_MESSAGE, { displayText: "Skipped" });
   };
 
+  const handleGenerate = () => {
+    speakAbortRef.current?.abort();
+    voice.interruptSpeech();
+    stopAndGenerate();
+  };
+
   useEffect(() => {
-    if (lastResponse?.message) speak(lastResponse.message);
+    if (lastResponse?.message) speak(lastResponse.message, { endSession: lastResponse.status === "generated" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
@@ -239,6 +246,7 @@ export default function VisitNotesAI() {
 
   const handleStartOver = async () => {
     if (pending) return;
+    speakAbortRef.current?.abort();
     if (voice.isActive) voice.stop();
     await reset();
     voice.start();
@@ -327,7 +335,7 @@ export default function VisitNotesAI() {
           <div className="shrink-0 border-t border-gray-100 p-2 text-right">
             <button
               type="button"
-              onClick={stopAndGenerate}
+              onClick={handleGenerate}
               disabled={pending || !historyLoaded}
               className="rounded-md bg-emerald-800 px-3 py-1.5 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
             >
