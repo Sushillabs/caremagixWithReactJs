@@ -34,7 +34,17 @@ function buildInitialFields(pd) {
   };
 }
 
-export default function PrefillDemographics({ formLabel, isExisting, initialName, initialPatientDetails, onBack, onSubmit }) {
+export default function PrefillDemographics({
+  formLabel,
+  isExisting,
+  initialName,
+  initialPatientDetails,
+  onBack,
+  onSubmit,
+  backLabel = "← Back",
+  submitLabel = "Save & Open Form →",
+  showStep = true,
+}) {
   const [firstName, setFirstName] = useState(initialName.first_name || "");
   const [mi, setMi] = useState(initialName.mi || "");
   const [lastName, setLastName] = useState(initialName.last_name || "");
@@ -108,7 +118,9 @@ export default function PrefillDemographics({ formLabel, isExisting, initialName
 
   return (
     <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">Step 3 of 3 · Patient Details</p>
+      {showStep && (
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">Step 3 of 3 · Patient Details</p>
+      )}
       <p className="mb-4 text-sm font-semibold text-gray-800">{formLabel}</p>
 
       {isExisting && (
@@ -275,7 +287,7 @@ export default function PrefillDemographics({ formLabel, isExisting, initialName
 
       <div className="flex gap-2">
         <button type="button" onClick={onBack} disabled={busy} className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-          ← Back
+          {backLabel}
         </button>
         <button
           type="button"
@@ -283,7 +295,7 @@ export default function PrefillDemographics({ formLabel, isExisting, initialName
           disabled={busy}
           className="flex-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {busy ? "Saving…" : "Save & Open Form →"}
+          {busy ? "Saving…" : submitLabel}
         </button>
       </div>
     </div>

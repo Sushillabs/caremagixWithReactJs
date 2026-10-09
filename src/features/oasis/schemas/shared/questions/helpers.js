@@ -56,3 +56,12 @@ export const notice = (itemCode, title, lines, extra = {}) => ({
 });
 
 export const keysOf = (prefix, suffixes, tail = "") => suffixes.map((s) => `${prefix}${s}${tail}`);
+
+// For forms that send zero-padded codes ("01" instead of "1"); NA/UK stay as they are.
+export const twoDigitCodes = (field) => ({
+  ...field,
+  maxLength: 2,
+  options: field.options.map((opt) => (/^\d$/.test(opt.value) ? { ...opt, value: `0${opt.value}` } : opt)),
+});
+
+export const withMaxLength = (field, maxLength) => ({ ...field, maxLength });

@@ -37,7 +37,8 @@ await build({
       import dah from "./schemas/dah.schema";
       import trn from "./schemas/trn.schema";
       import dc from "./schemas/dc.schema";
-      export const SCHEMAS = { FU: fu, ROC: roc, DAH: dah, TRN: trn, DC: dc };
+      import soc from "./schemas/soc.schema";
+      export const SCHEMAS = { FU: fu, ROC: roc, DAH: dah, TRN: trn, DC: dc, SOC: soc };
       export { FIELD_WIDGETS } from "./engine/schema";
       export {
         fieldLeaves, collectPayload, normalizeLoadedValues, applyDefaults,

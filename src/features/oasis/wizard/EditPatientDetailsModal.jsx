@@ -61,6 +61,9 @@ export default function EditPatientDetailsModal({ patient, onClose, onSaved }) {
             initialPatientDetails={initialPatientDetails}
             onBack={onClose}
             onSubmit={handleSubmit}
+            backLabel="Cancel"
+            submitLabel="Save"
+            showStep={false}
           />
         )}
       </div>

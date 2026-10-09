@@ -22,6 +22,52 @@ export const coverNotices = ({ title, pages, formNote }) => [
   ...(formNote ? [notice("FORM-NOTE", undefined, [formNote], { variant: "warn" })] : []),
 ];
 
+// keys in order A, B, C, D, E, X, Y.
+export const a1005 = (keys) =>
+  checks(
+    "A1005",
+    "Ethnicity — Are you of Hispanic, Latino/a, or Spanish origin?",
+    keys,
+    [
+      "A. No, not of Hispanic, Latino/a, or Spanish origin",
+      "B. Yes, Mexican, Mexican American, Chicano/a",
+      "C. Yes, Puerto Rican",
+      "D. Yes, Cuban",
+      "E. Yes, another Hispanic, Latino, or Spanish origin",
+      "X. Patient unable to respond",
+      "Y. Patient declines to respond",
+    ],
+    { description: "Check all that apply", layout: "two-col" }
+  );
+
+// keys in order A–N, X, Y, Z.
+export const a1010 = (keys) =>
+  checks(
+    "A1010",
+    "Race — What is your race?",
+    keys,
+    [
+      "A. White",
+      "B. Black or African American",
+      "C. American Indian or Alaska Native",
+      "D. Asian Indian",
+      "E. Chinese",
+      "F. Filipino",
+      "G. Japanese",
+      "H. Korean",
+      "I. Vietnamese",
+      "J. Other Asian",
+      "K. Native Hawaiian",
+      "L. Guamanian or Chamorro",
+      "M. Samoan",
+      "N. Other Pacific Islander",
+      "X. Patient unable to respond",
+      "Y. Patient declines to respond",
+      "Z. None of the above",
+    ],
+    { description: "Check all that apply", layout: "two-col" }
+  );
+
 export const m0032 = (fieldId, naFieldId) =>
   splitDate("M0032", fieldId, "Resumption of Care Date", {
     pairedField: pairedCheckbox(naFieldId, "NA — Not Applicable"),
