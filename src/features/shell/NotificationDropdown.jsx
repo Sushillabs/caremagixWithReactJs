@@ -76,7 +76,7 @@ export default function NotificationDropdown({ notifications, onlySection, onDis
   };
 
   return (
-    <div className="absolute right-0 top-10 z-20 w-96 rounded-lg border border-gray-200 bg-white shadow-xl">
+    <div className="fixed inset-x-2 top-16 z-20 rounded-lg border border-gray-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-10 sm:w-96">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <span className="text-sm font-semibold text-gray-800">Notifications</span>
         <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export default function NotificationDropdown({ notifications, onlySection, onDis
         </div>
       </div>
 
-      <div className="max-h-[28rem] overflow-y-auto">
+      <div className="max-h-[calc(100dvh-9rem)] overflow-y-auto overscroll-contain sm:max-h-[28rem]">
         {grouped.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
             <FileHeart size={28} className="text-gray-200" />

@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Changed — Mobile responsive: app shell + patient detail (phases 0–2)
+
+Layout only, desktop unchanged. Sidebar: drawer on phone, icon rail on
+tablet, collapsible on desktop. Patient detail: name in top bar, slim action
+row + "More" sheet, phone-friendly chat tabs/questions, big mic + listening
+panel. Safe-area, 16px inputs (no iOS zoom), chat tables scroll sideways.
+
 #### Added — OASIS: schema-driven form engine, proven on Follow-up (FU)
 
 New `src/features/oasis/` engine: a form is a schema (`fu.schema.js`), not a

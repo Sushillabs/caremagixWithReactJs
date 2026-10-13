@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Sparkles, Mic, Send } from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
+import useMediaQuery from "../../hooks/useMediaQuery";
 
 export default function AiCareAssistant() {
   const [input, setInput] = useState("");
@@ -11,6 +12,16 @@ export default function AiCareAssistant() {
   const patient = useSelector((state) => state.patientsingledata?.value);
   // const conversation = useSelector((state) => state.askQ?.value) || [];
 
+  const isMd = useMediaQuery("(min-width: 768px)");
+  const [focused, setFocused] = useState(false);
+  const chatActive = focused || isListening;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (chatActive) root.setAttribute("data-chat-active", "");
+    else root.removeAttribute("data-chat-active");
+    return () => root.removeAttribute("data-chat-active");
+  }, [chatActive]);
   const hasPatient = Boolean(patient);
   const patientName = patient?.patient_name || patient?.patient?.name;
 
@@ -51,8 +62,8 @@ export default function AiCareAssistant() {
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white px-5 py-3">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="border-t border-gray-200 bg-white px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-5 md:py-3">
+      <div className="mb-2 hidden items-center justify-between md:tall:flex">
         <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <Sparkles size={16} className="text-emerald-500" />
           AI Care Assistant
@@ -75,33 +86,56 @@ export default function AiCareAssistant() {
         </div>
       )} */}
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+      {isListening && (
+        <div className="mb-2 flex items-center gap-3 rounded-xl bg-emerald-50 px-3 py-2.5 md:hidden" role="status">
+          <span className="relative flex h-3 w-3 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-emerald-800">Listening…</p>
+            <p className="text-xs text-emerald-700">Speak now. Tap the mic when done.</p>
+          </div>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-4 pr-1 md:rounded-lg md:px-3 md:py-2"
+      >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           disabled={!hasPatient || isPending}
-          placeholder={hasPatient ? "Ask anything about patient care..." : "Select a patient to start"}
-          className="flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
+          placeholder={hasPatient ? (isMd ? "Ask anything about patient care..." : "Ask about this patient") : "Select a patient to start"}
+          className="min-w-0 flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
         />
         <button
           type="button"
           onClick={toggleMic}
           disabled={!hasPatient || isPending}
-          className={`hover:text-gray-600 disabled:opacity-40 ${isListening ? "text-red-500 animate-pulse" : "text-gray-400"}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-40 md:h-auto md:w-auto md:rounded-none md:bg-transparent md:hover:text-gray-600 ${
+            isListening ? "animate-pulse bg-red-500 md:text-red-500" : "bg-emerald-600 md:text-gray-400"
+          }`}
           aria-label="Voice input"
+          aria-pressed={isListening}
         >
-          <Mic size={18} />
+          <Mic size={18} className="size-[22px] md:size-[18px]" />
         </button>
         <button
           type="submit"
           disabled={!hasPatient || isPending || !input.trim()}
-          className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-40"
+          aria-label="Submit"
+          className="flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-gray-800 text-sm text-white disabled:opacity-30 md:h-auto md:bg-emerald-600 md:hover:bg-emerald-700 md:disabled:opacity-40 md:w-auto md:px-3 md:py-1.5"
         >
-          <Send size={14} />
-          {isPending ? "..." : "Submit"}
+          <Send size={14} className="size-[18px] md:size-[14px]" />
+          <span className="hidden md:inline">{isPending ? "..." : "Submit"}</span>
         </button>
       </form>
+      <p className="mt-1.5 text-center text-[11px] text-gray-400 md:hidden">AI answers can be wrong. Check clinical info.</p>
     </div>
   );
 }

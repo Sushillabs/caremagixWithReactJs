@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, ChevronUp, UserCircle2, LogOut, Menu, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "../../redux/authSlice";
 import NotificationDropdown from "./NotificationDropdown";
@@ -21,12 +21,15 @@ export default function TopBar({
   onDismissNotification,
   onMarkNotificationRead,
   onCloseNotifications,
+  onOpenNav,
+  showPatient,
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const auth = useSelector((state) => state.auth?.value) || {};
   const headerItem = useSelector((state) => state.auth?.item) || {};
+  const patient = useSelector((state) => state.patientsingledata?.value?.patient);
 
   const facilityName = auth.hospital_name || auth.facility_name || ": WeCare";
   const bedsAvailable = auth.beds_available ?? "—";
@@ -61,10 +64,30 @@ export default function TopBar({
   };
 
   return (
-    <header className="flex items-center gap-4 border-b border-gray-200 bg-white px-5 py-3">
+    <header className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3 md:gap-4 md:px-5">
+      {onOpenNav && (
+        <button type="button" onClick={onOpenNav} aria-label="Open menu" className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100">
+          <Menu size={22} />
+        </button>
+      )}
+
+      {showPatient && patient && (
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
+            <User size={16} className="text-gray-400" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-semibold text-gray-800">{patient.name || "Patient"}</h2>
+            <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Patient-name search — only relevant on the patients list page */}
       {showSearch && (
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full min-w-0 max-w-md">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -76,7 +99,7 @@ export default function TopBar({
         </div>
       )}
 
-      <div className="ml-auto flex items-center gap-4 relative">
+      <div className="ml-auto flex shrink-0 items-center gap-3 relative md:gap-4">
         <div className="hidden items-center gap-3 rounded-md bg-gray-50 px-3 py-1.5 text-xs sm:flex">
           <span className="text-gray-500">
             {role === "patient" ? "Provider" : "FACILITY NAME"} <span className="font-semibold text-gray-800">{facilityName}</span>

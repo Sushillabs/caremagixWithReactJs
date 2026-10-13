@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, Outlet, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, Home, User } from "lucide-react";
+import {
+  AudioLines,
+  CalendarPlus,
+  ChevronDown,
+  ClipboardCheck,
+  ClipboardList,
+  FileHeart,
+  FileText,
+  HeartHandshake,
+  HeartPulse,
+  Home,
+  ImageUp,
+  ListChecks,
+  MessageSquare,
+  NotebookPen,
+  PhoneCall,
+  Pill,
+  Route,
+  Upload,
+  User,
+} from "lucide-react";
 import useAskQuestion from "../../hooks/useAskQuestion";
 import { addDischargePatientDate } from "../../redux/PatientSingleDateSlice";
 import { clearChat, fetchPatientChat, setMode, restoreInitialChat } from "../../redux/chatSlice";
@@ -22,6 +42,13 @@ import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
 import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
 import Cms485Modal from "../cms485/Cms485Modal";
+import PatientActionsMobile from "./PatientActionsMobile";
+
+const MOBILE_MAIN_ACTIONS = {
+  caregiver: ["documents", "medication", "notes"],
+  physician: ["notes", "ambientAi", "timeline"],
+  patient: ["documents", "medication", "wellness"],
+};
 
 let DOCUMENT_ITEMS = [];
 
@@ -234,6 +261,28 @@ export default function PatientDetails() {
     }
   };
 
+  const handleRegisterCall = () => (isCallRegistered ? setShowUnregisterModal(true) : setShowCallModal(true));
+
+  const handleMedication = () => {
+    setActivePanel(null);
+    dispatch(clearChat());
+    dispatch(setMode("medication"));
+    askQuestion(
+      "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?",
+      {
+        dates: "Consolidated Med Summary",
+        patient_collection: "Consolidated Med Summary",
+        patient_date: "Consolidated Med Summary",
+      }
+    );
+    navigate(".");
+  };
+
+  const handleCarePlan = () => {
+    setActivePanel(null);
+    navigate("care-plan");
+  };
+
   const handleDocumentClick = (item) => {
     let payload = null;
     if (type === "Uploaded") {
@@ -255,10 +304,31 @@ export default function PatientDetails() {
     navigate(".");
   };
 
+  const uploadItems = byRole(UPLOAD_ITEMS, role);
+  const mobileActions = [
+    { key: "documents", label: role === "patient" ? "Documents" : "Summaries", icon: FileText, group: "Documents", show: canDocuments, items: DOCUMENT_ITEMS, onItemClick: handleDocumentClick },
+    { key: "notes", label: "Notes", icon: NotebookPen, group: "Care", show: canNotes, items: byRole(NOTES_ITEMS, role), onItemClick: handleNotesItemClick },
+    { key: "uploadPdf", label: uploadItems[0], icon: Upload, group: "Documents", show: canUpload && Boolean(uploadItems[0]), onClick: () => handleUploadItemClick(uploadItems[0]) },
+    { key: "uploadImage", label: uploadItems[1], icon: ImageUp, group: "Documents", show: canUpload && Boolean(uploadItems[1]), onClick: () => handleUploadItemClick(uploadItems[1]) },
+    { key: "cms485", label: "Plan of care (485)", icon: FileHeart, group: "Documents", show: canCms485, disabled: !singleData?.patient_name, onClick: () => setShowCms485Modal(true) },
+    { key: "medication", label: "Medication", icon: Pill, group: "Care", show: canMedication, onClick: handleMedication },
+    { key: "carePlan", label: "Care plan", icon: HeartHandshake, group: "Care", show: canCreateCarePlan, onClick: handleCarePlan },
+    { key: "mmta", label: "MMTA", icon: ClipboardList, group: "Care", show: canMmta, onClick: () => navigate("mmta") },
+    { key: "plan", label: "Plan", icon: ListChecks, group: "Care", show: canPlan, disabled: true, onClick: () => {} },
+    { key: "wellness", label: "Wellness check-in", icon: HeartPulse, group: "Care", show: canWellnessCheckIn, onClick: openWellnessCheckIn },
+    { key: "bookVisit", label: "Book physician visit", icon: CalendarPlus, group: "Care", show: canBookAppointment, onClick: () => openBookAppointment() },
+    { key: "timeline", label: "Patient journey", icon: Route, group: "Care", show: canTimeline, onClick: () => setActivePanel("timeline") },
+    { key: "ambientAi", label: "Ambient AI", icon: AudioLines, group: "Care", show: canAmbientVisitNotes, onClick: () => setActivePanel("ambientAi") },
+    { key: "wellnessReport", label: "Wellness report", icon: ClipboardCheck, group: "Care", show: canWellnessCheckInReport, onClick: () => setActivePanel("wellnessReport") },
+    { key: "wellnessQuestions", label: "Wellness questions", icon: ListChecks, group: "Care", show: canWellnessQuestionEditor, onClick: () => setActivePanel("wellnessQuestions") },
+    { key: "sendMessage", label: "Send message", icon: MessageSquare, group: "Contact", show: canSendMessage, onClick: () => setShowSendMessageModal(true) },
+    { key: "registerCall", label: isCallRegistered ? "Unregister call" : "Register a call", icon: PhoneCall, group: "Contact", show: canRegisterCall && type === "Uploaded", onClick: handleRegisterCall },
+  ];
+
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="grid grid-cols-4 items-center justify-between gap-3 ">
-        <div className="col-span-1 flex items-center h-16 gap-2 rounded-lg border border-gray-200 bg-white p-2">
+      <div className="grid grid-cols-1 items-center justify-between gap-3 md:grid-cols-4">
+        <div className="col-span-1 hidden items-center h-16 gap-2 rounded-lg border border-gray-200 bg-white p-2 md:flex">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
             <User size={18} className="text-gray-400" />
           </div>
@@ -276,7 +346,9 @@ export default function PatientDetails() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 col-span-3 text-xs">
+        <PatientActionsMobile actions={mobileActions} mainKeys={MOBILE_MAIN_ACTIONS[role] || MOBILE_MAIN_ACTIONS.caregiver} onHome={handleHome} />
+
+        <div className="hidden flex-wrap gap-2 col-span-1 text-xs md:col-span-3 lg:flex">
           <button
             type="button"
             onClick={handleHome}
@@ -359,7 +431,7 @@ export default function PatientDetails() {
           {canRegisterCall && type === "Uploaded" && (
             <button
               type="button"
-              onClick={() => (isCallRegistered ? setShowUnregisterModal(true) : setShowCallModal(true))}
+              onClick={handleRegisterCall}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               {isCallRegistered ? "Unregister Call" : "Register a Call"}
@@ -385,20 +457,7 @@ export default function PatientDetails() {
           {canMedication && (
             <button
               type="button"
-              onClick={() => {
-                setActivePanel(null);
-                dispatch(clearChat());
-                dispatch(setMode("medication"));
-                askQuestion(
-                  "What specific medications were prescribed to the patient, along with their intended uses, potential side effects and Medication schedule in tabular format?",
-                  {
-                    dates: "Consolidated Med Summary",
-                    patient_collection: "Consolidated Med Summary",
-                    patient_date: "Consolidated Med Summary",
-                  }
-                );
-                navigate(".");
-              }}
+              onClick={handleMedication}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Medication
@@ -412,10 +471,7 @@ export default function PatientDetails() {
           {canCreateCarePlan && (
             <button
               type="button"
-              onClick={() => {
-                setActivePanel(null);
-                navigate("care-plan");
-              }}
+              onClick={handleCarePlan}
               className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Care Plan

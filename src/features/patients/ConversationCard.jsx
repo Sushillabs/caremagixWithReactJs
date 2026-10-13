@@ -112,14 +112,14 @@ export default function ConversationCard() {
           type="button"
           onClick={() => setDocRefQuestionId(msg.id)}
           disabled={!msg.id}
-          className="mb-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+          className="mb-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs text-emerald-600 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40 md:px-2 md:py-0.5"
         >
           Doc Reference
         </button>
         {showQuickQuestions && (
           <button
             type="button"
-            className="mb-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs tex-gray-700 hover:bg-gray-200"
+            className="mb-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs tex-gray-700 hover:bg-gray-200 md:px-2 md:py-0.5"
             onClick={scrollToQuestions}
           >
             Quick Questions
@@ -144,7 +144,7 @@ export default function ConversationCard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
+      <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] md:gap-2 md:pb-2">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : sourceLabel}</h3>
           {latestAnswerId && (
@@ -158,20 +158,20 @@ export default function ConversationCard() {
           )}
           {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-500 ">
+        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               disabled={tab.disabled}
               onClick={() => !tab.disabled && setActiveTab(tab.key)}
-              className={
+              className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
                 tab.disabled
-                  ? "cursor-not-allowed text-gray-300"
+                  ? "cursor-not-allowed border-transparent text-gray-300"
                   : activeTab === tab.key
-                  ? "font-medium text-emerald-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }
+                  ? "border-emerald-600 font-medium text-emerald-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               {tab.label}
             </button>
@@ -223,16 +223,16 @@ export default function ConversationCard() {
                 <p className="mb-2 text-gray-700" ref={questionsRef}>
                   Welcome!! Try asking me questions related to {sourceLabel}. You can ask questions like:
                 </p>
-                <ul className="space-y-1">
+                <ul className="space-y-2 md:space-y-1">
                   {defaultQuestions.map((q, i) => (
                     <li key={i}>
                       <button
                         type="button"
                         disabled={askPending}
                         onClick={() => askQuestion(q)}
-                        className="flex items-start gap-2 text-left text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
+                        className="flex w-full items-start gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2.5 text-left text-emerald-700 active:bg-emerald-50 disabled:cursor-not-allowed disabled:text-gray-400 md:w-auto md:rounded-none md:border-0 md:bg-transparent md:p-0 md:hover:underline md:active:bg-transparent md:disabled:no-underline"
                       >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        <span className="mt-1.5 hidden h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 md:block" />
                         {/* Backend's own "N. " numbering is stripped — per-role hiding leaves gaps otherwise, and the bullet dot already marks each item. */}
                         {q.replace(/^\d+\.\s*/, "")}
                       </button>
