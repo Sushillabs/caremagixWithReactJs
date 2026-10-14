@@ -89,7 +89,7 @@ export default function EfaxConfigModal({ onClose }) {
 
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-600">Choose Date Range</label>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1">
                   <span className="mb-1 block text-xs text-gray-400">From</span>
                   <div className="flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
