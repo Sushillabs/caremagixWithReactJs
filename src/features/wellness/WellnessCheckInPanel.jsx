@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { HeartPulse, RotateCcw } from "lucide-react";
+import { ChevronDown, EllipsisVertical, HeartPulse, Mic, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useVoiceTurnLock from "../../hooks/useVoiceTurnLock";
@@ -10,6 +10,7 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
+import VoiceDock from "../../components/chat/VoiceDock";
 import WellnessTrendsTab from "./WellnessTrendsTab";
 import {
   wellnessChat,
@@ -42,7 +43,7 @@ function ZoneBanner({ zone }) {
     <div className={`mx-2 mt-2 flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-white ${style.className}`}>
       <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/25">✓</span>
       <span className="font-semibold">{style.label}</span>
-      <span className="font-normal opacity-90">— {style.detail}</span>
+      <span className="hidden font-normal opacity-90 md:inline">— {style.detail}</span>
     </div>
   );
 }
@@ -104,6 +105,7 @@ const MAX_PROGRESS_CHIPS = 8;
 // Tracks all active questions ("N of M answered"); core questions get a * so
 // the patient knows which the coach chases first.
 function ProgressChecklist({ questions, checkIn }) {
+  const [expanded, setExpanded] = useState(false);
   const list = Array.isArray(questions) ? [...questions].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)) : [];
   if (!list.length) return null;
 
@@ -113,7 +115,16 @@ function ProgressChecklist({ questions, checkIn }) {
 
   return (
     <div className="mx-2 mt-2 flex shrink-0 flex-wrap items-center gap-3 text-[11px]">
-      <span className="font-medium text-gray-500">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600 md:hidden"
+      >
+        {answeredCount} of {list.length} answered
+        <ChevronDown size={12} className={expanded ? "rotate-180" : ""} />
+      </button>
+      <span className="hidden font-medium text-gray-500 md:inline">
         {answeredCount} of {list.length} answered
       </span>
       {shown.map((q) => {
@@ -122,7 +133,7 @@ function ProgressChecklist({ questions, checkIn }) {
           <span
             key={q.id}
             title={`${q.prompt || questionLabel(q)}${q.is_core ? " (core)" : ""}`}
-            className={`flex items-center gap-1 ${done ? "text-emerald-600" : "text-gray-400"}`}
+            className={`items-center gap-1 md:flex ${expanded ? "flex" : "hidden"} ${done ? "text-emerald-600" : "text-gray-400"}`}
           >
             <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] ${done ? "bg-emerald-100" : "bg-gray-100"}`}>
               {done ? "✓" : "○"}
@@ -132,7 +143,7 @@ function ProgressChecklist({ questions, checkIn }) {
           </span>
         );
       })}
-      {hidden > 0 && <span className="text-gray-400">+{hidden} more</span>}
+      {hidden > 0 && <span className={`text-gray-400 md:inline ${expanded ? "inline" : "hidden"}`}>+{hidden} more</span>}
     </div>
   );
 }
@@ -178,6 +189,8 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   const [started, setStarted] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
   const [checklistCleared, setChecklistCleared] = useState(false);
+  const [typeMode, setTypeMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { setAssistantHidden } = useOutletContext() || {};
 
   // This panel has its own composer (below) instead of the shared
@@ -370,24 +383,57 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
           border-b border-gray-100, tabs styled font-medium text-emerald-600
           when active. */}
       <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
+        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] md:gap-2 md:pb-2">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
             <HeartPulse size={14} className="text-emerald-600" />
             Wellness Check-in
           </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          {activeTab === "checkin" && started && (
+            <div className="relative ml-auto md:hidden">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="More options"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500"
+              >
+                <EllipsisVertical size={18} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleStartOver();
+                      }}
+                      disabled={pending}
+                      className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 active:bg-gray-50 disabled:opacity-40"
+                    >
+                      <RotateCcw size={16} className="text-gray-500" />
+                      Start a new session
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+                className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+                  activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
               >
                 {tab.label}
               </button>
             ))}
             {activeTab === "checkin" && started && (
-              <>
+              <span className="hidden md:contents">
                 {!voice.isPaused && (
                   <VoiceToggleButton
                     voice={voice}
@@ -410,7 +456,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
                   <RotateCcw size={12} />
                   Start a New Session
                 </button>
-              </>
+              </span>
             )}
           </div>
         </div>
@@ -452,7 +498,11 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
       </div>
 
       {activeTab === "checkin" && started && voice.state === "speaking" && (
-        <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+        <div
+          className={`shrink-0 items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700 md:flex ${
+            typeMode ? "flex" : "hidden"
+          }`}
+        >
           <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
           <button
             type="button"
@@ -464,14 +514,37 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
         </div>
       )}
 
-      {activeTab === "checkin" && started && (
-        <AgentChatComposer
-          onSubmit={(text) => send(text)}
-          disabled={pending}
-          placeholder="Tell me your morning weight and how you are feeling. Type, or tap the microphone to talk continuously."
-          voice={voice.isPaused ? null : voice}
-          onMicToggle={toggleCheckIn}
+      {activeTab === "checkin" && started && !typeMode && (
+        <VoiceDock
+          state={voice.state}
+          idleHint={conversationStarted ? "Mic is off. Tap the mic to talk." : "Tap the mic to start your check-in"}
+          onToggleMic={toggleCheckIn}
+          micDisabled={!historyLoaded}
+          onPause={conversationStarted ? handleHoldToggle : undefined}
+          onContinue={handleHoldToggle}
+          onAnswerNow={handleTalkNow}
+          onType={() => setTypeMode(true)}
         />
+      )}
+
+      {activeTab === "checkin" && started && (
+        <div className={`shrink-0 flex-col gap-1.5 md:flex ${typeMode ? "flex" : "hidden"}`}>
+          <button
+            type="button"
+            onClick={() => setTypeMode(false)}
+            className="flex items-center gap-1 self-center rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 md:hidden"
+          >
+            <Mic size={14} />
+            Use voice instead
+          </button>
+          <AgentChatComposer
+            onSubmit={(text) => send(text)}
+            disabled={pending}
+            placeholder="Tell me your morning weight and how you are feeling. Type, or tap the microphone to talk continuously."
+            voice={voice.isPaused ? null : voice}
+            onMicToggle={toggleCheckIn}
+          />
+        </div>
       )}
     </div>
   );
