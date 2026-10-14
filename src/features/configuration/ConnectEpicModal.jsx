@@ -154,11 +154,11 @@ export default function ConnectEpicModal({ onClose }) {
 
   const isLoading = isLoadingConfig || isLoadingConnection;
   const showSettings = view === "settings" || (!settingsSaved && view === "main");
-  const width = view === "search" ? "w-[460px]" : "w-[420px]";
+  const width = view === "search" ? "sm:w-[460px]" : "sm:w-[420px]";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className={`${width} rounded-2xl bg-white shadow-lg`}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className={`${width} max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-none sm:overflow-visible sm:rounded-2xl`}>
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Connect Epic</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
@@ -317,7 +317,7 @@ export default function ConnectEpicModal({ onClose }) {
               </p>
             )}
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-600">Last name</label>
                 <input

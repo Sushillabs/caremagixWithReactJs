@@ -135,8 +135,8 @@ export default function ConnectMetriportModal({ onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-[640px] rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-none sm:overflow-visible sm:rounded-2xl sm:w-[640px]">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Connect HIE</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
@@ -196,18 +196,18 @@ export default function ConnectMetriportModal({ onClose }) {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {field("name", "Facility Name", { placeholder: "e.g. Sunrise Care Facility" })}
               {field("npi", "NPI", { placeholder: "1234567890" })}
               {field("tin", "TIN", { placeholder: "12-3456789", optional: true })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {field("addressLine1", "Address Line 1", { placeholder: "Street address" })}
               {field("addressLine2", "Address Line 2", { placeholder: "Suite, unit, etc.", optional: true })}
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {field("city", "City")}
               {field("state", "State")}
               {field("zip", "Zip")}

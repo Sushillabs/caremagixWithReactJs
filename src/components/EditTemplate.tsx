@@ -99,8 +99,8 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
   const isLoading = isPending || (isFetching && !data);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl h-[80vh] flex flex-col relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 sm:p-4">
+      <div className="bg-white shadow-lg w-full max-w-3xl h-dvh pb-safe flex flex-col relative sm:h-[80vh] sm:rounded-xl">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50">
           <h2 className="text-lg font-semibold text-black">{title}</h2>

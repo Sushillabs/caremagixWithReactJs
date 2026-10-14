@@ -116,8 +116,8 @@ export default function DocReferenceModal({ questionId, sourceType, onClose }) {
   }, [questionId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-[80vh] w-[480px] flex-col rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[80vh] sm:w-[480px] sm:rounded-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-4">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Document Reference</p>

@@ -12,8 +12,8 @@ export default function TransitionCarePlanModal({ patientName, onClose }) {
   const [activeTab, setActiveTab] = useState("transitionCare");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-[520px] max-h-[80vh] overflow-y-auto rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[80vh] sm:w-[520px] sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Transition-Care Plan</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">

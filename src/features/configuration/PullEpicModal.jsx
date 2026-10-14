@@ -26,8 +26,8 @@ export default function PullEpicModal({ onClose, title = "Pull Epic Data" }) {
   }, [started, error, navigate, onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-[380px] rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-none sm:overflow-visible sm:rounded-2xl sm:w-[380px]">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
