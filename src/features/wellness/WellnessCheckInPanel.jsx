@@ -378,7 +378,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 short:min-h-80">
       {/* Same section-card header bar as ConversationCard.jsx: bg-[#F0FDF4],
           border-b border-gray-100, tabs styled font-medium text-emerald-600
           when active. */}
@@ -517,6 +517,7 @@ export default function WellnessCheckInPanel({ initialTab, onRequestVisit }) {
       {activeTab === "checkin" && started && !typeMode && (
         <VoiceDock
           state={voice.state}
+          error={voice.error}
           idleHint={conversationStarted ? "Mic is off. Tap the mic to talk." : "Tap the mic to start your check-in"}
           onToggleMic={toggleCheckIn}
           micDisabled={!historyLoaded}

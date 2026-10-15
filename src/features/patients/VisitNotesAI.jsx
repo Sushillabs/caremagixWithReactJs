@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RotateCcw } from "lucide-react";
+import { ChevronDown, EllipsisVertical, Mic, RotateCcw } from "lucide-react";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
@@ -9,6 +9,7 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
+import VoiceDock from "../../components/chat/VoiceDock";
 
 const TABS = [
   { key: "chat", label: "Chat" },
@@ -30,6 +31,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   const [isSending, setIsSending] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveResult, setSaveResult] = useState(null);
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -74,72 +76,93 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-3">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs font-semibold text-gray-600">Transcript</label>
-          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-800">
-            To generate the PDF, save your changes below first.
-          </span>
-        </div>
-        <textarea
-          readOnly
-          value={lastResponse.transcript || ""}
-          className="mt-1 w-full min-h-[100px] border rounded p-2 text-xs text-gray-500 bg-gray-50"
-        />
-      </div>
-
-      <div>
-        <label className="text-xs font-semibold text-gray-600">{label}</label>
-        <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} className="mt-1 w-full min-h-[200px] border rounded p-2 text-sm" />
-      </div>
-
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
-        Email this {label.toLowerCase()}
-      </label>
-      {sendEmail && (
-        <div className="flex items-center gap-2">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Recipient email"
-            className="min-w-0 flex-1 border rounded p-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleSendEmail}
-            disabled={isSaving || isSending || !email.trim()}
-            className="shrink-0 rounded bg-emerald-800 px-3 py-2 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
-          >
-            {isSending ? "Sending..." : "Send"}
-          </button>
-        </div>
-      )}
-
-      {saveError && <p className="text-sm text-red-600">{saveError}</p>}
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={isSaving || isSending}
-        className="px-3 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded disabled:opacity-50"
-      >
-        {isSaving ? "Saving..." : "Save to patient record"}
-      </button>
-
-      {saveResult && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
-          {label} saved to the patient record.{saveResult.email_status ? ` ${saveResult.email_status}` : ""}
-          {saveResult.pdf_path && (
-            <button type="button" onClick={() => window.open(saveResult.pdf_path, "_blank")} className="ml-2 underline">
-              Download
+    <div className="flex min-h-0 flex-1 flex-col md:overflow-y-auto md:p-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 md:flex-none md:overflow-visible md:p-0">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTranscriptOpen((v) => !v)}
+              aria-expanded={transcriptOpen}
+              className="flex min-h-9 items-center gap-1 text-xs font-semibold text-gray-600 md:hidden"
+            >
+              Transcript · {transcriptOpen ? "hide" : "tap to view"}
+              <ChevronDown size={14} className={transcriptOpen ? "rotate-180" : ""} />
             </button>
-          )}
+            <label className="hidden text-xs font-semibold text-gray-600 md:inline">Transcript</label>
+            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-800">
+              To generate the PDF, save your changes below first.
+            </span>
+          </div>
+          <textarea
+            readOnly
+            value={lastResponse.transcript || ""}
+            className={`mt-1 w-full min-h-[100px] border rounded p-2 text-xs text-gray-500 bg-gray-50 md:block ${transcriptOpen ? "block" : "hidden"}`}
+          />
         </div>
-      )}
-      <div ref={bottomRef} />
+
+        <div className="flex min-h-[200px] flex-1 flex-col md:block md:min-h-0">
+          <label className="text-xs font-semibold text-gray-600">{label}</label>
+          <textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            className="mt-1 w-full min-h-[200px] flex-1 border rounded p-2 text-sm md:flex-none"
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
+          Email this {label.toLowerCase()}
+        </label>
+        {sendEmail && (
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Recipient email"
+              className="min-w-0 flex-1 border rounded p-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={handleSendEmail}
+              disabled={isSaving || isSending || !email.trim()}
+              className="shrink-0 rounded bg-emerald-800 px-3 py-2 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
+            >
+              {isSending ? "Sending..." : "Send"}
+            </button>
+          </div>
+        )}
+
+      </div>
+
+      <div className="shrink-0 space-y-2 border-t border-gray-100 bg-white px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:mt-3 md:space-y-3 md:border-0 md:p-0">
+        {saveError && (
+          <p role="alert" className="text-sm text-red-600">
+            {saveError}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || isSending}
+          className="w-full px-3 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded disabled:opacity-50 md:w-auto md:py-2"
+        >
+          {isSaving ? "Saving..." : "Save to patient record"}
+        </button>
+
+        {saveResult && (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-800">
+            {label} saved to the patient record.{saveResult.email_status ? ` ${saveResult.email_status}` : ""}
+            {saveResult.pdf_path && (
+              <button type="button" onClick={() => window.open(saveResult.pdf_path, "_blank")} className="ml-2 underline">
+                Download
+              </button>
+            )}
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
     </div>
   );
 }
@@ -152,6 +175,8 @@ export default function VisitNotesAI() {
 
   const [started, setStarted] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
+  const [typeMode, setTypeMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const {
     turns,
@@ -252,32 +277,75 @@ export default function VisitNotesAI() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-[#F0FDF4] p-2 text-xs">
-        <h3 className="text-xs font-bold text-gray-800">Create {label} AI</h3>
-        <div className="flex items-center gap-3 text-sm text-gray-500">
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white short:min-h-80">
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 bg-[#F0FDF4] p-2 pb-0 text-xs md:gap-2 md:pb-2">
+        <h3 className="min-w-0 truncate text-xs font-bold text-gray-800">Create {label} AI</h3>
+        {activeTab === "chat" && (
+          <button
+            type="button"
+            onClick={stopAndGenerate}
+            disabled={pending || !historyLoaded}
+            className="ml-auto min-h-9 shrink-0 rounded-full bg-emerald-800 px-3 text-xs font-medium text-white disabled:opacity-50 md:hidden"
+          >
+            Generate
+          </button>
+        )}
+        <div className={`relative md:hidden ${activeTab === "chat" ? "" : "ml-auto"}`}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="More options"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500"
+          >
+            <EllipsisVertical size={18} />
+          </button>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleStartOver();
+                  }}
+                  disabled={pending}
+                  className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 active:bg-gray-50 disabled:opacity-40"
+                >
+                  <RotateCcw size={16} className="text-gray-500" />
+                  Start a new session
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+              className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+                activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               {tab.label}
             </button>
           ))}
-          <VoiceToggleButton voice={voice} />
-          <ConversationHoldToggle voice={voice} />
-          <button
-            type="button"
-            onClick={handleStartOver}
-            disabled={pending}
-            title={`Clear this conversation and start a new ${label.toLowerCase()}`}
-            className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <RotateCcw size={12} />
-            Start New Session
-          </button>
+          <span className="hidden md:contents">
+            <VoiceToggleButton voice={voice} />
+            <ConversationHoldToggle voice={voice} />
+            <button
+              type="button"
+              onClick={handleStartOver}
+              disabled={pending}
+              title={`Clear this conversation and start a new ${label.toLowerCase()}`}
+              className="flex items-center gap-1 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <RotateCcw size={12} />
+              Start New Session
+            </button>
+          </span>
         </div>
       </div>
 
@@ -298,7 +366,7 @@ export default function VisitNotesAI() {
                     type="button"
                     onClick={handleSkip}
                     disabled={pending || !historyLoaded}
-                    className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40 md:px-2.5 md:py-1 md:text-xs"
                   >
                     skip and move to the next section
                   </button>
@@ -307,7 +375,11 @@ export default function VisitNotesAI() {
             }
           />
           {voice.state === "speaking" && (
-            <div className="shrink-0 flex items-center justify-between gap-2 border-t border-gray-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+            <div
+              className={`shrink-0 items-center justify-between gap-2 border-t border-gray-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700 md:flex ${
+                typeMode ? "flex" : "hidden"
+              }`}
+            >
               <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
               <button
                 type="button"
@@ -318,13 +390,23 @@ export default function VisitNotesAI() {
               </button>
             </div>
           )}
-          <AgentChatComposer
-            onSubmit={(text) => send(text)}
-            disabled={pending}
-            voice={voice}
-            placeholder={`Talk or type your ${label.toLowerCase()} answers...`}
-          />
-          <div className="shrink-0 border-t border-gray-100 p-2 text-right">
+          <div className={`shrink-0 flex-col gap-1.5 px-2 pt-2 md:flex md:p-0 ${typeMode ? "flex" : "hidden"}`}>
+            <button
+              type="button"
+              onClick={() => setTypeMode(false)}
+              className="flex min-h-11 items-center gap-1.5 self-center rounded-full bg-emerald-50 px-4 text-sm font-medium text-emerald-700 md:hidden"
+            >
+              <Mic size={14} />
+              Use voice instead
+            </button>
+            <AgentChatComposer
+              onSubmit={(text) => send(text)}
+              disabled={pending}
+              voice={voice}
+              placeholder={`Talk or type your ${label.toLowerCase()} answers...`}
+            />
+          </div>
+          <div className="hidden shrink-0 border-t border-gray-100 p-2 text-right md:block">
             <button
               type="button"
               onClick={stopAndGenerate}
@@ -334,6 +416,19 @@ export default function VisitNotesAI() {
               Generate {label}
             </button>
           </div>
+          {!typeMode && (
+            <div className="shrink-0 px-2 pb-2 md:hidden">
+              <VoiceDock
+                state={voice.state}
+                error={voice.error}
+                onToggleMic={voice.toggle}
+                onPause={voice.toggleListening}
+                onContinue={voice.toggleListening}
+                onAnswerNow={handleTalkNow}
+                onType={() => setTypeMode(true)}
+              />
+            </div>
+          )}
         </>
       )}
 

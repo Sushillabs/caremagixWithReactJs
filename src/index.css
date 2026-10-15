@@ -38,6 +38,7 @@
 }
 
 @custom-variant tall (@media (min-height: 501px));
+@custom-variant short (@media (max-height: 500px));
 
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);

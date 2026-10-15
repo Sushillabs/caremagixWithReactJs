@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Hand, Keyboard, Mic, Pause, Play } from "lucide-react";
 
 const STATUS = {
@@ -9,21 +10,42 @@ const STATUS = {
   paused: { title: "Paused", text: "", tone: "bg-amber-50 text-amber-800" },
 };
 
+function friendlyError(error) {
+  if (/permission|not ?allowed/i.test(error)) return "Microphone is blocked. Allow mic access in your browser settings, or tap Type.";
+  return error;
+}
+
 function SideButton({ icon, label, onClick, disabled }) {
   const Icon = icon;
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className="flex w-16 flex-col items-center gap-1 text-[11px] text-gray-600 disabled:opacity-40">
-      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-800">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="flex w-16 flex-col items-center gap-1 text-[11px] text-gray-600 disabled:opacity-40"
+    >
+      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-800 short:h-10 short:w-10">
         <Icon size={20} />
       </span>
-      {label}
+      <span className="short:hidden">{label}</span>
     </button>
   );
 }
 
-export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to talk", onToggleMic, onPause, onContinue, onAnswerNow, onType, micDisabled }) {
+export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to talk", error, onToggleMic, onPause, onContinue, onAnswerNow, onType, micDisabled }) {
   const status = state in STATUS ? STATUS[state] : STATUS.listening;
   const isListening = state === "listening" || state === "thinking" || state === "connecting";
+
+  // Only surface an error when a start attempt fails (connecting -> idle), not after the user stops on purpose.
+  const prevStateRef = useRef(state);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (state === "idle" && prevStateRef.current === "connecting") setFailed(true);
+    else if (state !== "idle") setFailed(false);
+    prevStateRef.current = state;
+  }, [state]);
+  const showError = failed && state === "idle" && Boolean(error);
 
   let main;
   if (state === "speaking") {
@@ -38,9 +60,15 @@ export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to t
   const MainIcon = main.icon;
 
   return (
-    <div className={`shrink-0 rounded-lg border border-gray-200 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden ${status?.tone || "bg-white"}`}>
-      <p className="mb-2 min-h-5 text-center text-sm" role="status">
-        {status ? (
+    <div
+      className={`shrink-0 rounded-lg border border-gray-200 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden short:pt-1.5 short:pb-[max(0.375rem,env(safe-area-inset-bottom))] ${
+        status?.tone || "bg-white"
+      }`}
+    >
+      <p className="mb-2 min-h-5 text-center text-sm short:mb-1 short:text-xs" role="status">
+        {showError ? (
+          <span className="text-red-600">{friendlyError(error)}</span>
+        ) : status ? (
           <>
             <span className="font-medium">{status.title}</span> {status.text}
           </>
@@ -57,10 +85,10 @@ export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to t
           aria-label={main.label}
           className="flex flex-col items-center gap-1 text-xs font-medium text-gray-700 disabled:opacity-40"
         >
-          <span className={`flex h-[72px] w-[72px] items-center justify-center rounded-full text-white ${main.className}`}>
-            <MainIcon size={30} />
+          <span className={`flex h-[72px] w-[72px] items-center justify-center rounded-full text-white short:h-12 short:w-12 ${main.className}`}>
+            <MainIcon size={30} className="short:size-6" />
           </span>
-          {main.label}
+          <span className="short:hidden">{main.label}</span>
         </button>
         {onType ? <SideButton icon={Keyboard} label="Type" onClick={onType} /> : <span className="w-16" />}
       </div>
