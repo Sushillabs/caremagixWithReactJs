@@ -14,8 +14,13 @@ export default function Cms485Modal({ patient, onClose }) {
             <h2 className="text-sm font-semibold text-emerald-700">Plan of Care (CMS-485)</h2>
             <p className="text-xs text-gray-500">{patient?.patient_name}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X size={16} className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+          >
+            <X size={16} className="size-5 text-gray-500 sm:size-4" />
           </button>
         </div>
 

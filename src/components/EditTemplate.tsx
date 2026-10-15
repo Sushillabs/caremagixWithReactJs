@@ -104,7 +104,11 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50">
           <h2 className="text-lg font-semibold text-black">{title}</h2>
-          <button onClick={onClose} className="p-2 rounded-full text-black hover:bg-gray-200">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-gray-200 sm:m-0 sm:h-auto sm:w-auto sm:p-2"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

@@ -30,8 +30,13 @@ export default function PullPccModal({ onClose }) {
       <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-none sm:overflow-visible sm:rounded-2xl sm:w-[380px]">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Pull PCC Data</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X size={16} className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+          >
+            <X size={16} className="size-5 text-gray-500 sm:size-4" />
           </button>
         </div>
 

@@ -19,7 +19,7 @@ function PdfEntry({ entry, index }) {
     <div className="rounded-md border border-gray-200 p-3 text-sm">
       <div className="flex items-center gap-2">
         <FileText size={14} className="shrink-0 text-emerald-600" />
-        <a href={entry.pdf_url} target="_blank" rel="noreferrer" className="font-medium text-emerald-700 hover:underline">
+        <a href={entry.pdf_url} target="_blank" rel="noreferrer" className="min-w-0 break-all font-medium text-emerald-700 hover:underline">
           {index + 1}. {pdfName}
         </a>
       </div>
@@ -87,12 +87,12 @@ function EhrEntry({ entry, index }) {
     <div className="rounded-md border border-gray-200 p-3 text-sm">
       <div className="flex items-center gap-2">
         <Icon size={14} className="shrink-0 text-emerald-600" />
-        <span className="font-medium text-gray-800">
+        <span className="min-w-0 break-words font-medium text-gray-800">
           {index + 1}. {label}
         </span>
-        {entry.source && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-500">{entry.source}</span>}
+        {entry.source && <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-500">{entry.source}</span>}
       </div>
-      <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md bg-gray-50 p-2 font-mono text-[11px] leading-relaxed text-gray-600">
+      <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-md bg-gray-50 p-2 font-mono text-[11px] leading-relaxed text-gray-600">
         {entry.snippet || "No source excerpt available."}
       </div>
     </div>
@@ -123,8 +123,13 @@ export default function DocReferenceModal({ questionId, sourceType, onClose }) {
             <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Document Reference</p>
             <h2 className="text-sm font-semibold text-emerald-700">{SOURCE_LABELS[sourceType] || sourceType || "Source"}</h2>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X size={16} className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+          >
+            <X size={16} className="size-5 text-gray-500 sm:size-4" />
           </button>
         </div>
 
