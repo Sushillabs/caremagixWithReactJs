@@ -14,7 +14,20 @@ export default function AiCareAssistant() {
 
   const isMd = useMediaQuery("(min-width: 768px)");
   const [focused, setFocused] = useState(false);
+  const blurTimerRef = useRef(null);
   const chatActive = focused || isListening;
+
+  const handleFocus = () => {
+    clearTimeout(blurTimerRef.current);
+    setFocused(true);
+  };
+  // Delay so the tap that caused the blur lands before the action row reappears and shifts the layout.
+  const handleBlur = () => {
+    clearTimeout(blurTimerRef.current);
+    blurTimerRef.current = setTimeout(() => setFocused(false), 250);
+  };
+
+  useEffect(() => () => clearTimeout(blurTimerRef.current), []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -107,8 +120,8 @@ export default function AiCareAssistant() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           disabled={!hasPatient || isPending}
           placeholder={hasPatient ? (isMd ? "Ask anything about patient care..." : "Ask about this patient") : "Select a patient to start"}
           className="min-w-0 flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
@@ -135,7 +148,7 @@ export default function AiCareAssistant() {
           <span className="hidden md:inline">{isPending ? "..." : "Submit"}</span>
         </button>
       </form>
-      <p className="mt-1.5 text-center text-[11px] text-gray-400 md:hidden">AI answers can be wrong. Check clinical info.</p>
+      <p className="mt-1.5 text-center text-[11px] text-gray-400 md:tall:hidden">AI answers can be wrong. Check clinical info.</p>
     </div>
   );
 }

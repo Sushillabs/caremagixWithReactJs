@@ -76,7 +76,7 @@ export default function AppShell() {
       {isMd && <Sidebar rail={rail} onExpand={expandNav} onCollapse={isLg ? toggleCollapsed : undefined} />}
 
       <Drawer open={navOpen && !isLg} onClose={() => setNavOpen(false)} className="bg-[#0c3b2e]">
-        <Sidebar />
+        <Sidebar onNavigate={() => setNavOpen(false)} />
       </Drawer>
 
       <div className="grid min-h-0 min-w-0 grid-rows-[auto_1fr_auto]">

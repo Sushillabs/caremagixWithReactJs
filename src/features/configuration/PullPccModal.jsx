@@ -27,7 +27,7 @@ export default function PullPccModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
-      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-none sm:overflow-visible sm:rounded-2xl sm:w-[380px]">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[90dvh] sm:overflow-y-auto sm:rounded-2xl sm:w-[380px]">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Pull PCC Data</h2>
           <button

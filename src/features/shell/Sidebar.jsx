@@ -44,11 +44,12 @@ const CHILD_MODALS = {
   editDischargePlanTemplate: EditDischargePlanTemplateModal,
 };
 
-function NavItem({ section, rail }) {
+function NavItem({ section, rail, onNavigate }) {
   const Icon = section.icon;
   return (
     <NavLink
       to={section.path}
+      onClick={onNavigate}
       title={rail ? section.label : undefined}
       className={({ isActive }) =>
         `flex items-center gap-3 ${rail ? "justify-center px-0 py-2.5" : "px-4 py-2"} rounded-md text-sm transition-colors ${
@@ -85,7 +86,7 @@ function ModalNavItem({ section, rail }) {
   );
 }
 
-function NavGroup({ section, role, rail, onExpand }) {
+function NavGroup({ section, role, rail, onExpand, onNavigate }) {
   const location = useLocation();
   const children = section.children.filter((c) => !c.roles || c.roles.includes(role));
   const [open, setOpen] = useState(children.some((c) => c.path && location.pathname.startsWith(c.path)));
@@ -126,6 +127,7 @@ function NavGroup({ section, role, rail, onExpand }) {
               <NavLink
                 key={child.key}
                 to={child.path}
+                onClick={onNavigate}
                 className={({ isActive }) =>
                   `block rounded-md px-2 py-1.5 text-xs transition-colors ${
                     isActive ? "font-medium text-white" : "text-emerald-100/60 hover:text-white"
@@ -152,7 +154,7 @@ function NavGroup({ section, role, rail, onExpand }) {
   );
 }
 
-export default function Sidebar({ rail = false, onExpand, onCollapse }) {
+export default function Sidebar({ rail = false, onExpand, onCollapse, onNavigate }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -190,8 +192,8 @@ export default function Sidebar({ rail = false, onExpand, onCollapse }) {
           {nav.primary.map((key) => {
             const section = SECTIONS[key];
             if (!section) return null;
-            if (section.children) return <NavGroup key={key} section={section} role={role} rail={rail} onExpand={onExpand} />;
-            if (section.path) return <NavItem key={key} section={section} rail={rail} />;
+            if (section.children) return <NavGroup key={key} section={section} role={role} rail={rail} onExpand={onExpand} onNavigate={onNavigate} />;
+            if (section.path) return <NavItem key={key} section={section} rail={rail} onNavigate={onNavigate} />;
             return <ModalNavItem key={key} section={section} rail={rail} />;
           })}
         </div>
@@ -204,6 +206,7 @@ export default function Sidebar({ rail = false, onExpand, onCollapse }) {
                   <NavLink
                     key={key}
                     to={SECTIONS[key].path}
+                    onClick={onNavigate}
                     className={({ isActive }) =>
                       `block px-4 py-1.5 text-xs rounded-md transition-colors ${
                         isActive ? "text-white font-medium" : "text-emerald-100/60 hover:text-white"
