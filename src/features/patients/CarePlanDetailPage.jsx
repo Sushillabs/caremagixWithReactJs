@@ -15,6 +15,31 @@ import { saveFinalJobStatus } from "../../redux/finalJobsStatusSlice";
 // so downstream rendering can always rely on it being present.
 const CARE_PLAN_ITEM_LIST_KEYS = ["smart_goals", "interventions", "patient_self_management_actions", "potential_barriers"];
 
+const MDY_DATE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+const ISO_DATE = /^(\d{4}-\d{2}-\d{2})/;
+const MONTH_NAME_DATE = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})$/i;
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// Only exact formats; a loose Date() parse turns text like "Week 4" or "2026" into fake dates.
+function toDateInputValue(value) {
+  const raw = String(value || "").trim();
+  const mdy = MDY_DATE.exec(raw);
+  if (mdy) return `${mdy[3]}-${pad2(mdy[1])}-${pad2(mdy[2])}`;
+  const iso = ISO_DATE.exec(raw);
+  if (iso) return iso[1];
+  const named = MONTH_NAME_DATE.exec(raw);
+  if (named) return `${named[3]}-${pad2(MONTHS.indexOf(named[1].toLowerCase()) + 1)}-${pad2(named[2])}`;
+  return "";
+}
+
+// The page and PDF show dates as MM/DD/YYYY, so edits are saved in that format too.
+function fromDateInputValue(value) {
+  if (!value) return "";
+  const [y, m, d] = value.split("-");
+  return `${m}/${d}/${y}`;
+}
+
 function normalizeSections(sections) {
   return (sections || []).map((section) => {
     const normalized = { ...section };
@@ -144,8 +169,8 @@ function ItemList({ items, editing, onItemChange }) {
             {editing ? (
               <input
                 type="date"
-                value={item.target_date || ""}
-                onChange={(e) => onItemChange(i, "target_date", e.target.value)}
+                value={toDateInputValue(item.target_date)}
+                onChange={(e) => onItemChange(i, "target_date", fromDateInputValue(e.target.value))}
                 className="rounded border border-gray-200 px-1 py-0.5 text-xs text-gray-700"
               />
             ) : (
@@ -308,8 +333,8 @@ function CarePlanSection({
                     {editing ? (
                       <input
                         type="date"
-                        value={assessment.table_data.date}
-                        onChange={(e) => onAssessmentChange("date", e.target.value)}
+                        value={toDateInputValue(assessment.table_data.date)}
+                        onChange={(e) => onAssessmentChange("date", fromDateInputValue(e.target.value))}
                         className="w-full rounded border border-gray-200 px-1 py-0.5 text-xs text-gray-700"
                       />
                     ) : (
@@ -559,35 +584,43 @@ export default function CarePlanDetailPage() {
     }
   };
 
+  const showUnsaved = hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf;
+  const planButtons = (
+    <>
+      <button
+        type="button"
+        onClick={handleSaveCarePlan}
+        disabled={isSavingPlan || isGeneratingPdf || !hasUnsavedChanges || isMidEdit}
+        title={isMidEdit ? "Finish editing the open section first" : undefined}
+        className="order-last flex-1 rounded-md bg-emerald-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 md:order-none md:flex-none md:py-1.5 md:text-xs"
+      >
+        {isSavingPlan ? "Saving..." : "Save Care Plan"}
+      </button>
+      <button
+        type="button"
+        onClick={handleGeneratePdf}
+        disabled={isSavingPlan || isGeneratingPdf || isMidEdit}
+        title={isMidEdit ? "Finish editing the open section first" : undefined}
+        className="flex-1 rounded-md border border-emerald-600 px-3 py-2.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 md:flex-none md:py-1.5 md:text-xs"
+      >
+        {isGeneratingPdf ? "Generating PDF..." : "Generate PDF"}
+      </button>
+    </>
+  );
+
   return (
     <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
       <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <button type="button" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+        <button type="button" onClick={() => navigate(-1)} className="flex shrink-0 items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
           <ArrowLeft size={16} /> Back
         </button>
-        <h3 className="font-semibold text-gray-800">Care Plan{patient?.name ? ` — ${patient.name}` : ""}</h3>
+        <h3 className="min-w-0 truncate font-semibold text-gray-800">Care Plan{patient?.name ? ` — ${patient.name}` : ""}</h3>
 
         {carePlanData && (
-          <div className="ml-auto flex items-center gap-2">
-            {hasUnsavedChanges && !isSavingPlan && !isGeneratingPdf && <span className="text-xs text-amber-600">Unsaved changes</span>}
-            <button
-              type="button"
-              onClick={handleSaveCarePlan}
-              disabled={isSavingPlan || isGeneratingPdf || !hasUnsavedChanges || isMidEdit}
-              title={isMidEdit ? "Finish editing the open section first" : undefined}
-              className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              {isSavingPlan ? "Saving..." : "Save Care Plan"}
-            </button>
-            <button
-              type="button"
-              onClick={handleGeneratePdf}
-              disabled={isSavingPlan || isGeneratingPdf || isMidEdit}
-              title={isMidEdit ? "Finish editing the open section first" : undefined}
-              className="rounded-md border border-emerald-600 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
-            >
-              {isGeneratingPdf ? "Generating PDF..." : "Generate PDF"}
-            </button>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {showUnsaved && <span className="text-xs text-amber-600 md:hidden">Unsaved</span>}
+            {showUnsaved && <span className="hidden text-xs text-amber-600 md:inline">Unsaved changes</span>}
+            <span className="hidden items-center gap-2 md:flex">{planButtons}</span>
           </div>
         )}
       </div>
@@ -688,8 +721,8 @@ export default function CarePlanDetailPage() {
                   {editingPatient ? (
                     <input
                       type="date"
-                      value={draftPatient?.plan_start_date || ""}
-                      onChange={(e) => handleDraftPatientChange("plan_start_date", e.target.value)}
+                      value={toDateInputValue(draftPatient?.plan_start_date)}
+                      onChange={(e) => handleDraftPatientChange("plan_start_date", fromDateInputValue(e.target.value))}
                       className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
                     />
                   ) : (
@@ -701,8 +734,8 @@ export default function CarePlanDetailPage() {
                   {editingPatient ? (
                     <input
                       type="date"
-                      value={draftPatient?.plan_end_date || ""}
-                      onChange={(e) => handleDraftPatientChange("plan_end_date", e.target.value)}
+                      value={toDateInputValue(draftPatient?.plan_end_date)}
+                      onChange={(e) => handleDraftPatientChange("plan_end_date", fromDateInputValue(e.target.value))}
                       className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
                     />
                   ) : (
@@ -714,8 +747,8 @@ export default function CarePlanDetailPage() {
                   {editingPatient ? (
                     <input
                       type="date"
-                      value={draftPatient?.date_acknowledged_by_patient || ""}
-                      onChange={(e) => handleDraftPatientChange("date_acknowledged_by_patient", e.target.value)}
+                      value={toDateInputValue(draftPatient?.date_acknowledged_by_patient)}
+                      onChange={(e) => handleDraftPatientChange("date_acknowledged_by_patient", fromDateInputValue(e.target.value))}
                       className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
                     />
                   ) : (
@@ -727,8 +760,8 @@ export default function CarePlanDetailPage() {
                   {editingPatient ? (
                     <input
                       type="date"
-                      value={draftPatient?.next_follow_up_date || ""}
-                      onChange={(e) => handleDraftPatientChange("next_follow_up_date", e.target.value)}
+                      value={toDateInputValue(draftPatient?.next_follow_up_date)}
+                      onChange={(e) => handleDraftPatientChange("next_follow_up_date", fromDateInputValue(e.target.value))}
                       className="w-full rounded border border-gray-200 px-2 py-1 text-sm text-gray-700"
                     />
                   ) : (
@@ -772,13 +805,22 @@ export default function CarePlanDetailPage() {
         )}
       </div>
 
+      {carePlanData && (
+        <div className="flex shrink-0 gap-2 border-t border-gray-100 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] md:hidden">{planButtons}</div>
+      )}
+
       {showSaveFirstModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-[340px] rounded-2xl bg-white shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+          <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[90dvh] sm:w-[340px] sm:rounded-2xl">
             <div className="flex items-center justify-between border-b border-gray-100 p-4">
               <h2 className="text-sm font-semibold text-emerald-700">Unsaved Changes</h2>
-              <button type="button" onClick={() => setShowSaveFirstModal(false)} className="rounded-full p-1 hover:bg-gray-100">
-                <X size={16} className="text-gray-500" />
+              <button
+                type="button"
+                onClick={() => setShowSaveFirstModal(false)}
+                aria-label="Close"
+                className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+              >
+                <X size={16} className="size-5 text-gray-500 sm:size-4" />
               </button>
             </div>
             <div className="space-y-4 p-4">

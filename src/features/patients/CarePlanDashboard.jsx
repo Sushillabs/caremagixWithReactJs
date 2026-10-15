@@ -155,7 +155,39 @@ export default function CarePlanDashboard({ data }) {
 
       <div className="rounded-lg border border-gray-200 bg-white">
         <h4 className="border-b border-gray-100 px-4 py-3 text-xs font-semibold text-gray-700">Health Status Analysis</h4>
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-gray-100 md:hidden">
+          {health_status_analysis.map((row) => (
+            <li key={row.section_index} className="space-y-1.5 px-4 py-3 text-xs text-gray-700">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-medium text-gray-800">{row.condition}</p>
+                  {row.description && <p className="text-[11px] text-gray-400">{row.description}</p>}
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${RISK_BADGE_CLASSES[row.risk_level]}`}>
+                  {row.risk_label}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500">{[row.metric_type, row.last_visit_record, row.source].filter(Boolean).join(" · ")}</p>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${row.progress_percent ?? 0}%` }} />
+                </div>
+                <span className="text-[11px] text-gray-500">{row.progress_percent != null ? `${row.progress_percent}%` : "—"}</span>
+              </div>
+              {row.recommended_actions && <p className="break-words">{row.recommended_actions}</p>}
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => navigate(`view?section=${row.section_index}`)}
+                  className="inline-flex min-h-9 items-center px-2 text-sm font-medium text-emerald-600"
+                >
+                  Edit ›
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-gray-100 text-gray-500">
@@ -189,9 +221,9 @@ export default function CarePlanDashboard({ data }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
-                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${row.progress_percent}%` }} />
+                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${row.progress_percent ?? 0}%` }} />
                       </div>
-                      <span>{row.progress_percent}%</span>
+                      <span>{row.progress_percent != null ? `${row.progress_percent}%` : "—"}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">{row.recommended_actions}</td>

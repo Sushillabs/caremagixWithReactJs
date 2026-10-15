@@ -79,12 +79,12 @@ export default function CarePlan() {
           <h3 className="text-xs font-bold text-gray-800">Care Plan</h3>
           {updatedAtLabel && <span className="text-[11px] text-gray-500">Last updated: {updatedAtLabel}</span>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid w-full grid-cols-2 gap-1.5 text-sm sm:flex sm:w-auto sm:items-center sm:gap-2 sm:text-xs">
           {effectiveStatus === "done" && (
             <button
               type="button"
               onClick={() => navigate("history")}
-              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-gray-200 bg-white px-2 py-2 text-gray-700 hover:bg-gray-50 sm:py-1"
             >
               Plan History
             </button>
@@ -95,7 +95,7 @@ export default function CarePlan() {
               type="button"
               onClick={handleRegenerate}
               disabled={isStarting}
-              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+              className="rounded-md border border-gray-200 bg-white px-2 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-70 sm:py-1"
             >
               Create New
             </button>
@@ -105,7 +105,7 @@ export default function CarePlan() {
             type="button"
             onClick={handleClick}
             disabled={isStarting}
-            className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-white hover:bg-emerald-700 disabled:opacity-70"
+            className="order-first col-span-2 flex items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-2 text-white hover:bg-emerald-700 disabled:opacity-70 sm:order-none sm:col-span-1 sm:justify-start sm:py-1"
           >
             {buttonLabel}
           </button>
