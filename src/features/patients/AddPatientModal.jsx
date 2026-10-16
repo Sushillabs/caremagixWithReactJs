@@ -183,12 +183,17 @@ export default function AddPatientModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-[540px] rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[90dvh] sm:w-[540px] sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Register a new patient</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X size={16} className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+          >
+            <X size={16} className="size-5 text-gray-500 sm:size-4" />
           </button>
         </div>
 
@@ -255,10 +260,10 @@ export default function AddPatientModal({ onClose }) {
                         disabled={otpState[key].verified}
                         onChange={(e) => handleCodeChange(key, i, e.target.value)}
                         onKeyDown={(e) => handleCodeKeyDown(key, i, e)}
-                        className="h-9 w-9 rounded-md border border-gray-200 text-center text-sm disabled:bg-emerald-50 disabled:text-emerald-700"
+                        className="h-11 w-11 min-w-0 rounded-md border border-gray-200 text-center text-sm disabled:bg-emerald-50 disabled:text-emerald-700 sm:h-9 sm:w-9"
                       />
                     ))}
-                    {otpState[key].verified && <CheckCircle2 size={20} className="ml-1 self-center text-emerald-600" />}
+                    {otpState[key].verified && <CheckCircle2 size={20} className="ml-1 shrink-0 self-center text-emerald-600" />}
                   </div>
                   {otpState[key].verifyError && <p className="mt-1 text-xs text-red-600">{otpState[key].verifyError}</p>}
                 </div>
@@ -302,7 +307,7 @@ export default function AddPatientModal({ onClose }) {
                     key={m}
                     type="button"
                     onClick={() => handleSelectUploadMode(m)}
-                    className={`flex-1 rounded-md border px-2 py-1.5 text-xs font-medium ${
+                    className={`flex-1 rounded-md border px-2 py-2.5 text-sm font-medium sm:py-1.5 sm:text-xs ${
                       uploadMode === m ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"
                     }`}
                   >

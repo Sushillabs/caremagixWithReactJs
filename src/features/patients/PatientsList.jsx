@@ -36,10 +36,10 @@ export default function PatientsList() {
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
-            <th className="px-4 py-3 font-medium">SL No</th>
-            <th className="px-4 py-3 font-medium">Patient name</th>
-            <th className="px-4 py-3 font-medium">Data Origin</th>
-            <th className="px-4 py-3 text-right font-medium">Action</th>
+            <th className="px-2 py-3 sm:px-4 font-medium">SL No</th>
+            <th className="px-2 py-3 sm:px-4 font-medium">Patient name</th>
+            <th className="px-2 py-3 sm:px-4 font-medium">Data Origin</th>
+            <th className="px-2 py-3 sm:px-4 text-right font-medium">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -52,10 +52,10 @@ export default function PatientsList() {
           )}
           {filteredPatients.map((p, idx) => (
             <tr key={p.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-              <td className="px-4 py-3 text-gray-700">{idx + 1}</td>
-              <td className="px-4 py-3 text-gray-700">{p.name}</td>
-              <td className="px-4 py-3 text-gray-700">{p.type}</td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-2 py-3 sm:px-4 text-gray-700">{idx + 1}</td>
+              <td className="px-2 py-3 sm:px-4 text-gray-700">{p.name}</td>
+              <td className="px-2 py-3 sm:px-4 text-gray-700">{p.type}</td>
+              <td className="px-2 py-3 sm:px-4 text-right">
                 <button type="button" className="font-medium text-emerald-600 hover:underline" onClick={() => handlePatient(p)}>
                   View Details
                 </button>
