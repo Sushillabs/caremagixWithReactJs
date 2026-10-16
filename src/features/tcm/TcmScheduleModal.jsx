@@ -57,12 +57,17 @@ export default function TcmScheduleModal({ patientKey, onClose }) {
   const physicians = physiciansQuery.data?.data?.physicians || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[85vh] w-[480px] overflow-y-auto rounded-2xl bg-white shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[85vh] sm:w-[480px] sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-emerald-700">Schedule TCM visits</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-1 hover:bg-gray-100">
-            <X size={16} className="text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-my-2 -mr-2 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 sm:m-0 sm:h-auto sm:w-auto sm:p-1"
+          >
+            <X size={16} className="size-5 text-gray-500 sm:size-4" />
           </button>
         </div>
 
