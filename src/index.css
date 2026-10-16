@@ -38,7 +38,8 @@
 }
 
 @custom-variant tall (@media (min-height: 501px));
-@custom-variant short (@media (max-height: 500px));
+@custom-variant short (@media (max-height: 600px));
+@custom-variant compact (@media (max-width: 767px) and (max-height: 600px));
 
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
@@ -60,15 +61,34 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
+  overflow-wrap: break-word;
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* Narrow phones: one step smaller text; spacing and tap targets stay the same, rem keeps the user's font setting */
+@media (max-width: 359px) {
+  :root {
+    --text-xs: 0.6875rem;
+    --text-sm: 0.8125rem;
+    --text-base: 0.9375rem;
+  }
 }
 
 /* iOS Safari zooms the page when a focused field is under 16px */
 @media (hover: none) and (pointer: coarse) {
   input,
   select,
-  textarea {
-    font-size: 16px;
+  textarea:not([readonly], .small-text-ok) {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* -webkit-touch-callout is only supported on iOS, so other phones keep the small note text */
+@supports (-webkit-touch-callout: none) {
+  @media (hover: none) and (pointer: coarse) {
+    textarea.small-text-ok {
+      font-size: max(16px, 1rem);
+    }
   }
 }

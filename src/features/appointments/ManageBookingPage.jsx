@@ -650,13 +650,13 @@ export default function ManageBookingPage() {
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <div className="flex flex-wrap items-center justify-between gap-y-1 border-b border-gray-200 p-3 pb-0 md:pb-3">
         <h2 className="text-sm font-semibold text-gray-800">Manage Calendar</h2>
-        <div className="flex w-full items-center gap-4 text-xs md:w-auto">
+        <div className="flex w-full items-center gap-4 text-xs md:w-auto min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 border-b-2 py-2.5 text-sm md:flex-none md:border-b-0 md:py-0 md:text-xs ${
+              className={`flex-1 whitespace-nowrap border-b-2 py-2.5 text-sm md:flex-none md:border-b-0 md:py-0 md:text-xs ${
                 activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >

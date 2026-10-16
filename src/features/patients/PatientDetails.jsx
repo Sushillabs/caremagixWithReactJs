@@ -326,7 +326,7 @@ export default function PatientDetails() {
   ];
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-4 compact:gap-1">
       <div className="grid grid-cols-1 items-center justify-between gap-3 md:grid-cols-4">
         <div className="col-span-1 hidden items-center h-16 gap-2 rounded-lg border border-gray-200 bg-white p-2 md:flex">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">

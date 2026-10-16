@@ -75,7 +75,7 @@ export default function AiCareAssistant() {
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-5 md:py-3">
+    <div className="border-t border-gray-200 bg-white px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] compact:pt-1.5 compact:pb-[max(0.25rem,env(safe-area-inset-bottom))] md:px-5 md:py-3">
       <div className="mb-2 hidden items-center justify-between md:tall:flex">
         <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <Sparkles size={16} className="text-emerald-500" />
@@ -114,7 +114,7 @@ export default function AiCareAssistant() {
 
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-4 pr-1 md:rounded-lg md:px-3 md:py-2"
+        className="flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-4 pr-1 compact:py-0.5 md:rounded-lg md:px-3 md:py-2"
       >
         <input
           type="text"
@@ -130,7 +130,7 @@ export default function AiCareAssistant() {
           type="button"
           onClick={toggleMic}
           disabled={!hasPatient || isPending}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white disabled:opacity-40 md:h-auto md:w-auto md:rounded-none md:bg-transparent md:hover:text-gray-600 ${
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white compact:h-10 compact:w-10 disabled:opacity-40 md:h-auto md:w-auto md:rounded-none md:bg-transparent md:hover:text-gray-600 ${
             isListening ? "animate-pulse bg-red-500 md:text-red-500" : "bg-emerald-600 md:text-gray-400"
           }`}
           aria-label="Voice input"
@@ -142,13 +142,13 @@ export default function AiCareAssistant() {
           type="submit"
           disabled={!hasPatient || isPending || !input.trim()}
           aria-label="Submit"
-          className="flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-gray-800 text-sm text-white disabled:opacity-30 md:h-auto md:bg-emerald-600 md:hover:bg-emerald-700 md:disabled:opacity-40 md:w-auto md:px-3 md:py-1.5"
+          className="flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-gray-800 compact:h-9 compact:w-9 text-sm text-white disabled:opacity-30 md:h-auto md:bg-emerald-600 md:hover:bg-emerald-700 md:disabled:opacity-40 md:w-auto md:px-3 md:py-1.5"
         >
           <Send size={14} className="size-[18px] md:size-[14px]" />
           <span className="hidden md:inline">{isPending ? "..." : "Submit"}</span>
         </button>
       </form>
-      <p className="mt-1.5 text-center text-[11px] text-gray-400 md:tall:hidden">AI answers can be wrong. Check clinical info.</p>
+      <p className="mt-1.5 text-center text-[11px] text-gray-400 compact:mt-1 md:tall:hidden">AI answers can be wrong. Check clinical info.</p>
     </div>
   );
 }

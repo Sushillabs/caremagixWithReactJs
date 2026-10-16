@@ -84,13 +84,13 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
               type="button"
               onClick={() => setTranscriptOpen((v) => !v)}
               aria-expanded={transcriptOpen}
-              className="flex min-h-9 items-center gap-1 text-xs font-semibold text-gray-600 md:hidden"
+              className="flex min-h-9 items-center gap-1 text-xs font-semibold text-gray-600 compact:min-h-7 md:hidden"
             >
               Transcript · {transcriptOpen ? "hide" : "tap to view"}
               <ChevronDown size={14} className={transcriptOpen ? "rotate-180" : ""} />
             </button>
             <label className="hidden text-xs font-semibold text-gray-600 md:inline">Transcript</label>
-            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-800">
+            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-800 compact:leading-tight">
               To generate the PDF, save your changes below first.
             </span>
           </div>
@@ -101,17 +101,22 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
           />
         </div>
 
-        <div className="flex min-h-[200px] flex-1 flex-col md:block md:min-h-0">
+        <div className="flex min-h-[200px] flex-1 flex-col compact:min-h-40 md:block md:min-h-0">
           <label className="text-xs font-semibold text-gray-600">{label}</label>
           <textarea
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            className="mt-1 w-full min-h-[200px] flex-1 border rounded p-2 text-sm md:flex-none"
+            className="small-text-ok mt-1 w-full min-h-[200px] flex-1 border rounded p-2 text-xs leading-relaxed compact:min-h-40 md:flex-none md:text-sm md:leading-normal"
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
+        <label className="flex min-h-10 items-center gap-2 text-sm text-gray-700 compact:min-h-8 max-[359px]:text-[0.75rem] md:min-h-0">
+          <input
+            type="checkbox"
+            checked={sendEmail}
+            onChange={(e) => setSendEmail(e.target.checked)}
+            className="h-5 w-5 shrink-0 accent-emerald-700 compact:h-4 compact:w-4 md:h-auto md:w-auto"
+          />
           Email this {label.toLowerCase()}
         </label>
         {sendEmail && (
@@ -121,13 +126,13 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Recipient email"
-              className="min-w-0 flex-1 border rounded p-2 text-sm"
+              className="h-10 min-w-0 flex-1 border rounded px-2 text-sm compact:h-9 md:h-auto md:p-2"
             />
             <button
               type="button"
               onClick={handleSendEmail}
               disabled={isSaving || isSending || !email.trim()}
-              className="shrink-0 rounded bg-emerald-800 px-3 py-2 text-sm text-white hover:bg-emerald-900 disabled:opacity-50"
+              className="h-10 shrink-0 rounded bg-emerald-800 px-3 text-sm text-white compact:h-9 md:h-auto md:py-2 hover:bg-emerald-900 disabled:opacity-50"
             >
               {isSending ? "Sending..." : "Send"}
             </button>
@@ -146,7 +151,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
           type="button"
           onClick={handleSave}
           disabled={isSaving || isSending}
-          className="w-full px-3 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded disabled:opacity-50 md:w-auto md:py-2"
+          className="w-full px-3 py-2.5 text-sm font-medium bg-emerald-800 hover:bg-emerald-900 text-white rounded disabled:opacity-50 compact:py-2 md:w-auto md:py-2 md:text-base md:font-normal"
         >
           {isSaving ? "Saving..." : "Save to patient record"}
         </button>
@@ -278,14 +283,14 @@ export default function VisitNotesAI() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white short:min-h-80">
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 bg-[#F0FDF4] p-2 pb-0 text-xs md:gap-2 md:pb-2">
-        <h3 className="min-w-0 truncate text-xs font-bold text-gray-800">Create {label} AI</h3>
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 bg-[#F0FDF4] p-2 pb-0 text-xs compact:gap-y-0 compact:pt-1 md:gap-2 md:pb-2">
+        <h3 className="min-w-0 flex-1 basis-0 truncate text-xs font-bold text-gray-800 md:flex-none md:basis-auto">Create {label} AI</h3>
         {activeTab === "chat" && (
           <button
             type="button"
             onClick={stopAndGenerate}
             disabled={pending || !historyLoaded}
-            className="ml-auto min-h-9 shrink-0 rounded-full bg-emerald-800 px-3 text-xs font-medium text-white disabled:opacity-50 md:hidden"
+            className="ml-auto min-h-9 shrink-0 rounded-full bg-emerald-800 px-3 compact:min-h-7 text-xs font-medium text-white disabled:opacity-50 md:hidden"
           >
             Generate
           </button>
@@ -295,7 +300,7 @@ export default function VisitNotesAI() {
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="More options"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 compact:h-7 compact:w-7"
           >
             <EllipsisVertical size={18} />
           </button>
@@ -319,13 +324,13 @@ export default function VisitNotesAI() {
             </>
           )}
         </div>
-        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
+        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+              className={`flex-1 whitespace-nowrap border-b-2 py-2 compact:py-1 max-[359px]:text-[0.75rem] md:flex-none md:border-b-0 md:py-0 ${
                 activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -417,7 +422,7 @@ export default function VisitNotesAI() {
             </button>
           </div>
           {!typeMode && (
-            <div className="shrink-0 px-2 pb-2 md:hidden">
+            <div className="shrink-0 px-2 pb-2 compact:pb-1 md:hidden">
               <VoiceDock
                 state={voice.state}
                 error={voice.error}

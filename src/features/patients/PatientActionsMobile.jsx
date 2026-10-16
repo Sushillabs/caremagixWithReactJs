@@ -1,8 +1,36 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronRight, Ellipsis, Home } from "lucide-react";
 import BottomSheet from "../../components/BottomSheet";
 
 const GROUPS = ["Documents", "Care", "Contact"];
+const CHIP_GAP = 4;
+const CHIP_CLASS =
+  "flex min-h-9 shrink-0 compact:min-h-8 items-center justify-center gap-1 whitespace-nowrap rounded-full border border-gray-200 bg-white px-2 text-xs text-gray-700 disabled:opacity-50";
+
+function ChipContent({ action }) {
+  const Icon = action.icon;
+  return (
+    <>
+      <Icon size={14} className="shrink-0 text-emerald-600" />
+      {action.label}
+    </>
+  );
+}
+
+function SheetTile({ action, onRun }) {
+  const Icon = action.icon;
+  return (
+    <button
+      type="button"
+      onClick={() => onRun(action)}
+      disabled={action.disabled}
+      className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-1 py-2 text-center text-xs text-gray-700 active:bg-gray-50 disabled:text-gray-300"
+    >
+      <Icon size={22} className={action.disabled ? "text-gray-300" : "text-emerald-600"} />
+      {action.label}
+    </button>
+  );
+}
 
 export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
   const [sheet, setSheet] = useState(null);
@@ -10,6 +38,39 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
   const main = mainKeys.map((k) => visible.find((a) => a.key === k)).filter(Boolean);
   const rest = visible.filter((a) => !mainKeys.includes(a.key));
   const listAction = sheet && sheet !== "more" ? visible.find((a) => a.key === sheet) : null;
+
+  // Show only the main chips that fully fit (width depends on screen, text size and labels); the rest move into More.
+  const slotRef = useRef(null);
+  const measureRef = useRef(null);
+  const [fitCount, setFitCount] = useState(main.length);
+  const mainSignature = main.map((a) => a.label).join("|");
+
+  useLayoutEffect(() => {
+    const slot = slotRef.current;
+    const measure = measureRef.current;
+    if (!slot || !measure) return;
+    const compute = () => {
+      const available = slot.clientWidth;
+      let used = 0;
+      let count = 0;
+      for (const chip of measure.children) {
+        const next = used + (count ? CHIP_GAP : 0) + chip.offsetWidth;
+        if (next > available) break;
+        used = next;
+        count += 1;
+      }
+      setFitCount(count);
+    };
+    compute();
+    const observer = new ResizeObserver(compute);
+    observer.observe(slot);
+    observer.observe(measure);
+    return () => observer.disconnect();
+  }, [mainSignature]);
+
+  const shownMain = main.slice(0, fitCount);
+  const overflowMain = main.slice(fitCount);
+  const hasMore = overflowMain.length > 0 || rest.length > 0;
 
   const run = (action) => {
     if (action.disabled) return;
@@ -27,37 +88,47 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
         type="button"
         onClick={onHome}
         aria-label="Home"
-        className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600"
+        className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 compact:h-8"
       >
         <Home size={16} />
       </button>
-      {main.map((action) => {
-        const Icon = action.icon;
-        return (
-          <button
-            key={action.key}
-            type="button"
-            onClick={() => run(action)}
-            disabled={action.disabled}
-            className="flex h-9 min-w-0 flex-auto items-center justify-center gap-1 rounded-full border border-gray-200 bg-white px-1.5 text-xs text-gray-700 disabled:opacity-50"
-          >
-            <Icon size={14} className="shrink-0 text-emerald-600" />
-            <span className="truncate">{action.label}</span>
+      <div ref={slotRef} className="relative flex min-w-0 flex-1 gap-1">
+        {shownMain.map((action) => (
+          <button key={action.key} type="button" onClick={() => run(action)} disabled={action.disabled} className={`${CHIP_CLASS} flex-auto`}>
+            <ChipContent action={action} />
           </button>
-        );
-      })}
-      {rest.length > 0 && (
+        ))}
+        <div aria-hidden="true" className="pointer-events-none invisible absolute left-0 top-0 h-0 w-0 overflow-hidden">
+          <div ref={measureRef} className="flex w-max gap-1">
+            {main.map((action) => (
+              <span key={action.key} className={CHIP_CLASS}>
+                <ChipContent action={action} />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      {hasMore && (
         <button
           type="button"
           onClick={() => setSheet("more")}
           aria-label="More actions"
-          className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600"
+          className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 compact:h-8"
         >
           <Ellipsis size={18} />
         </button>
       )}
 
       <BottomSheet open={sheet === "more"} onClose={() => setSheet(null)} title="More actions">
+        {overflowMain.length > 0 && (
+          <div className="px-2">
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {overflowMain.map((action) => (
+                <SheetTile key={action.key} action={action} onRun={run} />
+              ))}
+            </div>
+          </div>
+        )}
         {GROUPS.map((group) => {
           const items = rest.filter((a) => a.group === group);
           if (items.length === 0) return null;
@@ -65,21 +136,9 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
             <div key={group} className="px-2">
               <p className="mb-1.5 mt-3 text-xs text-gray-500">{group}</p>
               <div className="grid grid-cols-3 gap-2">
-                {items.map((action) => {
-                  const Icon = action.icon;
-                  return (
-                    <button
-                      key={action.key}
-                      type="button"
-                      onClick={() => run(action)}
-                      disabled={action.disabled}
-                      className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 px-1 py-2 text-center text-xs text-gray-700 active:bg-gray-50 disabled:text-gray-300"
-                    >
-                      <Icon size={22} className={action.disabled ? "text-gray-300" : "text-emerald-600"} />
-                      {action.label}
-                    </button>
-                  );
-                })}
+                {items.map((action) => (
+                  <SheetTile key={action.key} action={action} onRun={run} />
+                ))}
               </div>
             </div>
           );

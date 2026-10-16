@@ -144,7 +144,7 @@ export default function ConversationCard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] md:gap-2 md:pb-2">
+      <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] compact:gap-y-0 compact:pt-1 md:gap-2 md:pb-2">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-bold text-gray-800">{isMedication ? "Medication" : sourceLabel}</h3>
           {latestAnswerId && (
@@ -158,14 +158,14 @@ export default function ConversationCard() {
           )}
           {/* <p className="text-xs text-gray-400">Generated on — xx-xx-xxxx</p> */}
         </div>
-        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
+        <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               disabled={tab.disabled}
               onClick={() => !tab.disabled && setActiveTab(tab.key)}
-              className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+              className={`flex-1 whitespace-nowrap border-b-2 py-2 compact:py-1 md:flex-none md:border-b-0 md:py-0 ${
                 tab.disabled
                   ? "cursor-not-allowed border-transparent text-gray-300"
                   : activeTab === tab.key

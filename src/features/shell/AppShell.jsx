@@ -79,7 +79,7 @@ export default function AppShell() {
         <Sidebar onNavigate={() => setNavOpen(false)} />
       </Drawer>
 
-      <div className="grid min-h-0 min-w-0 grid-rows-[auto_1fr_auto]">
+      <div className="grid min-h-0 min-w-0 grid-cols-1 grid-rows-[auto_1fr_auto]">
         <TopBar
           onOpenNav={!isMd ? () => setNavOpen(true) : undefined}
           search={search}
@@ -96,7 +96,7 @@ export default function AppShell() {
           onCloseNotifications={() => setNotifOpen(false)}
         />
 
-        <main className="min-h-0 overflow-y-auto p-3 md:p-5">
+        <main className="min-h-0 overflow-y-auto p-3 compact:px-2 compact:pt-1 compact:pb-2 md:p-5">
           <Outlet context={{ search, section, setAssistantHidden, openNotifications }} />
         </main>
 

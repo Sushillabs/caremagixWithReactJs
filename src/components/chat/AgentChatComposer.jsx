@@ -29,7 +29,7 @@ export default function AgentChatComposer({ onSubmit, disabled, placeholder = "T
           onChange={(e) => setInput(e.target.value)}
           disabled={disabled}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
+          className="min-w-0 flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
         />
         {voice?.playReply && voice.state === "speaking" && <Volume2 size={16} className="shrink-0 animate-pulse text-emerald-500" />}
         {voice && (
@@ -38,8 +38,11 @@ export default function AgentChatComposer({ onSubmit, disabled, placeholder = "T
             onClick={onMicToggle || voice.toggle}
             disabled={disabled}
             title={micLabel}
+            aria-label={micLabel}
             aria-pressed={micActive}
-            className={`shrink-0 disabled:opacity-40 ${micActive ? "text-emerald-600" : "text-gray-400 hover:text-gray-600"}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center disabled:opacity-40 md:h-auto md:w-auto ${
+              micActive ? "text-emerald-600" : "text-gray-400 hover:text-gray-600"
+            }`}
           >
             <Mic size={18} />
           </button>
@@ -47,10 +50,11 @@ export default function AgentChatComposer({ onSubmit, disabled, placeholder = "T
         <button
           type="submit"
           disabled={disabled || !input.trim()}
-          className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-700 disabled:opacity-40"
+          aria-label="Submit"
+          className="flex h-9 w-9 shrink-0 items-center justify-center gap-1 rounded-full bg-emerald-600 text-sm text-white hover:bg-emerald-700 disabled:opacity-40 md:h-auto md:w-auto md:px-3 md:py-1.5"
         >
-          <Send size={14} />
-          Submit
+          <Send size={14} className="size-4 md:size-[14px]" />
+          <span className="hidden md:inline">Submit</span>
         </button>
       </form>
     </div>

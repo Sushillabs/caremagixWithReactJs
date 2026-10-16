@@ -64,16 +64,16 @@ export default function TopBar({
   };
 
   return (
-    <header className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3 md:gap-4 md:px-5">
+    <header className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3 compact:py-1 md:gap-4 md:px-5">
       {onOpenNav && (
-        <button type="button" onClick={onOpenNav} aria-label="Open menu" className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100">
+        <button type="button" onClick={onOpenNav} aria-label="Open menu" className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 compact:h-8 compact:w-8">
           <Menu size={22} />
         </button>
       )}
 
       {showPatient && patient && (
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 compact:h-7 compact:w-7">
             <User size={16} className="text-gray-400" />
           </div>
           <div className="min-w-0">
@@ -138,7 +138,12 @@ export default function TopBar({
         )}
 
         <div ref={profileRef} className="relative">
-          <button className="flex items-center gap-2 text-sm hover:cursor-pointer" onClick={handleNameClick}>
+          <button
+            className="flex min-h-10 items-center gap-2 text-sm hover:cursor-pointer compact:min-h-8 sm:min-h-0"
+            onClick={handleNameClick}
+            aria-label="Account menu"
+            aria-expanded={logoutShow}
+          >
             <UserCircle2 size={26} className="text-emerald-600" />
             <span className="hidden text-left leading-tight sm:block">
               <span className="block font-medium text-gray-800">{displayName}</span>
@@ -147,15 +152,21 @@ export default function TopBar({
             {logoutShow ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
           </button>
           {logoutShow && (
-            <button
-              className="px-6 py-2 text-gray-500 flex gap-2 items-center text-xs absolute right-0 top-10 border border-gray-200 bg-white rounded-sm hover:cursor-pointer"
-              onClick={handleLogout}
-            >
-              <span>
-                <LogOut size={14} />
-              </span>
-              <span>Logout</span>
-            </button>
+            <div className="absolute right-0 top-11 z-30 w-48 rounded-md border border-gray-200 bg-white shadow-lg sm:top-10 sm:w-auto sm:rounded-sm sm:shadow-none">
+              <div className="border-b border-gray-100 px-3 py-2 sm:hidden">
+                <p className="truncate text-sm font-medium text-gray-800">{displayName}</p>
+                <p className="text-xs capitalize text-gray-400">{role}</p>
+              </div>
+              <button
+                className="flex min-h-11 w-full items-center gap-2 px-3 text-sm text-gray-600 hover:cursor-pointer active:bg-gray-50 sm:min-h-0 sm:px-6 sm:py-2 sm:text-xs sm:text-gray-500"
+                onClick={handleLogout}
+              >
+                <span>
+                  <LogOut size={14} />
+                </span>
+                <span>Logout</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

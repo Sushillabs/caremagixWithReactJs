@@ -314,7 +314,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 short:min-h-80">
       <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] md:gap-2 md:pb-2">
+        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] compact:gap-y-0 compact:pt-1 md:gap-2 md:pb-2">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
             <CalendarPlus size={14} className="text-emerald-600" />
             Appointments
@@ -325,7 +325,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="More options"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 compact:h-7 compact:w-7"
               >
                 <EllipsisVertical size={18} />
               </button>
@@ -350,7 +350,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
               )}
             </div>
           )}
-          <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
+          <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:overflow-visible">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -359,7 +359,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
                   if (tab.key !== "book" && voice.isActive) voice.stop();
                   setActiveTab(tab.key);
                 }}
-                className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+                className={`flex-1 whitespace-nowrap border-b-2 py-2 compact:py-1 md:flex-none md:border-b-0 md:py-0 ${
                   activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >

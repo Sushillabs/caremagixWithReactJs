@@ -11,7 +11,7 @@ const STATUS = {
 };
 
 function friendlyError(error) {
-  if (/permission|not ?allowed/i.test(error)) return "Microphone is blocked. Allow mic access in your browser settings, or tap Type.";
+  if (/permission|not ?allowed/i.test(error)) return "Mic is blocked. Allow it in browser settings, or tap Type.";
   return error;
 }
 
@@ -23,9 +23,9 @@ function SideButton({ icon, label, onClick, disabled }) {
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex w-16 flex-col items-center gap-1 text-[11px] text-gray-600 disabled:opacity-40"
+      className="flex w-16 flex-col items-center gap-1 whitespace-nowrap text-[11px] text-gray-600 disabled:opacity-40"
     >
-      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-800 short:h-10 short:w-10">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-800 short:h-9 short:w-9">
         <Icon size={20} />
       </span>
       <span className="short:hidden">{label}</span>
@@ -65,7 +65,7 @@ export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to t
         status?.tone || "bg-white"
       }`}
     >
-      <p className="mb-2 min-h-5 text-center text-sm short:mb-1 short:text-xs" role="status">
+      <p className="mb-2 min-h-5 text-center text-sm short:mb-0.5 short:min-h-4 short:text-xs" role="status">
         {showError ? (
           <span className="text-red-600">{friendlyError(error)}</span>
         ) : status ? (
@@ -83,10 +83,10 @@ export default function VoiceDock({ state = "idle", idleHint = "Tap the mic to t
           onClick={main.onClick}
           disabled={main.disabled}
           aria-label={main.label}
-          className="flex flex-col items-center gap-1 text-xs font-medium text-gray-700 disabled:opacity-40"
+          className="flex flex-col items-center gap-1 whitespace-nowrap text-xs font-medium text-gray-700 disabled:opacity-40"
         >
-          <span className={`flex h-[72px] w-[72px] items-center justify-center rounded-full text-white short:h-12 short:w-12 ${main.className}`}>
-            <MainIcon size={30} className="short:size-6" />
+          <span className={`flex h-[72px] w-[72px] items-center justify-center rounded-full text-white short:h-11 short:w-11 ${main.className}`}>
+            <MainIcon size={30} className="short:size-5" />
           </span>
           <span className="short:hidden">{main.label}</span>
         </button>
