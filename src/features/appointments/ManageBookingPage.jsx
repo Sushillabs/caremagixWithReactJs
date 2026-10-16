@@ -51,6 +51,8 @@ function AppointmentsTab() {
   const [reschedulingId, setReschedulingId] = useState(null);
   const [rescheduleValue, setRescheduleValue] = useState("");
   const [actionError, setActionError] = useState(null);
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
+  const [lastActionId, setLastActionId] = useState(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: APPOINTMENTS_QUERY_KEY,
@@ -98,9 +100,130 @@ function AppointmentsTab() {
 
   return (
     <>
-      {actionError && <p className="border-b border-gray-100 px-4 py-2 text-xs text-red-600">{actionError}</p>}
+      {actionError && <p className="hidden border-b border-gray-100 px-4 py-2 text-xs text-red-600 md:block">{actionError}</p>}
 
-      <table className="w-full text-left text-sm">
+      <ul className="divide-y divide-gray-100 md:hidden">
+        {isLoading && <li className="px-4 py-6 text-center text-sm text-gray-400">Loading...</li>}
+        {isError && !isLoading && (
+          <li className="px-4 py-6 text-center text-sm text-red-600">
+            {error?.response?.data?.error || error?.message || "Failed to load appointments."}
+          </li>
+        )}
+        {!isLoading && !isError && appointments.length === 0 && (
+          <li className="px-4 py-6 text-center text-sm text-gray-500">No appointments booked with you yet.</li>
+        )}
+        {appointments.map((appt) => {
+          const isRescheduling = reschedulingId === appt.id;
+          const isUpdating = updateMutation.isPending && updateMutation.variables?.id === appt.id;
+          const isCancelling = cancelMutation.isPending && cancelMutation.variables === appt.id;
+          const active = appt.status === "pending" || appt.status === "confirmed";
+
+          return (
+            <li key={appt.id} className="space-y-1 px-4 py-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="min-w-0 break-words font-medium text-gray-800">{appt.patient_display_name || "Patient"}</p>
+                <StatusPill status={appt.status} />
+              </div>
+              {isRescheduling ? (
+                <div className="space-y-2 pt-1">
+                  <label className="text-xs text-gray-500">New date and time</label>
+                  <input
+                    type="datetime-local"
+                    value={rescheduleValue}
+                    onChange={(e) => setRescheduleValue(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLastActionId(appt.id);
+                        saveReschedule(appt.id);
+                      }}
+                      disabled={isUpdating}
+                      className="flex-1 rounded-md bg-emerald-700 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isUpdating ? "Saving..." : "Save"}
+                    </button>
+                    <button type="button" onClick={() => setReschedulingId(null)} className="flex-1 rounded-md border border-gray-300 py-2 text-gray-700">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-700">{formatDateTime(appt.appointment_datetime)}</p>
+                  <p className="text-xs text-gray-500">
+                    {[APPOINTMENT_TYPE_LABEL[appt.appointment_type] || appt.appointment_type, appt.reason || "—"].filter(Boolean).join(" · ")}
+                  </p>
+                  {active &&
+                    (confirmCancelId === appt.id ? (
+                      <div className="mt-1.5 space-y-2 rounded-md border border-red-200 bg-red-50 p-2.5">
+                        <p className="text-sm text-red-800">Cancel this appointment? The patient will lose this slot.</p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLastActionId(appt.id);
+                              setConfirmCancelId(null);
+                              handleCancel(appt.id);
+                            }}
+                            className="flex-1 rounded-md bg-red-600 py-2 text-white"
+                          >
+                            Yes, cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmCancelId(null)}
+                            className="flex-1 rounded-md border border-gray-300 bg-white py-2 text-gray-700"
+                          >
+                            Keep
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1.5">
+                        <div className="flex gap-2">
+                          {appt.status === "pending" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLastActionId(appt.id);
+                                handleConfirm(appt.id);
+                              }}
+                              disabled={isUpdating}
+                              className="flex-1 rounded-md bg-emerald-700 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isUpdating ? "Confirming..." : "Confirm"}
+                            </button>
+                          )}
+                          <button type="button" onClick={() => startReschedule(appt)} className="flex-1 rounded-md border border-gray-300 py-2 text-gray-700">
+                            Reschedule
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCancelId(appt.id)}
+                          disabled={isCancelling}
+                          className="w-full rounded-md border border-red-200 py-2 text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isCancelling ? "Cancelling..." : "Cancel appointment"}
+                        </button>
+                      </div>
+                    ))}
+                </>
+              )}
+              {actionError && lastActionId === appt.id && (
+                <p role="alert" className="pt-1 text-xs text-red-600">
+                  {actionError}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <table className="hidden w-full text-left text-sm md:table">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
             <th className="px-4 py-3 font-medium">Patient</th>
@@ -313,8 +436,8 @@ function SettingsTab() {
               {DAYS.map((day) => {
                 const dayValue = form.work_hours?.[day.key] || { enabled: false, start: "09:00", end: "17:00" };
                 return (
-                  <div key={day.key} className="flex items-center gap-2 text-xs text-gray-700">
-                    <label className="flex w-24 shrink-0 items-center gap-1.5">
+                  <div key={day.key} className="flex flex-wrap items-center gap-2 border-b border-gray-100 py-1.5 text-xs text-gray-700 md:flex-nowrap md:border-0 md:py-0">
+                    <label className="flex min-h-8 w-full shrink-0 items-center gap-1.5 md:min-h-0 md:w-24">
                       <input
                         type="checkbox"
                         checked={dayValue.enabled}
@@ -328,7 +451,7 @@ function SettingsTab() {
                       value={dayValue.start}
                       disabled={!dayValue.enabled}
                       onChange={(e) => handleDayChange(day.key, "start", e.target.value)}
-                      className="rounded-md border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-50 disabled:text-gray-400"
+                      className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs disabled:bg-gray-50 disabled:text-gray-400 md:flex-none md:py-1"
                     />
                     <span className="text-gray-400">to</span>
                     <input
@@ -336,7 +459,7 @@ function SettingsTab() {
                       value={dayValue.end}
                       disabled={!dayValue.enabled}
                       onChange={(e) => handleDayChange(day.key, "end", e.target.value)}
-                      className="rounded-md border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-50 disabled:text-gray-400"
+                      className="min-w-0 flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs disabled:bg-gray-50 disabled:text-gray-400 md:flex-none md:py-1"
                     />
                   </div>
                 );
@@ -351,7 +474,7 @@ function SettingsTab() {
             type="button"
             onClick={handleSave}
             disabled={saveMutation.isPending}
-            className="rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-800 px-4 py-2.5 text-sm text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto md:py-2"
           >
             {saveMutation.isPending ? "Saving..." : "Save Settings"}
           </button>
@@ -431,7 +554,7 @@ function BlockedTimeTab() {
       <div>
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Add blocked time</h3>
         <div className="space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1">
               <label className="text-xs font-medium text-gray-700">Start</label>
               <input
@@ -481,7 +604,7 @@ function BlockedTimeTab() {
             type="button"
             onClick={handleAdd}
             disabled={createMutation.isPending}
-            className="rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-800 px-4 py-2.5 text-sm text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto md:py-2"
           >
             {createMutation.isPending ? "Adding..." : "Add Block"}
           </button>
@@ -508,7 +631,7 @@ function BlockedTimeTab() {
                 type="button"
                 onClick={() => deleteMutation.mutate(block.id)}
                 disabled={deletingId === block.id}
-                className="shrink-0 font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-9 shrink-0 px-2 font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 md:min-h-0 md:px-0"
               >
                 {deletingId === block.id ? "Removing..." : "Remove"}
               </button>
@@ -525,15 +648,17 @@ export default function ManageBookingPage() {
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-y-1 border-b border-gray-200 p-3 pb-0 md:pb-3">
         <h2 className="text-sm font-semibold text-gray-800">Manage Calendar</h2>
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex w-full items-center gap-4 text-xs md:w-auto">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+              className={`flex-1 border-b-2 py-2.5 text-sm md:flex-none md:border-b-0 md:py-0 md:text-xs ${
+                activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
               {tab.label}
             </button>
