@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { CalendarPlus, RotateCcw } from "lucide-react";
+import { CalendarPlus, EllipsisVertical, Mic, RotateCcw } from "lucide-react";
 import useAgentChat from "../../hooks/useAgentChat";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
@@ -9,6 +9,7 @@ import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
 import VoiceToggleButton from "../../components/chat/VoiceToggleButton";
 import ConversationHoldToggle from "../../components/chat/ConversationHoldToggle";
+import VoiceDock from "../../components/chat/VoiceDock";
 import MyAppointmentsTab from "./MyAppointmentsTab";
 import {
   appointmentChat,
@@ -68,7 +69,7 @@ function ConfirmBookingPanel({ booking, pending, onConfirm, onCancel }) {
           type="button"
           onClick={onConfirm}
           disabled={pending}
-          className="rounded-md bg-emerald-600 px-3 py-1 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 rounded-md bg-emerald-600 px-3 py-2.5 text-sm md:flex-none md:py-1 md:text-xs font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Confirm booking
         </button>
@@ -76,7 +77,7 @@ function ConfirmBookingPanel({ booking, pending, onConfirm, onCancel }) {
           type="button"
           onClick={onCancel}
           disabled={pending}
-          className="rounded-md border border-emerald-300 px-3 py-1 font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 rounded-md border border-emerald-300 px-3 py-2.5 text-sm md:flex-none md:py-1 md:text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancel booking
         </button>
@@ -94,6 +95,8 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
   // same pattern as VisitNotesAI/Wellness — My Appointments stays
   // independent, not blocked by this.
   const [started, setStarted] = useState(false);
+  const [typeMode, setTypeMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { setAssistantHidden } = useOutletContext() || {};
 
   useEffect(() => {
@@ -309,14 +312,45 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 short:min-h-80">
       <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2 bg-[#F0FDF4]">
+        <div className="shrink-0 text-xs flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-gray-100 p-2 pb-0 bg-[#F0FDF4] md:gap-2 md:pb-2">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
             <CalendarPlus size={14} className="text-emerald-600" />
             Appointments
           </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          {activeTab === "book" && started && (
+            <div className="relative ml-auto md:hidden">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="More options"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500"
+              >
+                <EllipsisVertical size={18} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleStartOver();
+                      }}
+                      disabled={pending}
+                      className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 active:bg-gray-50 disabled:opacity-40"
+                    >
+                      <RotateCcw size={16} className="text-gray-500" />
+                      Start a new session
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <div className="flex w-full items-center gap-3 text-sm text-gray-500 md:w-auto">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -325,13 +359,15 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
                   if (tab.key !== "book" && voice.isActive) voice.stop();
                   setActiveTab(tab.key);
                 }}
-                className={activeTab === tab.key ? "font-medium text-emerald-600" : "text-gray-500 hover:text-gray-700"}
+                className={`flex-1 border-b-2 py-2 md:flex-none md:border-b-0 md:py-0 ${
+                  activeTab === tab.key ? "border-emerald-600 font-medium text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
               >
                 {tab.label}
               </button>
             ))}
             {activeTab === "book" && started && (
-              <>
+              <span className="hidden md:contents">
                 <VoiceToggleButton voice={voice} />
                 <ConversationHoldToggle voice={voice} />
                 <button
@@ -344,7 +380,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
                   <RotateCcw size={12} />
                   Start New Session
                 </button>
-              </>
+              </span>
             )}
           </div>
         </div>
@@ -357,7 +393,7 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
               <select
                 value={selectedPhysicianId || ""}
                 onChange={handlePhysicianSelectChange}
-                className="w-full rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700"
+                className="w-full rounded-md border border-gray-200 bg-white px-2 py-2 text-sm text-gray-700 md:py-1 md:text-xs"
               >
                 <option value="">{physicianSelectionRequired ? "Select nearest physician…" : "Use assigned physician"}</option>
                 {physicians.map((p) => (
@@ -405,7 +441,11 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
       )}
 
       {activeTab === "book" && started && voice.state === "speaking" && (
-        <div className="shrink-0 flex items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+        <div
+          className={`shrink-0 items-center justify-between gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700 md:flex ${
+            typeMode ? "flex" : "hidden"
+          }`}
+        >
           <span>Speaking… tap Answer now or the mic to interrupt and answer.</span>
           <button
             type="button"
@@ -417,13 +457,35 @@ export default function AppointmentsPanel({ initialTab, onBooked }) {
         </div>
       )}
 
-      {activeTab === "book" && started && (
-        <AgentChatComposer
-          onSubmit={(text) => sendMessage(text)}
-          disabled={pending}
-          placeholder="Tell me what kind of visit you need and when. Type, or tap the microphone to talk continuously."
-          voice={voice}
+      {activeTab === "book" && started && !typeMode && (
+        <VoiceDock
+          state={voice.state}
+          error={voice.error}
+          onToggleMic={voice.toggle}
+          onPause={voice.toggleListening}
+          onContinue={voice.toggleListening}
+          onAnswerNow={handleTalkNow}
+          onType={() => setTypeMode(true)}
         />
+      )}
+
+      {activeTab === "book" && started && (
+        <div className={`shrink-0 flex-col gap-1.5 md:flex ${typeMode ? "flex" : "hidden"}`}>
+          <button
+            type="button"
+            onClick={() => setTypeMode(false)}
+            className="flex min-h-11 items-center gap-1.5 self-center rounded-full bg-emerald-50 px-4 text-sm font-medium text-emerald-700 md:hidden"
+          >
+            <Mic size={14} />
+            Use voice instead
+          </button>
+          <AgentChatComposer
+            onSubmit={(text) => sendMessage(text)}
+            disabled={pending}
+            placeholder="Tell me what kind of visit you need and when. Type, or tap the microphone to talk continuously."
+            voice={voice}
+          />
+        </div>
       )}
     </div>
   );

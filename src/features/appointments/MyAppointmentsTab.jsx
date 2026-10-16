@@ -10,6 +10,7 @@ export default function MyAppointmentsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancelingId, setCancelingId] = useState(null);
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
 
   const loadAppointments = () => {
     setLoading(true);
@@ -49,8 +50,8 @@ export default function MyAppointmentsTab() {
       {appointments.map((appt) => {
         const cancellable = appt.status === "confirmed" || appt.status === "pending";
         return (
-          <div key={appt.id} className="flex items-center justify-between gap-2 rounded-md border border-gray-100 p-2 text-xs">
-            <div className="min-w-0">
+          <div key={appt.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-100 p-3 text-sm md:flex-nowrap md:p-2 md:text-xs">
+            <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-700">{appt.physician_name || "Physician"}</div>
               <div className="text-gray-500">{formatDateTime(appt.appointment_datetime)}</div>
               <div className="text-gray-400">
@@ -64,12 +65,46 @@ export default function MyAppointmentsTab() {
                   type="button"
                   onClick={() => handleCancel(appt.id)}
                   disabled={cancelingId === appt.id}
-                  className="text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="hidden text-red-600 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40 md:inline"
                 >
                   {cancelingId === appt.id ? "Cancelling..." : "Cancel"}
                 </button>
               )}
             </div>
+            {cancellable &&
+              (confirmCancelId === appt.id ? (
+                <div className="w-full space-y-2 rounded-md border border-red-200 bg-red-50 p-2.5 md:hidden">
+                  <p className="text-sm text-red-800">Cancel this appointment?</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmCancelId(null);
+                        handleCancel(appt.id);
+                      }}
+                      className="flex-1 rounded-md bg-red-600 py-2 text-white"
+                    >
+                      Yes, cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmCancelId(null)}
+                      className="flex-1 rounded-md border border-gray-300 bg-white py-2 text-gray-700"
+                    >
+                      Keep
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancelId(appt.id)}
+                  disabled={cancelingId === appt.id}
+                  className="w-full rounded-md border border-red-200 py-2 text-red-600 disabled:cursor-not-allowed disabled:opacity-40 md:hidden"
+                >
+                  {cancelingId === appt.id ? "Cancelling..." : "Cancel appointment"}
+                </button>
+              ))}
           </div>
         );
       })}
