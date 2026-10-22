@@ -1,21 +1,36 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { X, CheckCircle2, Calendar } from "lucide-react";
-import { uploadEFaxConfig } from "../../api/hospitalApi";
+import { uploadEFaxConfig, getEfaxSettings } from "../../api/hospitalApi";
 import { setJobsId } from "../../redux/jobsIdslice";
 
 export default function EfaxConfigModal({ onClose }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [originatingFaxNumber, setOriginatingFaxNumber] = useState("");
+  const [receivingFaxNumber, setReceivingFaxNumber] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [hospitalName, setHospitalName] = useState("");
   const [saveDischargeDoc, setSaveDischargeDoc] = useState(true);
   const [formError, setFormError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+
+  const { data: settings, isLoading: settingsLoading } = useQuery({
+    queryKey: ["efax-settings"],
+    queryFn: getEfaxSettings,
+    staleTime: 0,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!settings) return;
+    setOriginatingFaxNumber((v) => v || settings.originating_fax_number || "");
+    setReceivingFaxNumber((v) => v || settings.receiving_fax_number || "");
+    setHospitalName((v) => v || settings.hospital_name || "");
+  }, [settings]);
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: uploadEFaxConfig,
@@ -51,6 +66,7 @@ export default function EfaxConfigModal({ onClose }) {
     // hardcoded server-side, not sent from here.
     mutate({
       originating_fax_number: originatingFaxNumber.trim(),
+      receiving_fax_number: receivingFaxNumber.trim(),
       from: dateFrom,
       to: dateTo,
       hospital_name: hospitalName.trim(),
@@ -62,7 +78,10 @@ export default function EfaxConfigModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4">
       <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white pb-safe shadow-lg sm:max-h-[90dvh] sm:overflow-y-auto sm:rounded-2xl sm:w-[460px]">
         <div className="flex items-center justify-between border-b border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-emerald-700">eFax Configuration</h2>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-emerald-700">eFax Configuration</h2>
+            {settings?.facility_name && <p className="truncate text-xs text-gray-400">{settings.facility_name}</p>}
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -87,8 +106,33 @@ export default function EfaxConfigModal({ onClose }) {
                 type="text"
                 value={originatingFaxNumber}
                 onChange={(e) => setOriginatingFaxNumber(e.target.value)}
-                placeholder="Type here..."
-                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
+                placeholder={settingsLoading ? "Loading..." : "Type here..."}
+                disabled={settingsLoading}
+                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700 disabled:bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">Receiving Fax Number</label>
+              <input
+                type="text"
+                value={receivingFaxNumber}
+                onChange={(e) => setReceivingFaxNumber(e.target.value)}
+                placeholder={settingsLoading ? "Loading..." : "Type here..."}
+                disabled={settingsLoading}
+                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700 disabled:bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">Hospital Name</label>
+              <input
+                type="text"
+                value={hospitalName}
+                onChange={(e) => setHospitalName(e.target.value)}
+                placeholder={settingsLoading ? "Loading..." : "Type here..."}
+                disabled={settingsLoading}
+                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700 disabled:bg-gray-50"
               />
             </div>
 
@@ -120,17 +164,6 @@ export default function EfaxConfigModal({ onClose }) {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">Hospital Name</label>
-              <input
-                type="text"
-                value={hospitalName}
-                onChange={(e) => setHospitalName(e.target.value)}
-                placeholder="Type here..."
-                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm text-gray-700"
-              />
             </div>
 
             <div>
