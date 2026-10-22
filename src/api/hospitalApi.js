@@ -52,6 +52,7 @@ export const getChatHistory = (params) =>
   http.get(`/chat-history?${new URLSearchParams(params)}`, { withAuth: true });
 export const uploadEFaxConfig = (data) => http.post("/getfax", data, { withAuth: true });
 export const getEfaxSettings = () => http.get("/facility/fax-settings", { withAuth: true });
+export const saveEfaxConfig = (data) => http.post("/efax/save-config", data, { withAuth: true });
 export const uploadPlan = (data) => http.post("/upload", data, { withAuth: true, isMultipart: true });
 export const uploadPatientImage = (data) => http.post("/ocr-upload", data, { withAuth: true, isMultipart: true });
 export const deletePatient = (patient_type, patient_name, patient_date) =>

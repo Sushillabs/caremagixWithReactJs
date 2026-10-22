@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { X, CheckCircle2, Calendar } from "lucide-react";
-import { uploadEFaxConfig, getEfaxSettings } from "../../api/hospitalApi";
+import { uploadEFaxConfig, getEfaxSettings, saveEfaxConfig } from "../../api/hospitalApi";
 import { setJobsId } from "../../redux/jobsIdslice";
 
 export default function EfaxConfigModal({ onClose }) {
@@ -17,11 +17,13 @@ export default function EfaxConfigModal({ onClose }) {
   const [saveDischargeDoc, setSaveDischargeDoc] = useState(true);
   const [formError, setFormError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [savedMessage, setSavedMessage] = useState(null);
 
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ["efax-settings"],
     queryFn: getEfaxSettings,
     staleTime: 0,
+    gcTime: 0,
     retry: false,
   });
 
@@ -42,6 +44,57 @@ export default function EfaxConfigModal({ onClose }) {
     },
   });
 
+  const {
+    mutate: saveSettings,
+    isPending: isSaving,
+    error: saveError,
+    reset: resetSave,
+  } = useMutation({
+    mutationFn: saveEfaxConfig,
+    onSuccess: (response) => {
+      setOriginatingFaxNumber(response?.originating_fax_number ?? originatingFaxNumber);
+      setReceivingFaxNumber(response?.receiving_fax_number ?? receivingFaxNumber);
+      setHospitalName(response?.hospital_name ?? hospitalName);
+      setSavedMessage("Settings saved.");
+    },
+  });
+
+  const saveErrorMessage = (err) => {
+    const status = err?.response?.status;
+    if (status === 400) return "Please fill at least one field";
+    if (status === 404) return "Facility not found";
+    return err?.response?.data?.message || err?.response?.data?.error || "Server error. Please try again.";
+  };
+
+  const handleSaveSettings = () => {
+    setSavedMessage(null);
+    resetSave();
+    const orig = originatingFaxNumber.replace(/\D/g, "");
+    const recv = receivingFaxNumber.replace(/\D/g, "");
+    const hosp = hospitalName.trim();
+
+    if (!originatingFaxNumber.trim() && !receivingFaxNumber.trim() && !hosp) {
+      setFormError("Please fill at least one field");
+      return;
+    }
+    const isBadFax = (raw, digits) => raw.trim() && (digits.length < 10 || digits.length > 15);
+    if (isBadFax(originatingFaxNumber, orig) || isBadFax(receivingFaxNumber, recv)) {
+      setFormError("Fax numbers must have 10-15 digits.");
+      return;
+    }
+    if (hosp.length > 200) {
+      setFormError("Hospital name must be 200 characters or less.");
+      return;
+    }
+    setFormError(null);
+
+    saveSettings({
+      ...(orig && { originating_fax_number: orig }),
+      ...(recv && { receiving_fax_number: recv }),
+      ...(hosp && { hospital_name: hosp }),
+    });
+  };
+
   // Sidebar (and this modal, mounted inside it) lives outside the route
   // <Outlet>, so it survives navigation — closing it explicitly here is
   // required, navigate() alone would leave it open on top of the Jobs page.
@@ -55,21 +108,26 @@ export default function EfaxConfigModal({ onClose }) {
   }, [successMessage, navigate, onClose]);
 
   const handleSubmit = () => {
-    if (!originatingFaxNumber.trim() || !dateFrom || !dateTo) {
+    const orig = originatingFaxNumber.replace(/\D/g, "");
+    const recv = receivingFaxNumber.replace(/\D/g, "");
+    const hosp = hospitalName.trim();
+    if (!orig || !dateFrom || !dateTo) {
       setFormError("Originating fax number and both dates are required.");
       return;
     }
     setFormError(null);
+    setSavedMessage(null);
+    resetSave();
 
     // Wire keys verified against Efax.py's /getfax route directly — "from"/"to",
     // not date_from/date_to. patient_type/confirm/destination_fax_number are
     // hardcoded server-side, not sent from here.
     mutate({
-      originating_fax_number: originatingFaxNumber.trim(),
-      receiving_fax_number: receivingFaxNumber.trim(),
+      originating_fax_number: orig,
+      ...(recv && { receiving_fax_number: recv }),
       from: dateFrom,
       to: dateTo,
-      hospital_name: hospitalName.trim(),
+      ...(hosp && { hospital_name: hosp }),
       note_doc: saveDischargeDoc ? "yes" : "no",
     });
   };
@@ -188,6 +246,8 @@ export default function EfaxConfigModal({ onClose }) {
             </div>
 
             {formError && <p className="text-xs text-red-600">{formError}</p>}
+            {saveError && <p className="text-xs text-red-600">{saveErrorMessage(saveError)}</p>}
+            {savedMessage && <p className="text-xs text-emerald-700">{savedMessage}</p>}
             {error && (
               <p className="text-xs text-red-600">
                 {error?.response?.data?.message || error?.response?.data?.error || "Error submitting eFax configuration."}
@@ -196,14 +256,24 @@ export default function EfaxConfigModal({ onClose }) {
 
             <hr className="border-gray-100" />
 
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isPending}
-              className="w-full rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-            >
-              {isPending ? "Submitting..." : "Submit"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSaveSettings}
+                disabled={isSaving || isPending || settingsLoading}
+                className="flex-1 rounded-md border border-emerald-700 bg-white py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save Settings"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isPending || isSaving}
+                className="flex-1 rounded-md bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {isPending ? "Fetching..." : "Get Fax"}
+              </button>
+            </div>
           </div>
         )}
       </div>
