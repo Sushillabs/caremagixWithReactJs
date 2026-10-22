@@ -301,7 +301,7 @@ export default function PatientDetails() {
     dispatch(clearChat());
     dispatch(addDischargePatientDate(payload));
     dispatch(fetchPatientChat(payload));
-    navigate(".");
+    navigate(".", { state: { tab: "summary" } });
   };
 
   const uploadItems = byRole(UPLOAD_ITEMS, role);

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getChatHistory } from "../../api/hospitalApi";
 import ReactMarkdown from "react-markdown";
@@ -48,6 +49,14 @@ const HIDDEN_QUESTION_KEYWORDS_BY_ROLE = {
 
 export default function ConversationCard() {
   const [activeTab, setActiveTab] = useState("conversation");
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!location.state?.tab) return;
+    setActiveTab(location.state.tab);
+    // Clear it so Back to this history entry doesn't re-force the tab.
+    navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null });
+  }, [location.key]);
   const { data: chatData, loading: chatLoading, error: chatError, isAskPending: askPending, mode } = useSelector((state) => state.askQ) || {};
   const conversation = useSelector((state) => state.askQ?.value) || [];
   const singleData = useSelector((state) => state.patientsingledata?.value);
@@ -134,7 +143,7 @@ export default function ConversationCard() {
     );
   };
 
-  const summaryTable = isMedication ? null : chatData?.[0];
+  const summaryTable = !isMedication && typeof chatData?.[0] === "string" ? chatData[0].trim() : "";
   // index 0 is the summary table, the last item is the MMTA question (not shown here), everything between is the default question list
   const rawDefaultQuestions = !isMedication && chatData?.length > 2 ? chatData.slice(1, -1) : [];
   const hiddenKeywords = HIDDEN_QUESTION_KEYWORDS_BY_ROLE[role] || [];
