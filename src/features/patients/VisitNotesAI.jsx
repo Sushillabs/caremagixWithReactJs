@@ -213,7 +213,7 @@ export default function VisitNotesAI() {
   // hands the mic back. speakAbortRef lets "Talk now" cut the fetch itself,
   // not just the playback.
   const speakAbortRef = useRef(null);
-  const speak = async (text, { endSession = false } = {}) => {
+  const speak = async (text) => {
     if (!text) return;
     const controller = new AbortController();
     speakAbortRef.current = controller;
@@ -232,8 +232,7 @@ export default function VisitNotesAI() {
       }
     } finally {
       if (speakAbortRef.current === controller) speakAbortRef.current = null;
-      if (endSession) voice.stop();
-      else voice.resumeAfterTurn();
+      voice.resumeAfterTurn();
     }
   };
 
@@ -250,12 +249,13 @@ export default function VisitNotesAI() {
 
   const handleGenerate = () => {
     speakAbortRef.current?.abort();
-    voice.interruptSpeech();
+    voice.stop();
     stopAndGenerate();
   };
 
   useEffect(() => {
-    if (lastResponse?.message) speak(lastResponse.message, { endSession: lastResponse.status === "generated" });
+    if (lastResponse?.status === "generated") voice.stop();
+    else if (lastResponse?.message) speak(lastResponse.message);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastResponse]);
 
@@ -296,7 +296,7 @@ export default function VisitNotesAI() {
         {activeTab === "chat" && (
           <button
             type="button"
-            onClick={stopAndGenerate}
+            onClick={handleGenerate}
             disabled={pending || !historyLoaded}
             className="ml-auto min-h-9 shrink-0 rounded-full bg-emerald-800 px-3 compact:min-h-7 text-xs font-medium text-white disabled:opacity-50 md:hidden"
           >
