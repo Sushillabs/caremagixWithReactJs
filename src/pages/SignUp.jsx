@@ -7,12 +7,40 @@ import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { getHospitals, registerHospital, verifyEmail, signUpAPI } from '../api/hospitalApi';
-import { useSelector, useDispatch } from 'react-redux';
-import { addHospitalNames } from '../redux/hospitalSlice';
+import {
+  getHospitals,
+  registerHospital,
+  verifyEmail,
+  getFacilities,
+  registerFacility,
+  verifyFacilityEmail,
+  signUpAPI,
+} from '../api/hospitalApi';
 
 const inputClass = 'border border-gray-300 w-full p-2 rounded text-sm';
 const buttonClass = 'bg-resblue w-full p-2 rounded text-white font-bold hover:cursor-pointer hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed';
+const EMAIL_PATTERN = { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Please enter a valid email' };
+
+const ORG_BY_ROLE = {
+  Physician: {
+    prefix: 'hospital',
+    label: 'Hospital',
+    selectLabel: 'Select Hospital',
+    fetchList: getHospitals,
+    verify: verifyEmail,
+    idKey: 'hospital_id',
+  },
+  Caregiver: {
+    prefix: 'facility',
+    label: 'Facility',
+    selectLabel: 'Select Nursing Facility',
+    fetchList: getFacilities,
+    verify: verifyFacilityEmail,
+    idKey: 'facility_id',
+  },
+};
+
+const FACILITY_TYPES = ['SNF caregiver', 'homecare homebased'];
 
 const apiErrorMessage = (error) => {
   if (!error?.response) return 'Server is not reachable. Please try again later.';
@@ -41,43 +69,50 @@ const Popup = ({ popup, onClose }) => {
 
 const SignUp = () => {
   const [role, setRole] = useState('');
-  const [selectedHospitalId, setSelectedHospitalId] = useState('');
-  const [isAddingNewHospital, setIsAddingNewHospital] = useState(false);
+  const [orgs, setOrgs] = useState([]);
+  const [selectedOrgId, setSelectedOrgId] = useState('');
+  const [isAddingNewOrg, setIsAddingNewOrg] = useState(false);
   const [verifyEmailValue, setVerifyEmailValue] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [popup, setPopup] = useState(null);
   const resetTimer = useRef(null);
+  const roleRef = useRef('');
 
-  const hospitalForm = useForm();
+  const orgForm = useForm();
   const signUpForm = useForm();
 
-  const hospitalNames = useSelector((state) => state.hospitalnames.value);
-  const dispatch = useDispatch();
-
-  const selectedHospital = hospitalNames.find((item) => String(item.id) === selectedHospitalId) || null;
+  const org = ORG_BY_ROLE[role] || null;
+  const selectedOrg = orgs.find((item) => String(item.id) === selectedOrgId) || null;
   const isPhysician = role === 'Physician';
+  const isCaregiver = role === 'Caregiver';
 
-  const fetchHospitals = async () => {
+  const fetchOrgs = async (forRole) => {
     try {
-      const res = await getHospitals();
-      dispatch(addHospitalNames(res?.status === 'success' ? res.data : []));
+      const res = await ORG_BY_ROLE[forRole].fetchList();
+      if (roleRef.current === forRole) setOrgs(res?.status === 'success' ? res.data : []);
     } catch (error) {
-      setPopup({ message: apiErrorMessage(error), isError: true });
+      if (roleRef.current === forRole) setPopup({ message: apiErrorMessage(error), isError: true });
     }
   };
 
   useEffect(() => () => clearTimeout(resetTimer.current), []);
 
-  const resetAll = () => {
-    setRole('');
-    setSelectedHospitalId('');
-    setIsAddingNewHospital(false);
+  const clearSelection = () => {
+    setOrgs([]);
+    setSelectedOrgId('');
+    setIsAddingNewOrg(false);
     setVerifyEmailValue('');
     setShowPassword(false);
-    setPopup(null);
-    hospitalForm.reset();
+    orgForm.reset();
     signUpForm.reset();
+  };
+
+  const resetAll = () => {
+    roleRef.current = '';
+    setRole('');
+    setPopup(null);
+    clearSelection();
   };
 
   const showSuccessThenReset = (message) => {
@@ -87,18 +122,19 @@ const SignUp = () => {
   };
 
   const handleRoleChange = (e) => {
-    setRole(e.target.value);
-    setSelectedHospitalId('');
-    setIsAddingNewHospital(false);
-    if (e.target.value === 'Physician') fetchHospitals();
+    const nextRole = e.target.value;
+    roleRef.current = nextRole;
+    setRole(nextRole);
+    clearSelection();
+    if (ORG_BY_ROLE[nextRole]) fetchOrgs(nextRole);
   };
 
-  const handleHospitalChange = (e) => {
+  const handleOrgChange = (e) => {
     const id = e.target.value;
-    setSelectedHospitalId(id);
-    setIsAddingNewHospital(false);
-    const hospital = hospitalNames.find((item) => String(item.id) === id);
-    setVerifyEmailValue(hospital?.email_id || '');
+    setSelectedOrgId(id);
+    setIsAddingNewOrg(false);
+    const item = orgs.find((o) => String(o.id) === id);
+    setVerifyEmailValue(item?.email_id || '');
   };
 
   const runRequest = async (request) => {
@@ -113,19 +149,28 @@ const SignUp = () => {
     }
   };
 
-  const onRegisterHospital = (values) =>
+  const onRegisterOrg = (values) =>
     runRequest(() =>
-      registerHospital({
-        hospital_name: values.hospital_name,
-        address: values.hospital_address,
-        email: values.hospital_email,
-        phone: values.hospital_phone,
-      })
+      isPhysician
+        ? registerHospital({
+            hospital_name: values.name,
+            address: values.address,
+            email: values.email,
+            phone: values.phone,
+          })
+        : registerFacility({
+            facility_name: values.name,
+            facility_type: values.facility_type,
+            address: values.address,
+            email: values.email,
+            phone: values.phone,
+            beds_available: values.beds_available,
+          })
     );
 
   const onVerifyEmail = (e) => {
     e.preventDefault();
-    runRequest(() => verifyEmail({ hospital_id: selectedHospital?.id, email: verifyEmailValue }));
+    runRequest(() => org.verify({ [org.idKey]: selectedOrg?.id, email: verifyEmailValue }));
   };
 
   const onSignUp = (values) =>
@@ -137,16 +182,17 @@ const SignUp = () => {
         mobile_number: values.mobile_number,
         password: values.password,
         role,
-        hospital_id: selectedHospital?.id,
-        specialization: values.specialization,
-        npi_number: values.npi_number.trim(),
+        hospital_id: isPhysician ? selectedOrg?.id : undefined,
+        specialization: isPhysician ? values.specialization : '',
+        npi_number: isPhysician ? values.npi_number.trim() : '',
+        facility_id: isCaregiver ? selectedOrg?.id : undefined,
         poa_full_name: '',
         poa_relationship: '',
         is_poa: false,
       })
     );
 
-  const hErrors = hospitalForm.formState.errors;
+  const oErrors = orgForm.formState.errors;
   const sErrors = signUpForm.formState.errors;
 
   const withDigitsOnly = (reg) => ({
@@ -157,7 +203,37 @@ const SignUp = () => {
     },
   });
   const digitsOnly = (field) => withDigitsOnly(signUpForm.register(field.name, field.rules));
-  const hospitalPhoneField = withDigitsOnly(hospitalForm.register('hospital_phone', { required: 'Phone number is required' }));
+  const orgPhoneField = withDigitsOnly(orgForm.register('phone', { required: 'Phone number is required' }));
+
+  const orgNameField = (
+    <div className='relative'>
+      <label htmlFor={`${org?.prefix}_name`}>{org?.label} Name</label>
+      <input
+        id={`${org?.prefix}_name`}
+        type='text'
+        placeholder={`${org?.label} Name`}
+        className={`${inputClass} pr-9`}
+        {...orgForm.register('name', { required: `${org?.label} Name is required` })}
+      />
+      <CIcon icon={cilHospital} className="h-4 w-6 absolute right-2 top-7 text-gray-500" />
+      <FieldError error={oErrors.name} />
+    </div>
+  );
+
+  const orgAddressField = (
+    <div className='relative'>
+      <label htmlFor={`${org?.prefix}_address`}>{org?.label} Address</label>
+      <input
+        id={`${org?.prefix}_address`}
+        type='text'
+        placeholder={`${org?.label} Address`}
+        className={`${inputClass} pr-9`}
+        {...orgForm.register('address', { required: `${org?.label} Address is required` })}
+      />
+      <CIcon icon={cilHospital} className="h-4 w-6 absolute right-2 top-7 text-gray-500" />
+      <FieldError error={oErrors.address} />
+    </div>
+  );
 
   return (
     <div className='grid grid-cols-12 md:ml-48 md:mr-48 mt-10 gap-1 rounded shadow-2xl border border-gray-300'>
@@ -183,96 +259,100 @@ const SignUp = () => {
           ))}
         </div>
 
-        {isPhysician && <div>
-          <select value={selectedHospitalId} onChange={handleHospitalChange} required className={inputClass}>
-            <option value=''>Select Hospital</option>
-            {hospitalNames.map((hospital) => (
+        {org && <div>
+          <select value={selectedOrgId} onChange={handleOrgChange} required className={inputClass}>
+            <option value=''>{org.selectLabel}</option>
+            {orgs.map((item) => (
               <option
-                key={hospital.id}
-                value={String(hospital.id)}
-                style={hospital.email_confirmed ? undefined : { background: '#ccc' }}
+                key={item.id}
+                value={String(item.id)}
+                style={item.email_confirmed ? undefined : { background: '#ccc' }}
               >
-                {hospital.name}{!hospital.email_confirmed && '(Not Verified)'}
+                {item.name}{!item.email_confirmed && '(Not Verified)'}
               </option>
             ))}
           </select>
-          {!selectedHospital && <div className='text-sm text-addhosblue hover:cursor-pointer hover:underline w-fit mt-1' onClick={() => setIsAddingNewHospital(true)}>
+          {!selectedOrg && <div className='text-sm text-addhosblue hover:cursor-pointer hover:underline w-fit mt-1' onClick={() => setIsAddingNewOrg(true)}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5 inline-block">
               <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
             </svg>
-            <span>  Add New Hospital</span>
+            <span>  Add New {org.label}</span>
           </div>}
         </div>}
 
-        {isPhysician && isAddingNewHospital && !selectedHospital && <form onSubmit={hospitalForm.handleSubmit(onRegisterHospital)} noValidate className='text-sm flex flex-col gap-3 font-bold'>
-          <div className='relative'>
-            <label htmlFor='hospital_name'>Hospital Name</label>
-            <input
-              id='hospital_name'
-              type='text'
-              placeholder='Hospital Name'
-              className={`${inputClass} pr-9`}
-              {...hospitalForm.register('hospital_name', { required: 'Hospital Name is required' })}
-            />
-            <CIcon icon={cilHospital} className="h-4 w-6 absolute right-2 top-7 text-gray-500" />
-            <FieldError error={hErrors.hospital_name} />
-          </div>
-          <div className='relative'>
-            <label htmlFor='hospital_address'>Hospital Address</label>
-            <input
-              id='hospital_address'
-              type='text'
-              placeholder='Hospital Address'
-              className={`${inputClass} pr-9`}
-              {...hospitalForm.register('hospital_address', { required: 'Hospital Address is required' })}
-            />
-            <CIcon icon={cilHospital} className="h-4 w-6 absolute right-2 top-7 text-gray-500" />
-            <FieldError error={hErrors.hospital_address} />
-          </div>
+        {org && isAddingNewOrg && !selectedOrg && <form onSubmit={orgForm.handleSubmit(onRegisterOrg)} noValidate className='text-sm flex flex-col gap-3 font-bold'>
+          {orgNameField}
+          {isCaregiver && <div className='grid grid-cols-2 gap-2'>
+            <div className='col-span-2 md:col-span-1'>
+              <label htmlFor='facility_type'>Facility Type</label>
+              <select
+                id='facility_type'
+                className={`${inputClass} font-normal`}
+                {...orgForm.register('facility_type', { required: 'Facility Type is required' })}
+              >
+                <option value=''>Facility Type</option>
+                {FACILITY_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
+              <FieldError error={oErrors.facility_type} />
+            </div>
+            <div className='col-span-2 md:col-span-1'>
+              <label htmlFor='facility_no_beds'>No of Beds Available</label>
+              <input
+                id='facility_no_beds'
+                type='number'
+                min={0}
+                step={1}
+                className={inputClass}
+                {...orgForm.register('beds_available', {
+                  required: 'No of Beds Available is required',
+                  pattern: { value: /^\d+$/, message: 'Please enter a whole number' },
+                })}
+              />
+              <FieldError error={oErrors.beds_available} />
+            </div>
+          </div>}
+          {orgAddressField}
           <div className='grid grid-cols-2 gap-2'>
             <div className='col-span-2 md:col-span-1'>
-              <label htmlFor='hospital_email'>Email</label>
+              <label htmlFor={`${org.prefix}_email`}>Email</label>
               <input
-                id='hospital_email'
+                id={`${org.prefix}_email`}
                 type='email'
                 placeholder='Email'
                 className={inputClass}
-                {...hospitalForm.register('hospital_email', {
-                  required: 'Email is required',
-                  pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Please enter a valid email' },
-                })}
+                {...orgForm.register('email', { required: 'Email is required', pattern: EMAIL_PATTERN })}
               />
-              <FieldError error={hErrors.hospital_email} />
+              <FieldError error={oErrors.email} />
             </div>
             <div className='col-span-2 md:col-span-1'>
-              <label htmlFor='hospital_phone'>Phone</label>
+              <label htmlFor={`${org.prefix}_phone`}>Phone</label>
               <div className='flex items-stretch'>
                 <span className='flex items-center px-2 border border-r-0 border-gray-300 rounded-l text-sm font-normal text-gray-600 bg-gray-50'>+1</span>
                 <input
-                  id='hospital_phone'
+                  id={`${org.prefix}_phone`}
                   type='tel'
                   inputMode='numeric'
                   maxLength={10}
                   placeholder='Phone Number'
                   className={`${inputClass} rounded-l-none min-w-0`}
-                  {...hospitalPhoneField}
+                  {...orgPhoneField}
                 />
               </div>
-              <FieldError error={hErrors.hospital_phone} />
+              <FieldError error={oErrors.phone} />
             </div>
           </div>
-          <button type='submit' disabled={busy} className={buttonClass}>Register Hospital</button>
+          <button type='submit' disabled={busy} className={buttonClass}>Register {org.label}</button>
         </form>}
 
-        {isPhysician && selectedHospital?.email_confirmed === false && <form onSubmit={onVerifyEmail} className='grid grid-cols-5 gap-2 items-end text-sm'>
+        {org && selectedOrg?.email_confirmed === false && <form onSubmit={onVerifyEmail} className='grid grid-cols-5 gap-2 items-end text-sm'>
           <div className='col-span-5 sm:col-span-4'>
-            <label htmlFor='hospital_email_verify' className='font-bold'>Hospital Email</label>
+            <label htmlFor={`${org.prefix}_email_verify`} className='font-bold'>{org.label} Email</label>
             <input
-              id='hospital_email_verify'
+              id={`${org.prefix}_email_verify`}
               type='email'
               value={verifyEmailValue}
               onChange={(e) => setVerifyEmailValue(e.target.value)}
-              placeholder='Hospital Email'
+              placeholder={`${org.label} Email`}
               required
               className={inputClass}
             />
@@ -282,7 +362,7 @@ const SignUp = () => {
           </div>
         </form>}
 
-        {isPhysician && selectedHospital?.email_confirmed === true && <form onSubmit={signUpForm.handleSubmit(onSignUp)} noValidate className='text-sm flex flex-col gap-3'>
+        {org && selectedOrg?.email_confirmed === true && <form onSubmit={signUpForm.handleSubmit(onSignUp)} noValidate className='text-sm flex flex-col gap-3'>
           <div className='grid grid-cols-2 gap-2'>
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor='first_name'>First Name</label>
@@ -322,10 +402,7 @@ const SignUp = () => {
                 id='email'
                 type='email'
                 className={inputClass}
-                {...signUpForm.register('email', {
-                  required: 'Email is required',
-                  pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Please enter a valid email' },
-                })}
+                {...signUpForm.register('email', { required: 'Email is required', pattern: EMAIL_PATTERN })}
               />
               <FieldError error={sErrors.email} />
             </div>
@@ -349,7 +426,7 @@ const SignUp = () => {
               <FieldError error={sErrors.mobile_number} />
             </div>
           </div>
-          <div className='grid grid-cols-2 gap-2'>
+          {isPhysician && <div className='grid grid-cols-2 gap-2'>
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor='npi_number'>NPI Number</label>
               <input
@@ -386,7 +463,7 @@ const SignUp = () => {
               />
               <FieldError error={sErrors.npi_number_confirm} />
             </div>
-          </div>
+          </div>}
           <div className='relative'>
             <label htmlFor='password'>Password</label>
             <input
@@ -410,7 +487,7 @@ const SignUp = () => {
             </button>
             <FieldError error={sErrors.password} />
           </div>
-          <div>
+          {isPhysician && <div>
             <label htmlFor='specialization'>Specialization</label>
             <input
               id='specialization'
@@ -422,7 +499,7 @@ const SignUp = () => {
               })}
             />
             <FieldError error={sErrors.specialization} />
-          </div>
+          </div>}
           <button type='submit' disabled={busy} className={buttonClass}>Sign up</button>
         </form>}
       </div>

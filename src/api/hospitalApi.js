@@ -19,6 +19,9 @@ function fetchVoiceSpeakStream(base, text, signal) {
 export const registerHospital = (data) => http.post("/org_register/hospital_verify", data);
 export const getHospitals = () => http.get("/get_details?type=hospital");
 export const verifyEmail = (data) => http.put("/org_register/hospital_edit", data);
+export const getFacilities = () => http.get("/get_details?type=snf");
+export const registerFacility = (data) => http.post("/org_register/snf_verify", data);
+export const verifyFacilityEmail = (data) => http.put("/org_register/snf_edit", data);
 export const signUpAPI = (data) => http.post("/register_category", data);
 export const signInAPI = (data) => http.post("/login", data);
 export const forgotPasswordAPI = (data) => http.post("/forgot_password", data);
