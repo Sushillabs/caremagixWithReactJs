@@ -86,6 +86,9 @@ const SignUp = () => {
   const selectedOrg = orgs.find((item) => String(item.id) === selectedOrgId) || null;
   const isPhysician = role === 'Physician';
   const isCaregiver = role === 'Caregiver';
+  const isPatient = role === 'Patient';
+  const showSignUpForm = isPatient || (org && selectedOrg?.email_confirmed === true);
+  const isPoa = signUpForm.watch('is_poa');
 
   const fetchOrgs = async (forRole) => {
     try {
@@ -186,9 +189,9 @@ const SignUp = () => {
         specialization: isPhysician ? values.specialization : '',
         npi_number: isPhysician ? values.npi_number.trim() : '',
         facility_id: isCaregiver ? selectedOrg?.id : undefined,
-        poa_full_name: '',
-        poa_relationship: '',
-        is_poa: false,
+        poa_full_name: values.poa_full_name ?? '',
+        poa_relationship: values.poa_relationship ?? '',
+        is_poa: !!values.is_poa,
       })
     );
 
@@ -362,7 +365,7 @@ const SignUp = () => {
           </div>
         </form>}
 
-        {org && selectedOrg?.email_confirmed === true && <form onSubmit={signUpForm.handleSubmit(onSignUp)} noValidate className='text-sm flex flex-col gap-3'>
+        {showSignUpForm && <form onSubmit={signUpForm.handleSubmit(onSignUp)} noValidate className='text-sm flex flex-col gap-3'>
           <div className='grid grid-cols-2 gap-2'>
             <div className='col-span-2 md:col-span-1'>
               <label htmlFor='first_name'>First Name</label>
@@ -499,6 +502,35 @@ const SignUp = () => {
               })}
             />
             <FieldError error={sErrors.specialization} />
+          </div>}
+          {isPatient && <label className='flex items-center gap-2 w-fit'>
+            <input type='checkbox' id='poa' {...signUpForm.register('is_poa')} />
+            Patient's Power of Attorney
+          </label>}
+          {isPatient && isPoa && <div className='grid grid-cols-2 gap-2'>
+            <div className='col-span-2 md:col-span-1'>
+              <label htmlFor='poa_full_name'>POA Full Name</label>
+              <input
+                id='poa_full_name'
+                type='text'
+                className={inputClass}
+                {...signUpForm.register('poa_full_name', {
+                  required: 'POA Full Name is required',
+                  minLength: { value: 4, message: 'POA Full Name must be at least 4 characters' },
+                })}
+              />
+              <FieldError error={sErrors.poa_full_name} />
+            </div>
+            <div className='col-span-2 md:col-span-1'>
+              <label htmlFor='poa_relationship'>Relationship to Patient</label>
+              <input
+                id='poa_relationship'
+                type='text'
+                className={inputClass}
+                {...signUpForm.register('poa_relationship', { required: 'Relationship to Patient is required' })}
+              />
+              <FieldError error={sErrors.poa_relationship} />
+            </div>
           </div>}
           <button type='submit' disabled={busy} className={buttonClass}>Sign up</button>
         </form>}
