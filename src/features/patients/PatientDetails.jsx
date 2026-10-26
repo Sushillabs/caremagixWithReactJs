@@ -187,7 +187,7 @@ export default function PatientDetails() {
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
-  const documentsLabel = role === "patient" ? "Documents" : "Pre-Visit Summaries";
+  const documentsLabel = role === "patient" ? "Documents" : "Intake Summaries";
   const canPlan = useCan("plan");
   const canForms = useCan("forms");
   const canUpload = useCan("upload");
@@ -306,23 +306,103 @@ export default function PatientDetails() {
 
   const uploadItems = byRole(UPLOAD_ITEMS, role);
   const mobileActions = [
-    { key: "documents", label: role === "patient" ? "Documents" : "Summaries", icon: FileText, group: "Documents", show: canDocuments, items: DOCUMENT_ITEMS, onItemClick: handleDocumentClick },
-    { key: "notes", label: "Notes", icon: NotebookPen, group: "Care", show: canNotes, items: byRole(NOTES_ITEMS, role), onItemClick: handleNotesItemClick },
-    { key: "uploadPdf", label: uploadItems[0], icon: Upload, group: "Documents", show: canUpload && Boolean(uploadItems[0]), onClick: () => handleUploadItemClick(uploadItems[0]) },
-    { key: "uploadImage", label: uploadItems[1], icon: ImageUp, group: "Documents", show: canUpload && Boolean(uploadItems[1]), onClick: () => handleUploadItemClick(uploadItems[1]) },
-    { key: "cms485", label: "Plan of care (485)", icon: FileHeart, group: "Documents", show: canCms485, disabled: !singleData?.patient_name, onClick: () => setShowCms485Modal(true) },
+    {
+      key: "documents",
+      label: role === "patient" ? "Documents" : "Intake summaries",
+      icon: FileText,
+      group: "Documents",
+      show: canDocuments,
+      items: DOCUMENT_ITEMS,
+      onItemClick: handleDocumentClick,
+    },
+    {
+      key: "notes",
+      label: "Visit notes",
+      icon: NotebookPen,
+      group: "Care",
+      show: canNotes,
+      items: byRole(NOTES_ITEMS, role),
+      onItemClick: handleNotesItemClick,
+    },
+    {
+      key: "uploadPdf",
+      label: uploadItems[0],
+      icon: Upload,
+      group: "Documents",
+      show: canUpload && Boolean(uploadItems[0]),
+      onClick: () => handleUploadItemClick(uploadItems[0]),
+    },
+    {
+      key: "uploadImage",
+      label: uploadItems[1],
+      icon: ImageUp,
+      group: "Documents",
+      show: canUpload && Boolean(uploadItems[1]),
+      onClick: () => handleUploadItemClick(uploadItems[1]),
+    },
+    {
+      key: "cms485",
+      label: "Plan of care (485)",
+      icon: FileHeart,
+      group: "Documents",
+      show: canCms485,
+      disabled: !singleData?.patient_name,
+      onClick: () => setShowCms485Modal(true),
+    },
     { key: "medication", label: "Medication", icon: Pill, group: "Care", show: canMedication, onClick: handleMedication },
     { key: "carePlan", label: "Care plan", icon: HeartHandshake, group: "Care", show: canCreateCarePlan, onClick: handleCarePlan },
     { key: "mmta", label: "MMTA", icon: ClipboardList, group: "Care", show: canMmta, onClick: () => navigate("mmta") },
     { key: "plan", label: "Plan", icon: ListChecks, group: "Care", show: canPlan, disabled: true, onClick: () => {} },
     { key: "wellness", label: "Wellness check-in", icon: HeartPulse, group: "Care", show: canWellnessCheckIn, onClick: openWellnessCheckIn },
-    { key: "bookVisit", label: "Book physician visit", icon: CalendarPlus, group: "Care", show: canBookAppointment, onClick: () => openBookAppointment() },
+    {
+      key: "bookVisit",
+      label: "Book physician visit",
+      icon: CalendarPlus,
+      group: "Care",
+      show: canBookAppointment,
+      onClick: () => openBookAppointment(),
+    },
     { key: "timeline", label: "Patient journey", icon: Route, group: "Care", show: canTimeline, onClick: () => setActivePanel("timeline") },
-    { key: "ambientAi", label: "Ambient AI", icon: AudioLines, group: "Care", show: canAmbientVisitNotes, onClick: () => setActivePanel("ambientAi") },
-    { key: "wellnessReport", label: "Wellness report", icon: ClipboardCheck, group: "Care", show: canWellnessCheckInReport, onClick: () => setActivePanel("wellnessReport") },
-    { key: "wellnessQuestions", label: "Wellness questions", icon: ListChecks, group: "Care", show: canWellnessQuestionEditor, onClick: () => setActivePanel("wellnessQuestions") },
-    { key: "sendMessage", label: "Send message", icon: MessageSquare, group: "Contact", show: canSendMessage, onClick: () => setShowSendMessageModal(true) },
-    { key: "registerCall", label: isCallRegistered ? "Unregister call" : "Register a call", icon: PhoneCall, group: "Contact", show: canRegisterCall && type === "Uploaded", onClick: handleRegisterCall },
+    {
+      key: "ambientAi",
+      label: "Ambient AI",
+      icon: AudioLines,
+      group: "Care",
+      show: canAmbientVisitNotes,
+      onClick: () => setActivePanel("ambientAi"),
+    },
+    {
+      key: "wellnessReport",
+      label: "Wellness report",
+      icon: ClipboardCheck,
+      group: "Care",
+      show: canWellnessCheckInReport,
+      onClick: () => setActivePanel("wellnessReport"),
+    },
+    {
+      key: "wellnessQuestions",
+      label: "Wellness questions",
+      icon: ListChecks,
+      group: "Care",
+      show: canWellnessQuestionEditor,
+      onClick: () => setActivePanel("wellnessQuestions"),
+    },
+    {
+      key: "sendMessage",
+      label: "Send message",
+      icon: MessageSquare,
+      group: "Contact",
+      show: canSendMessage,
+      onClick: () => setShowSendMessageModal(true),
+    },
+    {
+      key: "registerCall",
+      label: isCallRegistered ? "Unregister med adherence call" : "Med adherence call",
+      icon: PhoneCall,
+      group: "Contact",
+      show: canRegisterCall && type === "Uploaded",
+      onClick: handleRegisterCall,
+    },
   ];
 
   return (
@@ -370,7 +450,7 @@ export default function PatientDetails() {
           )}
           {canNotes && (
             <DropdownButton
-              label="Notes"
+              label="Visit Notes"
               items={byRole(NOTES_ITEMS, role)}
               onItemClick={handleNotesItemClick}
               open={openDropdown === "Notes"}
@@ -429,13 +509,22 @@ export default function PatientDetails() {
             </button>
           )}
           {canRegisterCall && type === "Uploaded" && (
-            <button
-              type="button"
-              onClick={handleRegisterCall}
-              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
-            >
-              {isCallRegistered ? "Unregister Call" : "Register a Call"}
-            </button>
+            <div className="group relative">
+              <button
+                type="button"
+                onClick={handleRegisterCall}
+                className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+              >
+                {isCallRegistered ? "Unregister Med Adherence Call" : "Med Adherence Call"}
+              </button>
+              <div
+                role="tooltip"
+                className="pointer-events-none invisible absolute right-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-md bg-gray-800 px-3 py-2 text-xs leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+              >
+                Use this to set up a daily automated call to the patient that collects information about the medications they have taken. You
+                will get a report of missed critical medications so that an intervention can be started.
+              </div>
+            </div>
           )}
           {/* {canMedicationAlerts && (
             <button type="button" className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
@@ -555,11 +644,7 @@ export default function PatientDetails() {
           onRequestVisit={canBookAppointment ? () => openBookAppointment(true) : undefined}
         />
       ) : activePanel === "appointments" ? (
-        <AppointmentsPanel
-          key={appointmentsKey}
-          initialTab={appointmentsTab}
-          onBooked={cameFromWellness ? handleBooked : undefined}
-        />
+        <AppointmentsPanel key={appointmentsKey} initialTab={appointmentsTab} onBooked={cameFromWellness ? handleBooked : undefined} />
       ) : activePanel === "wellnessReport" ? (
         <WellnessCaregiverPanel />
       ) : activePanel === "wellnessQuestions" ? (

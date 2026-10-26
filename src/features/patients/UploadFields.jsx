@@ -24,7 +24,7 @@ export default function UploadFields({
     <>
       <div>
         <label className="mb-2 block text-xs font-medium text-gray-600">Select Plan</label>
-        <div className="flex flex-wrap gap-1 sm:flex-nowrap">
+        <div className="flex flex-wrap gap-1">
           {config.planOptions.map((plan) => {
             const checked = selectedPlan === plan;
             return (

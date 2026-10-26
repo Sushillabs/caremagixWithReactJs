@@ -1,7 +1,7 @@
 // Shared between UploadPlanModal (existing patient) and AddPatientModal's
 // upload step (brand-new patient) — same two backend endpoints, same field
 // contracts, different source for patient_name/email/mobile.
-const PLAN_OPTIONS = ["Discharge Plan", "Nursing Plan", "Medication Adherence", "OASIS Form", "Care Plan", "Prescription"];
+const PLAN_OPTIONS = ["Discharge Plan", "Nursing Plan", "Medication Adherence", "OASIS Form", "Care Plan", "Prescription", "Referral"];
 
 export const MODE_CONFIG = {
   pdf: {
