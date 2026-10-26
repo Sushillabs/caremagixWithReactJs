@@ -34,7 +34,7 @@ export default function EfaxConfigModal({ onClose }) {
     setHospitalName((v) => v || settings.hospital_name || "");
   }, [settings]);
 
-  const { mutate, isPending, error } = useMutation({
+  const { mutate, isPending, error, reset: resetGetFax } = useMutation({
     mutationFn: uploadEFaxConfig,
     onSuccess: (response) => {
       if (Array.isArray(response?.jobs) && response.jobs.length > 0) {
@@ -66,9 +66,20 @@ export default function EfaxConfigModal({ onClose }) {
     return err?.response?.data?.message || err?.response?.data?.error || "Server error. Please try again.";
   };
 
+  const getFaxErrorMessage = (err) => {
+    const status = err?.response?.status;
+    const serverMessage = err?.response?.data?.message || err?.response?.data?.error;
+    if (status === 400) return serverMessage || "Enter Fax Number or Date Range";
+    if (status === 404) return "No fax found for criteria";
+    if (status === 409) return "All faxes already uploaded";
+    if (status === 500) return "Server error. Please try again.";
+    return serverMessage || "Server error. Please try again.";
+  };
+
   const handleSaveSettings = () => {
     setSavedMessage(null);
     resetSave();
+    resetGetFax();
     const orig = originatingFaxNumber.replace(/\D/g, "");
     const recv = receivingFaxNumber.replace(/\D/g, "");
     const hosp = hospitalName.trim();
@@ -111,8 +122,23 @@ export default function EfaxConfigModal({ onClose }) {
     const orig = originatingFaxNumber.replace(/\D/g, "");
     const recv = receivingFaxNumber.replace(/\D/g, "");
     const hosp = hospitalName.trim();
-    if (!orig || !dateFrom || !dateTo) {
-      setFormError("Originating fax number and both dates are required.");
+    const hasSavedOrig = Boolean(settings?.originating_fax_number);
+
+    if (Boolean(dateFrom) !== Boolean(dateTo)) {
+      setFormError("Please select both From and To dates.");
+      return;
+    }
+    if (dateFrom && dateFrom > dateTo) {
+      setFormError("From date must be on or before To date.");
+      return;
+    }
+    if (!orig && !hasSavedOrig && !dateFrom) {
+      setFormError("Please provide a Fax Number or a Date Range.");
+      return;
+    }
+    const isBadFax = (raw, digits) => raw.trim() && (digits.length < 10 || digits.length > 15);
+    if (isBadFax(originatingFaxNumber, orig) || isBadFax(receivingFaxNumber, recv)) {
+      setFormError("Fax numbers must have 10-15 digits.");
       return;
     }
     setFormError(null);
@@ -123,10 +149,9 @@ export default function EfaxConfigModal({ onClose }) {
     // not date_from/date_to. patient_type/confirm/destination_fax_number are
     // hardcoded server-side, not sent from here.
     mutate({
-      originating_fax_number: orig,
+      ...(orig && { originating_fax_number: orig }),
       ...(recv && { receiving_fax_number: recv }),
-      from: dateFrom,
-      to: dateTo,
+      ...(dateFrom && { from: dateFrom, to: dateTo }),
       ...(hosp && { hospital_name: hosp }),
       note_doc: saveDischargeDoc ? "yes" : "no",
     });
@@ -250,7 +275,7 @@ export default function EfaxConfigModal({ onClose }) {
             {savedMessage && <p className="text-xs text-emerald-700">{savedMessage}</p>}
             {error && (
               <p className="text-xs text-red-600">
-                {error?.response?.data?.message || error?.response?.data?.error || "Error submitting eFax configuration."}
+                {getFaxErrorMessage(error)}
               </p>
             )}
 
