@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, CheckCircle2 } from "lucide-react";
-import { uploadPlan, uploadPatientImage } from "../../api/hospitalApi";
+import { uploadPlan, uploadPatientImage, getPatients } from "../../api/hospitalApi";
 import { setJobsId } from "../../redux/jobsIdslice";
+import { updatePatientData } from "../../redux/PatientSingleDateSlice";
+
+const PDF_REFRESH_DELAY_MS = 6000;
 import { MODE_CONFIG, buildUploadFormData } from "./uploadPlanShared";
 import UploadFields from "./UploadFields";
 
 export default function UploadPlanModal({ onClose, mode = "pdf" }) {
   const config = MODE_CONFIG[mode];
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const singleData = useSelector((state) => state.patientsingledata?.value);
   const patient_name = singleData?.patient_name;
   const registered_email = singleData?.patient?.raw?.registered_email;
@@ -22,6 +26,21 @@ export default function UploadPlanModal({ onClose, mode = "pdf" }) {
   const [done, setDone] = useState(false);
   const [doneMessage, setDoneMessage] = useState("");
 
+  // Backend indexes /upload in a background thread, so wait before reloading.
+  const refreshOpenPatient = () => {
+    queryClient
+      .fetchQuery({ queryKey: ["patientList"], queryFn: getPatients, staleTime: 0 })
+      .then((res) => {
+        dispatch((innerDispatch, getState) => {
+          const open = getState().patientsingledata?.value?.patient;
+          if (open?.type !== "Uploaded" || !open.raw) return;
+          const fresh = res?.data?.find((p) => p.name === open.name);
+          if (fresh) innerDispatch(updatePatientData(fresh));
+        });
+      })
+      .catch(() => {});
+  };
+
   const { mutate: upload, isPending, error } = useMutation({
     mutationFn: mode === "scan" ? uploadPatientImage : uploadPlan,
     onSuccess: (response) => {
@@ -30,6 +49,7 @@ export default function UploadPlanModal({ onClose, mode = "pdf" }) {
         setDoneMessage("Scan started — we'll track its progress in the background.");
       } else {
         setDoneMessage("File uploaded successfully");
+        setTimeout(refreshOpenPatient, PDF_REFRESH_DELAY_MS);
       }
       setDone(true);
       setTimeout(onClose, 1200);
