@@ -6,7 +6,19 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   base: "/new/",
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: "redirect-base",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === "/new") return res.writeHead(301, { Location: "/new/" }).end();
+          next();
+        });
+      },
+    },
+  ],
   build: {
     rollupOptions: {
       input: {
