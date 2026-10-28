@@ -357,6 +357,8 @@ export default function PatientDetails() {
       show: canDocuments,
       items: DOCUMENT_ITEMS,
       onItemClick: handleDocumentClick,
+      onItemDelete: canDeleteDocument && type === "Uploaded" ? setDeleteDocTarget : undefined,
+      canDeleteItem: (item) => item !== CONSOLIDATED_DOC,
     },
     {
       key: "notes",

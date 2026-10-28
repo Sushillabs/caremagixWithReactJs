@@ -55,7 +55,7 @@ export default function PatientsList() {
           <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-500">
             <th className="px-2 py-3 sm:px-4 font-medium">SL No</th>
             <th className="px-2 py-3 sm:px-4 font-medium">Patient name</th>
-            <th className="px-2 py-3 sm:px-4 font-medium">Data Origin</th>
+            <th className="hidden px-2 py-3 font-medium sm:table-cell sm:px-4">Data Origin</th>
             <th className="px-2 py-3 sm:px-4 text-right font-medium">Action</th>
           </tr>
         </thead>
@@ -70,19 +70,24 @@ export default function PatientsList() {
           {filteredPatients.map((p, idx) => (
             <tr key={p.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
               <td className="px-2 py-3 sm:px-4 text-gray-700">{idx + 1}</td>
-              <td className="px-2 py-3 sm:px-4 text-gray-700">{p.name}</td>
-              <td className="px-2 py-3 sm:px-4 text-gray-700">{p.type}</td>
+              <td className="px-2 py-3 sm:px-4 text-gray-700">
+                {p.name}
+                <span className="block text-xs text-gray-400 sm:hidden">{p.type}</span>
+              </td>
+              <td className="hidden px-2 py-3 text-gray-700 sm:table-cell sm:px-4">{p.type}</td>
               <td className="px-2 py-3 sm:px-4 text-right">
-                <div className="flex items-center justify-end gap-3">
-                  <button type="button" className="font-medium text-emerald-600 hover:underline" onClick={() => handlePatient(p)}>
-                    View Details
+                <div className="flex items-center justify-end gap-1 sm:gap-3">
+                  <button type="button" className="whitespace-nowrap font-medium text-emerald-600 hover:underline" onClick={() => handlePatient(p)}>
+                    <span className="sm:hidden">View</span>
+                    <span className="hidden sm:inline">View Details</span>
                   </button>
                   {canDeletePatient && (
                     <button
                       type="button"
                       title="Delete patient and all documents"
+                      aria-label={`Delete ${p.name}`}
                       onClick={() => setDeleteTarget(p)}
-                      className="text-gray-300 hover:text-red-600"
+                      className="-my-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-300 hover:text-red-600 active:bg-red-50 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
                     >
                       <Trash2 size={15} />
                     </button>
