@@ -248,6 +248,8 @@ export default function PatientDetails() {
     navigate(".");
   };
 
+  const isLastDoc = DOCUMENT_ITEMS.filter((d) => d !== CONSOLIDATED_DOC).length <= 1;
+
   const handleConfirmDeleteDocument = () => {
     const doc = patient?.raw?.data?.find((d) => d.dates === deleteDocTarget);
     deleteDoc(
@@ -718,7 +720,14 @@ export default function PatientDetails() {
           onClose={() => setShowCms485Modal(false)}
         />
       )}
-      {deleteDocTarget && (
+      {deleteDocTarget && isLastDoc && (
+        <DeleteConfirmModal
+          title="Can't Delete"
+          message={`This is the last document for ${patient?.name || "this patient"}. To remove this patient, use Delete Patient from the Patients list.`}
+          onCancel={() => setDeleteDocTarget(null)}
+        />
+      )}
+      {deleteDocTarget && !isLastDoc && (
         <DeleteConfirmModal
           title="Delete Document"
           message={`Delete "${deleteDocTarget}" for ${patient?.name || "this patient"}? This cannot be undone.`}

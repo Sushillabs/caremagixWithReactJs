@@ -26,16 +26,18 @@ export default function DeleteConfirmModal({ title = "Delete", message, pending,
               disabled={pending}
               className="flex-1 rounded-md border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
-              Cancel
+              {onConfirm ? "Cancel" : "OK"}
             </button>
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={pending}
-              className="flex-1 rounded-md bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              {pending ? "Deleting..." : confirmLabel}
-            </button>
+            {onConfirm && (
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={pending}
+                className="flex-1 rounded-md bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {pending ? "Deleting..." : confirmLabel}
+              </button>
+            )}
           </div>
         </div>
       </div>
