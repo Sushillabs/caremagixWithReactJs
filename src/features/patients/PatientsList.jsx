@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Trash2 } from "lucide-react";
 import usePatientRecords from "../../hooks/usePatientRecords";
 import useOpenPatientDetail from "../../hooks/useOpenPatientDetail";
 import useCan from "../../hooks/useCan";
 import AddPatientModal from "./AddPatientModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import useDeletePatientDocument from "../../hooks/useDeletePatientDocument";
 
 export default function PatientsList() {
   const { search } = useOutletContext() || {};
@@ -12,6 +14,21 @@ export default function PatientsList() {
   const handlePatient = useOpenPatientDetail();
   const [showAddPatient, setShowAddPatient] = useState(false);
   const canAddPatient = useCan("addPatient");
+  const canDeletePatient = useCan("deletePatient");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const { remove, isPending, errorMessage, reset } = useDeletePatientDocument();
+
+  const handleConfirmDelete = () => {
+    const firstDoc = deleteTarget?.raw?.data?.[0];
+    remove(
+      {
+        patient_name: deleteTarget?.name,
+        patient_type: firstDoc?.patient_type || deleteTarget?.raw?.patient_type,
+        patient_date: "Consolidated Med Summary",
+      },
+      { onSuccess: () => setDeleteTarget(null) }
+    );
+  };
 
   const filteredPatients = useMemo(() => {
     const q = (search || "").trim().toLowerCase();
@@ -56,9 +73,21 @@ export default function PatientsList() {
               <td className="px-2 py-3 sm:px-4 text-gray-700">{p.name}</td>
               <td className="px-2 py-3 sm:px-4 text-gray-700">{p.type}</td>
               <td className="px-2 py-3 sm:px-4 text-right">
-                <button type="button" className="font-medium text-emerald-600 hover:underline" onClick={() => handlePatient(p)}>
-                  View Details
-                </button>
+                <div className="flex items-center justify-end gap-3">
+                  <button type="button" className="font-medium text-emerald-600 hover:underline" onClick={() => handlePatient(p)}>
+                    View Details
+                  </button>
+                  {canDeletePatient && (
+                    <button
+                      type="button"
+                      title="Delete patient and all documents"
+                      onClick={() => setDeleteTarget(p)}
+                      className="text-gray-300 hover:text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
@@ -66,6 +95,20 @@ export default function PatientsList() {
       </table>
 
       {showAddPatient && <AddPatientModal onClose={() => setShowAddPatient(false)} />}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          title="Delete Patient"
+          message={`Delete ${deleteTarget.name} and all of their documents? This cannot be undone.`}
+          confirmLabel="Delete Patient"
+          pending={isPending}
+          error={errorMessage}
+          onCancel={() => {
+            reset();
+            setDeleteTarget(null);
+          }}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
     </div>
   );
 }
