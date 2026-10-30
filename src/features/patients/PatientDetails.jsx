@@ -46,6 +46,7 @@ import Cms485Modal from "../cms485/Cms485Modal";
 import PatientActionsMobile from "./PatientActionsMobile";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import useDeletePatientDocument from "../../hooks/useDeletePatientDocument";
+import usePatientMeta from "../../hooks/usePatientMeta";
 
 const MOBILE_MAIN_ACTIONS = {
   caregiver: ["documents", "medication", "notes"],
@@ -202,8 +203,9 @@ export default function PatientDetails() {
   const role = auth.role || "caregiver";
   const caregiverName = `${auth.first_name || ""} ${auth.last_name || ""}`.trim() || auth.name || auth.username || "";
 
-  const age = patient?.raw?.age || patient?.age || "";
-  const admissionDate = patient?.raw?.admission_date || patient?.admissionDate || "";
+  const { dob, age, gender } = usePatientMeta(patient?.name);
+  const metaLine = [age != null && `${age} yrs`, gender, dob && ` ${dob}`].filter(Boolean).join(" · ");
+  const metaTitle = [age != null && `${age} yrs`, gender, dob && `DOB ${dob}`].filter(Boolean).join(" · ");
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
@@ -457,17 +459,19 @@ export default function PatientDetails() {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
             <User size={18} className="text-gray-400" />
           </div>
-          <div className="">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-gray-800">{patient?.name || "Patient"}</h2>
               <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
               </span>
             </div>
-            {/* <p className="mt-0.5 text-xs text-gray-500">
-              Age: {age} &nbsp;&nbsp; Admission Date: {admissionDate}
-            </p>
-            <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p> */}
+            {metaLine && (
+              <p className="mt-0.5 truncate text-xs text-gray-500" title={metaTitle}>
+                {metaLine}
+              </p>
+            )}
+            {/* <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p> */}
           </div>
         </div>
 

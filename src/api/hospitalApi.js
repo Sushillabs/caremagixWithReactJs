@@ -46,6 +46,8 @@ export const getDashboardActiveCarePlans = (patientName) =>
   http
     .get("/dashboard/active-care-plans", { params: patientName ? { patient_name: patientName } : {}, withAuth: true })
     .then((res) => res.data);
+export const getPatientMeta = (patientName) =>
+  http.get("/patient-meta", { params: { patient_name: patientName }, withAuth: true }).then((res) => res.data);
 export const getPatientChat = (data) => http.post("/generate_questions", data, { withAuth: true });
 export const askAPI = (data) => http.post("/ask", data, { withAuth: true });
 export const getDocRef = (data) => http.post("/doc-ref", data, { withAuth: true });
