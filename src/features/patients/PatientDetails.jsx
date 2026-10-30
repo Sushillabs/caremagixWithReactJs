@@ -19,6 +19,7 @@ import {
   PhoneCall,
   Pill,
   Route,
+  Trash2,
   Upload,
   User,
 } from "lucide-react";
@@ -43,6 +44,9 @@ import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
 import Cms485Modal from "../cms485/Cms485Modal";
 import PatientActionsMobile from "./PatientActionsMobile";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import useDeletePatientDocument from "../../hooks/useDeletePatientDocument";
+import usePatientMeta from "../../hooks/usePatientMeta";
 
 const MOBILE_MAIN_ACTIONS = {
   caregiver: ["documents", "medication", "notes"],
@@ -51,6 +55,8 @@ const MOBILE_MAIN_ACTIONS = {
 };
 
 let DOCUMENT_ITEMS = [];
+
+const CONSOLIDATED_DOC = "Consolidated Med Summary";
 
 const NOTES_ITEMS = [
   { label: "Create Visit Notes AI", roles: ["caregiver"] },
@@ -72,7 +78,7 @@ const UPLOAD_ITEMS = [{ label: "Upload PDF" }, { label: "Upload Image" }];
 
 const byRole = (items, role) => items.filter((item) => !item.roles || item.roles.includes(role)).map((item) => item.label);
 
-function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, disabled }) {
+function DropdownButton({ label, items, onItemClick, onItemDelete, open, onToggle, onClose, disabled }) {
   const boxRef = useRef(null);
 
   useEffect(() => {
@@ -102,15 +108,30 @@ function DropdownButton({ label, items, onItemClick, open, onToggle, onClose, di
       {!disabled && open && (
         <ul className="absolute h-60 overflow-y-auto right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
           {items.map((item) => (
-            <li
-              key={item}
-              onClick={() => {
-                onClose();
-                onItemClick?.(item);
-              }}
-              className="cursor-pointer px-3 py-1.5 text-gray-600 hover:bg-gray-50"
-            >
-              {item}
+            <li key={item} className="group flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-50">
+              <span
+                onClick={() => {
+                  onClose();
+                  onItemClick?.(item);
+                }}
+                className="flex-1 cursor-pointer"
+              >
+                {item}
+              </span>
+              {onItemDelete && item !== CONSOLIDATED_DOC && (
+                <button
+                  type="button"
+                  title="Delete this document"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                    onItemDelete(item);
+                  }}
+                  className="shrink-0 text-gray-300 hover:text-red-600"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -182,11 +203,15 @@ export default function PatientDetails() {
   const role = auth.role || "caregiver";
   const caregiverName = `${auth.first_name || ""} ${auth.last_name || ""}`.trim() || auth.name || auth.username || "";
 
-  const age = patient?.raw?.age || patient?.age || "";
-  const admissionDate = patient?.raw?.admission_date || patient?.admissionDate || "";
+  const { dob, age, gender } = usePatientMeta(patient?.name);
+  const metaLine = [age != null && `${age} yrs`, gender, dob && ` ${dob}`].filter(Boolean).join(" · ");
+  const metaTitle = [age != null && `${age} yrs`, gender, dob && `DOB ${dob}`].filter(Boolean).join(" · ");
   const isCallRegistered = patient?.raw?.call_registered;
 
   const canDocuments = useCan("documents");
+  const canDeleteDocument = useCan("deleteDocument");
+  const [deleteDocTarget, setDeleteDocTarget] = useState(null);
+  const { remove: deleteDoc, isPending: deletePending, errorMessage: deleteError, reset: resetDelete } = useDeletePatientDocument();
   const documentsLabel = role === "patient" ? "Documents" : "Intake Summaries";
   const canPlan = useCan("plan");
   const canForms = useCan("forms");
@@ -223,6 +248,26 @@ export default function PatientDetails() {
     if (initialPayload) dispatch(addDischargePatientDate(initialPayload));
     setHomeKey((k) => k + 1);
     navigate(".");
+  };
+
+  const isLastDoc = DOCUMENT_ITEMS.filter((d) => d !== CONSOLIDATED_DOC).length <= 1;
+
+  const handleConfirmDeleteDocument = () => {
+    const doc = patient?.raw?.data?.find((d) => d.dates === deleteDocTarget);
+    deleteDoc(
+      {
+        patient_name: singleData?.patient_name,
+        patient_type: doc?.patient_type || singleData?.patient_type,
+        patient_date: deleteDocTarget,
+      },
+      {
+        onSuccess: () => {
+          const wasOpen = singleData?.dates === deleteDocTarget || singleData?.patient_collection === deleteDocTarget;
+          setDeleteDocTarget(null);
+          if (wasOpen) handleHome();
+        },
+      }
+    );
   };
 
   const handleUploadItemClick = (item) => {
@@ -314,6 +359,8 @@ export default function PatientDetails() {
       show: canDocuments,
       items: DOCUMENT_ITEMS,
       onItemClick: handleDocumentClick,
+      onItemDelete: canDeleteDocument && type === "Uploaded" ? setDeleteDocTarget : undefined,
+      canDeleteItem: (item) => item !== CONSOLIDATED_DOC,
     },
     {
       key: "notes",
@@ -412,17 +459,19 @@ export default function PatientDetails() {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
             <User size={18} className="text-gray-400" />
           </div>
-          <div className="">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-gray-800">{patient?.name || "Patient"}</h2>
               <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
               </span>
             </div>
-            {/* <p className="mt-0.5 text-xs text-gray-500">
-              Age: {age} &nbsp;&nbsp; Admission Date: {admissionDate}
-            </p>
-            <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p> */}
+            {metaLine && (
+              <p className="mt-0.5 truncate text-xs text-gray-500" title={metaTitle}>
+                {metaLine}
+              </p>
+            )}
+            {/* <p className="text-xs  text-gray-500">Caregiver name: {caregiverName}</p> */}
           </div>
         </div>
 
@@ -443,6 +492,7 @@ export default function PatientDetails() {
               label={documentsLabel}
               items={DOCUMENT_ITEMS}
               onItemClick={handleDocumentClick}
+              onItemDelete={canDeleteDocument && type === "Uploaded" ? setDeleteDocTarget : undefined}
               open={openDropdown === documentsLabel}
               onToggle={() => toggleDropdown(documentsLabel)}
               onClose={() => setOpenDropdown(null)}
@@ -674,6 +724,26 @@ export default function PatientDetails() {
             dates: "Consolidated Med Summary",
           }}
           onClose={() => setShowCms485Modal(false)}
+        />
+      )}
+      {deleteDocTarget && isLastDoc && (
+        <DeleteConfirmModal
+          title="Can't Delete"
+          message={`This is the last document for ${patient?.name || "this patient"}. To remove this patient, use Delete Patient from the Patients list.`}
+          onCancel={() => setDeleteDocTarget(null)}
+        />
+      )}
+      {deleteDocTarget && !isLastDoc && (
+        <DeleteConfirmModal
+          title="Delete Document"
+          message={`Delete "${deleteDocTarget}" for ${patient?.name || "this patient"}? This cannot be undone.`}
+          pending={deletePending}
+          error={deleteError}
+          onCancel={() => {
+            resetDelete();
+            setDeleteDocTarget(null);
+          }}
+          onConfirm={handleConfirmDeleteDocument}
         />
       )}
     </div>

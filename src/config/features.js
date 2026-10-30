@@ -9,6 +9,8 @@ export const FEATURE_ROLES = {
   forms: ["caregiver"],
   cms485: ["caregiver"],
   upload: ALL_ROLES,
+  deleteDocument: ["caregiver", "physician"],
+  deletePatient: ["caregiver", "physician"],
   mmta: ["caregiver"],
   registerCall: ["caregiver"],
   // medicationAlerts: ["caregiver", "physician"],

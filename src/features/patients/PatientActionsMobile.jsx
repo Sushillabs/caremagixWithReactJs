@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { ChevronRight, Ellipsis, Home } from "lucide-react";
+import { ChevronRight, Ellipsis, Home, Trash2 } from "lucide-react";
 import BottomSheet from "../../components/BottomSheet";
 
 const GROUPS = ["Documents", "Care", "Contact"];
@@ -149,18 +149,31 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
         {listAction?.items.length === 0 && <p className="px-3 py-6 text-center text-sm text-gray-400">Nothing here yet.</p>}
         <ul>
           {listAction?.items.map((item) => (
-            <li key={item}>
+            <li key={item} className="flex items-center">
               <button
                 type="button"
                 onClick={() => {
                   setSheet(null);
                   listAction.onItemClick(item);
                 }}
-                className="flex min-h-12 w-full items-center justify-between gap-2 rounded-lg px-3 text-left text-sm text-gray-700 active:bg-gray-50"
+                className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-lg px-3 text-left text-sm text-gray-700 active:bg-gray-50"
               >
                 <span className="min-w-0 break-words">{item}</span>
                 <ChevronRight size={16} className="shrink-0 text-gray-300" />
               </button>
+              {listAction.onItemDelete && listAction.canDeleteItem?.(item) !== false && (
+                <button
+                  type="button"
+                  aria-label={`Delete ${item}`}
+                  onClick={() => {
+                    setSheet(null);
+                    listAction.onItemDelete(item);
+                  }}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-gray-400 active:bg-red-50 active:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
