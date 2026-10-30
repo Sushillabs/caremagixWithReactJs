@@ -24,7 +24,7 @@ export const FEATURE_ROLES = {
   wellnessQuestionEditor: ["physician"],
   createProgressNotes: ["physician"],
   timeline: ["physician"],
-  ambientVisitNotes: ["physician"],
+  ambientVisitNotes: ["caregiver", "physician"],
   sendMessage: ["caregiver", "physician"],
 };
 
