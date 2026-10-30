@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { setJobsId } from "../redux/jobsIdslice";
+import useRefreshOpenPatient from "./useRefreshOpenPatient";
 
 // Shared engine behind Group B pull features (PCC, Epic, ...) — confirmed
 // identical wire shape on both: {success, job_id, status_url, message} to
@@ -10,7 +11,7 @@ import { setJobsId } from "../redux/jobsIdslice";
 // progress to poll. Each feature just supplies its own start/status calls
 // and identity; this hook does the polling/toast/redux-tracking once.
 export default function useJobPull({ startFn, statusFn, toastId, defaultMsg, jobsSliceKey, pollMs = 3000 }) {
-  const queryClient = useQueryClient();
+  const refreshOpenPatient = useRefreshOpenPatient();
   const dispatch = useDispatch();
   const [jobId, setJobId] = useState(null);
   const [softPct, setSoftPct] = useState(0);
@@ -73,11 +74,11 @@ export default function useJobPull({ startFn, statusFn, toastId, defaultMsg, job
     handledRef.current = jobId;
 
     toast.success(statusData?.message || "Data fetched successfully", { id: toastId });
-    queryClient.invalidateQueries({ queryKey: ["patientList"] });
+    refreshOpenPatient();
 
     const t = setTimeout(resetJob, 400);
     return () => clearTimeout(t);
-  }, [jobId, status, statusData?.message, queryClient, resetJob, toastId]);
+  }, [jobId, status, statusData?.message, refreshOpenPatient, resetJob, toastId]);
 
   // Terminal: failed
   useEffect(() => {

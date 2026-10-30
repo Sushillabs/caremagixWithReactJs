@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import useDeepgramVoice from "./useDeepgramVoice";
 import useStopVoiceOnAuthError from "./useStopVoiceOnAuthError";
+import useRefreshOpenPatient, { NEW_DOC_REFRESH_DELAY_MS } from "./useRefreshOpenPatient";
 import { getPhysicianAmbientVoiceToken, physicianAmbientStart, physicianAmbientStop, physicianAmbientSave } from "../api/hospitalApi";
 
 // Matches the labels ambient_ai/agent.py's format_note_text writes — query_api.py's
@@ -33,6 +34,7 @@ function rebuildNoteText(originalNoteText, soapFields) {
 // interview onto useAgentChat's generic {session_id, message} contract.
 export default function usePhysicianAmbientSession() {
   const patientData = useSelector((state) => state?.patientsingledata?.value);
+  const refreshOpenPatient = useRefreshOpenPatient();
 
   const [phase, setPhase] = useState("idle"); // idle | recording | generating | review | saving | saved
   const [sessionId, setSessionId] = useState(null);
@@ -149,12 +151,13 @@ export default function usePhysicianAmbientSession() {
         });
         setSaveResult(result);
         setPhase("saved");
+        refreshOpenPatient(NEW_DOC_REFRESH_DELAY_MS);
       } catch (err) {
         setError(errorMessage(err, "Could not save the visit note"));
         setPhase("review");
       }
     },
-    [sessionId, noteText]
+    [sessionId, noteText, refreshOpenPatient]
   );
 
   const reset = useCallback(() => {

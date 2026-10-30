@@ -4,6 +4,7 @@ import { ChevronDown, EllipsisVertical, Mic, RotateCcw } from "lucide-react";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
+import useRefreshOpenPatient, { NEW_DOC_REFRESH_DELAY_MS } from "../../hooks/useRefreshOpenPatient";
 import AgentChatThread from "../../components/chat/AgentChatThread";
 import AgentChatComposer from "../../components/chat/AgentChatComposer";
 import VoiceStartGate from "../../components/chat/VoiceStartGate";
@@ -33,6 +34,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   const [saveResult, setSaveResult] = useState(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const bottomRef = useRef(null);
+  const refreshOpenPatient = useRefreshOpenPatient();
 
   useEffect(() => {
     setNoteText(lastResponse?.note_text || "");
@@ -61,6 +63,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
         recipient_email: withEmail ? email.trim() : "",
       });
       setSaveResult(result);
+      refreshOpenPatient(NEW_DOC_REFRESH_DELAY_MS);
     } catch (err) {
       setSaveError(err?.message || `Could not save ${label.toLowerCase()}`);
     } finally {
