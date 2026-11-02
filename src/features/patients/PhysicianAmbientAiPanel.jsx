@@ -203,6 +203,7 @@ export default function PhysicianAmbientAiPanel() {
             onResume={session.resume}
             onStop={session.stopAndGenerate}
           />
+          {session.error && <p className="px-3 pt-2 text-xs text-red-600">{session.error}</p>}
           <RecordingBody completedTranscript={session.completedTranscript} interimText={session.voice.transcript} />
         </>
       )}

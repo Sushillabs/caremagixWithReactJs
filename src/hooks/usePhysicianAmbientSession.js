@@ -112,8 +112,11 @@ export default function usePhysicianAmbientSession() {
     }
   }, [patientData?.patient_name, phase, abort]);
 
-  const pause = useCallback(() => voice.pauseListening(), [voice]);
-  const resume = useCallback(() => voice.resumeListening(), [voice]);
+  const pause = useCallback(() => pushUtterance(voice.pauseListening()), [voice, pushUtterance]);
+  const resume = useCallback(() => {
+    setError(null);
+    return Promise.resolve(voice.resumeListening()).catch((err) => setError(err?.message || "Could not resume recording"));
+  }, [voice]);
 
   const stopAndGenerate = useCallback(async () => {
     if (voice.isActive) {
