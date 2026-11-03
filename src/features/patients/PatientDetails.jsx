@@ -47,6 +47,7 @@ import PatientActionsMobile from "./PatientActionsMobile";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import useDeletePatientDocument from "../../hooks/useDeletePatientDocument";
 import usePatientMeta from "../../hooks/usePatientMeta";
+import { CONSOLIDATED_DOC, SEARCH_MIN_ITEMS, filterDocs } from "../../utils/docSearch";
 
 const MOBILE_MAIN_ACTIONS = {
   caregiver: ["documents", "medication", "notes"],
@@ -55,8 +56,6 @@ const MOBILE_MAIN_ACTIONS = {
 };
 
 let DOCUMENT_ITEMS = [];
-
-const CONSOLIDATED_DOC = "Consolidated Med Summary";
 
 const NOTES_ITEMS = [
   { label: "Create Visit Notes AI", roles: ["caregiver"] },
@@ -80,6 +79,13 @@ const byRole = (items, role) => items.filter((item) => !item.roles || item.roles
 
 function DropdownButton({ label, items, onItemClick, onItemDelete, open, onToggle, onClose, disabled }) {
   const boxRef = useRef(null);
+  const [search, setSearch] = useState("");
+  const showSearch = items.length >= SEARCH_MIN_ITEMS;
+  const shownItems = filterDocs(items, search);
+
+  useEffect(() => {
+    if (!open) setSearch("");
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -106,35 +112,50 @@ function DropdownButton({ label, items, onItemClick, onItemDelete, open, onToggl
         <ChevronDown size={14} className="text-gray-400" />
       </button>
       {!disabled && open && (
-        <ul className="absolute h-60 overflow-y-auto right-0 top-full z-10 mt-1 w-52 rounded-md border border-gray-200 bg-white py-1 text-sm shadow-md">
-          {items.map((item) => (
-            <li key={item} className="group flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-50">
-              <span
-                onClick={() => {
-                  onClose();
-                  onItemClick?.(item);
-                }}
-                className="flex-1 cursor-pointer"
-              >
-                {item}
-              </span>
-              {onItemDelete && item !== CONSOLIDATED_DOC && (
-                <button
-                  type="button"
-                  title="Delete this document"
-                  onClick={(e) => {
-                    e.stopPropagation();
+        <div className="absolute right-0 top-full z-10 mt-1 flex h-60 w-52 flex-col rounded-md border border-gray-200 bg-white text-sm shadow-md">
+          {showSearch && (
+            <div className="border-b border-gray-100 p-2">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name or date"
+                autoFocus
+                className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              />
+            </div>
+          )}
+          <ul className="flex-1 overflow-y-auto py-1">
+            {shownItems.length === 0 && <li className="px-3 py-3 text-center text-xs text-gray-400">No documents found</li>}
+            {shownItems.map((item) => (
+              <li key={item} className="group flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:bg-gray-50">
+                <span
+                  onClick={() => {
                     onClose();
-                    onItemDelete(item);
+                    onItemClick?.(item);
                   }}
-                  className="shrink-0 text-gray-300 hover:text-red-600"
+                  className="flex-1 cursor-pointer"
                 >
-                  <Trash2 size={13} />
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+                  {item}
+                </span>
+                {onItemDelete && item !== CONSOLIDATED_DOC && (
+                  <button
+                    type="button"
+                    title="Delete this document"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClose();
+                      onItemDelete(item);
+                    }}
+                    className="shrink-0 text-gray-300 hover:text-red-600"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

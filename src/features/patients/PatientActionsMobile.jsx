@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronRight, Ellipsis, Home, Trash2 } from "lucide-react";
 import BottomSheet from "../../components/BottomSheet";
+import { SEARCH_MIN_ITEMS, filterDocs } from "../../utils/docSearch";
 
 const GROUPS = ["Documents", "Care", "Contact"];
 const CHIP_GAP = 4;
@@ -38,6 +39,10 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
   const main = mainKeys.map((k) => visible.find((a) => a.key === k)).filter(Boolean);
   const rest = visible.filter((a) => !mainKeys.includes(a.key));
   const listAction = sheet && sheet !== "more" ? visible.find((a) => a.key === sheet) : null;
+  const [search, setSearch] = useState("");
+  const listItems = listAction?.items || [];
+  const showSearch = listItems.length >= SEARCH_MIN_ITEMS;
+  const shownItems = filterDocs(listItems, search);
 
   // Show only the main chips that fully fit (width depends on screen, text size and labels); the rest move into More.
   const slotRef = useRef(null);
@@ -75,6 +80,7 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
   const run = (action) => {
     if (action.disabled) return;
     if (action.items) {
+      setSearch("");
       setSheet(action.key);
       return;
     }
@@ -146,9 +152,21 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
       </BottomSheet>
 
       <BottomSheet open={Boolean(listAction)} onClose={() => setSheet(null)} title={listAction?.label}>
-        {listAction?.items.length === 0 && <p className="px-3 py-6 text-center text-sm text-gray-400">Nothing here yet.</p>}
+        {showSearch && (
+          <div className="px-2 pt-2">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or date"
+              className="min-h-11 w-full rounded-lg border border-gray-200 px-3 text-base focus:outline-none focus:ring-1 focus:ring-emerald-400"
+            />
+          </div>
+        )}
+        {listItems.length === 0 && <p className="px-3 py-6 text-center text-sm text-gray-400">Nothing here yet.</p>}
+        {listItems.length > 0 && shownItems.length === 0 && <p className="px-3 py-6 text-center text-sm text-gray-400">No documents found</p>}
         <ul>
-          {listAction?.items.map((item) => (
+          {shownItems.map((item) => (
             <li key={item} className="flex items-center">
               <button
                 type="button"
