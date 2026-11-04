@@ -21,6 +21,7 @@ interface TemplateField {
 interface TemplateSection extends TemplateField {
   key: string;
   locked?: boolean;
+  isDefault?: boolean;
 }
 
 interface EditTemplateResponse {
@@ -38,6 +39,26 @@ const SIGNATURE_SECTION: TemplateSection = {
   check_prompt: "Is the clinician's full name and credentials documented? If not provided, ask the user.",
   locked: true,
 };
+
+// Same keys as the backend default visit_template.txt; these can be edited but not removed.
+const DEFAULT_KEYS = [
+  "vital_signs",
+  "cardiovascular",
+  "respiratory",
+  "neurological",
+  "genitourinary_unit",
+  "sensory",
+  "skin",
+  "digestive_nutrition",
+  "musculoskeletal",
+  "pain",
+  "infusion",
+  "mental_health_affect",
+  "endocrine",
+  "skilled_intervention_teaching_response",
+  "supervision",
+  "coordination_plan",
+];
 
 const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }: EditTemplateProps) => {
   const [sections, setSections] = useState<TemplateSection[]>([]);
@@ -72,6 +93,7 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
       key,
       question: value?.question ?? "",
       check_prompt: value?.check_prompt ?? "",
+      isDefault: DEFAULT_KEYS.includes(key),
     }));
 
     if (canAddSection) {
@@ -95,6 +117,16 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
   };
 
   const current = sections[currentIndex] ?? { key: "", question: "", check_prompt: "" };
+
+  const canRemove = canAddSection && !current.locked && !current.isDefault;
+
+  const removeSection = () => {
+    if (!window.confirm("Remove this section?")) return;
+
+    setSections(sections.filter((_, i) => i !== currentIndex));
+    setCurrentIndex(Math.max(0, currentIndex - 1));
+    setKeyError(null);
+  };
 
   const updateCurrent = (prop: keyof TemplateSection, value: string) => {
     setKeyError(null);
@@ -189,7 +221,19 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
               </div>
 
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700">Section Key</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Section Key</label>
+                  {canRemove && (
+                    <button
+                      type="button"
+                      onClick={removeSection}
+                      disabled={isSaving}
+                      className="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
+                    >
+                      Remove section
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={current.key}
