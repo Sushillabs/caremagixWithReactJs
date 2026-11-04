@@ -158,7 +158,7 @@ export default function PatientActionsMobile({ actions, mainKeys, onHome }) {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or date"
+              placeholder="Search doc name or date"
               className="min-h-11 w-full rounded-lg border border-gray-200 px-3 text-base focus:outline-none focus:ring-1 focus:ring-emerald-400"
             />
           </div>

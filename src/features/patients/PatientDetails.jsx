@@ -119,7 +119,7 @@ function DropdownButton({ label, items, onItemClick, onItemDelete, open, onToggl
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name or date"
+                placeholder="Search doc name or date"
                 autoFocus
                 className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
               />
@@ -592,8 +592,8 @@ export default function PatientDetails() {
                 role="tooltip"
                 className="pointer-events-none invisible absolute right-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-md bg-gray-800 px-3 py-2 text-xs leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
               >
-                Use this to set up a daily automated call to the patient that collects information about the medications they have taken. You
-                will get a report of missed critical medications so that an intervention can be started.
+                Use this to set up a daily automated call to the patient that collects information about the medications they have taken. You will get
+                a report of missed critical medications so that an intervention can be started.
               </div>
             </div>
           )}
@@ -750,7 +750,9 @@ export default function PatientDetails() {
       {deleteDocTarget && isLastDoc && (
         <DeleteConfirmModal
           title="Can't Delete"
-          message={`This is the last document for ${patient?.name || "this patient"}. To remove this patient, use Delete Patient from the Patients list.`}
+          message={`This is the last document for ${
+            patient?.name || "this patient"
+          }. To remove this patient, use Delete Patient from the Patients list.`}
           onCancel={() => setDeleteDocTarget(null)}
         />
       )}
