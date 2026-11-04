@@ -20,6 +20,7 @@ interface TemplateField {
 
 interface TemplateSection extends TemplateField {
   key: string;
+  locked?: boolean;
 }
 
 interface EditTemplateResponse {
@@ -29,10 +30,21 @@ interface EditTemplateResponse {
 // trim + spaces -> underscores; no other normalisation
 const normalizeKey = (k: string) => k.trim().replace(/\s+/g, "_");
 
+const SIGNATURE_KEY = "clinician_signature";
+
+const SIGNATURE_SECTION: TemplateSection = {
+  key: SIGNATURE_KEY,
+  question: "Please state the clinician's full name and credentials to sign this visit note.",
+  check_prompt: "Is the clinician's full name and credentials documented? If not provided, ask the user.",
+  locked: true,
+};
+
 const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }: EditTemplateProps) => {
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [keyError, setKeyError] = useState<string | null>(null);
+  const canAddSection = !noteKind;
+  const queryClient = useQueryClient();
 
   const { data, error, isSuccess, isError, isPending, isFetching } = useMyQuery<EditTemplateResponse>({
     api: editNoteTemplate(noteKind),
@@ -54,16 +66,33 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
   });
 
   useEffect(() => {
-    if (data?.fields) {
-      setSections(
-        Object.entries(data.fields).map(([key, value]) => ({
-          key,
-          question: value?.question ?? "",
-          check_prompt: value?.check_prompt ?? "",
-        }))
-      );
+    if (!data?.fields) return;
+
+    let list: TemplateSection[] = Object.entries(data.fields).map(([key, value]) => ({
+      key,
+      question: value?.question ?? "",
+      check_prompt: value?.check_prompt ?? "",
+    }));
+
+    if (canAddSection) {
+      const saved = list.find((s) => s.key === SIGNATURE_KEY);
+      const signature = saved ? { ...saved, locked: true } : SIGNATURE_SECTION;
+      list = [...list.filter((s) => s.key !== SIGNATURE_KEY), signature];
     }
-  }, [data]);
+
+    setSections(list);
+  }, [data, canAddSection]);
+
+  const addSection = () => {
+    const signatureIndex = sections.findIndex((s) => s.locked);
+    const insertAt = signatureIndex === -1 ? sections.length : signatureIndex;
+
+    const next = [...sections];
+    next.splice(insertAt, 0, { key: "", question: "", check_prompt: "" });
+
+    setSections(next);
+    setCurrentIndex(insertAt);
+  };
 
   const current = sections[currentIndex] ?? { key: "", question: "", check_prompt: "" };
 
@@ -75,14 +104,26 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
   const handleSave = async () => {
     const updated_fields: Record<string, TemplateField> = {};
     const seen = new Set<string>();
-    for (const s of sections) {
+    for (const [i, s] of sections.entries()) {
       const key = normalizeKey(s.key);
       if (!key) {
+        setCurrentIndex(i);
         setKeyError("Section key cannot be empty.");
         return;
       }
       if (seen.has(key)) {
+        setCurrentIndex(i);
         setKeyError(`Duplicate section key: "${key}".`);
+        return;
+      }
+      if (!s.question.trim()) {
+        setCurrentIndex(i);
+        setKeyError(`Question cannot be empty in "${key.replaceAll("_", " ")}".`);
+        return;
+      }
+      if (!s.check_prompt.trim()) {
+        setCurrentIndex(i);
+        setKeyError(`Check Prompt cannot be empty in "${key.replaceAll("_", " ")}".`);
         return;
       }
       seen.add(key);
@@ -91,6 +132,7 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
     setKeyError(null);
     try {
       await mutateAsync({ updated_fields, note_kind: noteKind });
+      queryClient.invalidateQueries({ queryKey: ["edit-template", noteKind ?? "visit"] });
     } catch (err) {
       console.error("Error saving template", err);
     }
@@ -134,6 +176,16 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
                     {idx + 1}. {s.key.trim() ? s.key.replaceAll("_", " ") : "(unnamed)"}
                   </button>
                 ))}
+                {canAddSection && (
+                  <button
+                    type="button"
+                    onClick={addSection}
+                    disabled={isSaving}
+                    className="whitespace-nowrap font-semibold text-emerald-700 hover:text-emerald-900 disabled:opacity-50"
+                  >
+                    + Add Section
+                  </button>
+                )}
               </div>
 
               <div className="mb-4">
@@ -142,7 +194,7 @@ const EditTemplate = ({ onClose, title = "Edit Visit Notes Template", noteKind }
                   type="text"
                   value={current.key}
                   onChange={(e) => updateCurrent("key", e.target.value)}
-                  disabled={isSaving}
+                  disabled={isSaving || current.locked}
                   className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm text-black focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50"
                 />
                 <p className="mt-1 text-xs text-gray-500">
