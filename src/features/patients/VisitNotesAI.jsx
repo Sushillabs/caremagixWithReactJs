@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ChevronDown, EllipsisVertical, Mic, RotateCcw } from "lucide-react";
+import SignatureCanvas from "react-signature-canvas";
 import useAmbientVisitNotes from "../../hooks/useAmbientVisitNotes";
 import useDeepgramVoice from "../../hooks/useDeepgramVoice";
 import useStopVoiceOnAuthError from "../../hooks/useStopVoiceOnAuthError";
@@ -24,8 +25,48 @@ const SKIP_MESSAGE = "I do not have information, move to the next section withou
 
 const isValidEmailFormate = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
-  const [noteText, setNoteText] = useState(lastResponse?.note_text || "");
+function SignatureBox({ signature, setSignature }) {
+  const padRef = useRef(null);
+
+  useEffect(() => {
+    if (signature) padRef.current?.fromDataURL(signature.full);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const clear = () => {
+    padRef.current?.clear();
+    setSignature(null);
+  };
+
+  const saveDrawing = () => {
+    const pad = padRef.current;
+    setSignature({
+      full: pad.toDataURL("image/png"),
+      trimmed: pad.getTrimmedCanvas().toDataURL("image/png"),
+    });
+  };
+
+  return (
+    <div className="shrink-0 border-t border-gray-200 p-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-600">Clinician Signature</span>
+        <button type="button" onClick={clear} className="min-h-8 px-2 text-xs text-emerald-700 hover:underline">
+          Clear
+        </button>
+      </div>
+      <SignatureCanvas
+        ref={padRef}
+        penColor="#1e3a8a"
+        clearOnResize={false}
+        onEnd={saveDrawing}
+        canvasProps={{ className: "mt-1 h-28 w-full rounded border border-dashed border-gray-300 bg-white" }}
+      />
+      {!signature && <p className="mt-1 text-xs text-gray-400">Sign above with your finger or mouse.</p>}
+    </div>
+  );
+}
+
+function ReviewSaveTab({ lastResponse, sessionId, saveNote, label, noteText, setNoteText, signature, setSignature, showSignature }) {
   const [sendEmail, setSendEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -35,10 +76,6 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const bottomRef = useRef(null);
   const refreshOpenPatient = useRefreshOpenPatient();
-
-  useEffect(() => {
-    setNoteText(lastResponse?.note_text || "");
-  }, [lastResponse?.note_text]);
 
   useEffect(() => {
     if (saveResult) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,6 +98,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
         note_text: noteText,
         send_email: withEmail,
         recipient_email: withEmail ? email.trim() : "",
+        ...(showSignature && signature ? { signature_image: signature.trimmed } : {}),
       });
       setSaveResult(result);
       refreshOpenPatient(NEW_DOC_REFRESH_DELAY_MS);
@@ -106,11 +144,14 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label }) {
 
         <div className="flex min-h-[200px] flex-1 flex-col compact:min-h-40 md:block md:min-h-0">
           <label className="text-xs font-semibold text-gray-600">{label}</label>
-          <textarea
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            className="small-text-ok mt-1 w-full min-h-[200px] flex-1 border rounded p-2 text-xs leading-relaxed compact:min-h-40 md:flex-none md:text-sm md:leading-normal"
-          />
+          <div className="mt-1 flex flex-1 flex-col rounded border md:block">
+            <textarea
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              className="small-text-ok block w-full min-h-[200px] flex-1 rounded p-2 text-xs leading-relaxed focus:outline-none compact:min-h-40 md:flex-none md:text-sm md:leading-normal"
+            />
+            {showSignature && <SignatureBox signature={signature} setSignature={setSignature} />}
+          </div>
         </div>
 
         <label className="flex min-h-10 items-center gap-2 text-sm text-gray-700 compact:min-h-8 max-[359px]:text-[0.75rem] md:min-h-0">
@@ -185,6 +226,8 @@ export default function VisitNotesAI() {
   const [activeTab, setActiveTab] = useState("chat");
   const [typeMode, setTypeMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [signature, setSignature] = useState(null);
 
   const {
     turns,
@@ -266,6 +309,10 @@ export default function VisitNotesAI() {
     if (lastResponse?.status === "generated") setActiveTab("review");
   }, [lastResponse]);
 
+  useEffect(() => {
+    setNoteText(lastResponse?.note_text || "");
+  }, [lastResponse?.note_text]);
+
   const handleStart = async () => {
     setStarted(true);
     // Start the voice session before speaking, not after — playStream/playReply
@@ -281,6 +328,7 @@ export default function VisitNotesAI() {
     if (pending) return;
     speakAbortRef.current?.abort();
     if (voice.isActive) voice.stop();
+    setSignature(null);
     await reset();
     voice.start();
     const res = await hydrateHistory();
@@ -448,7 +496,19 @@ export default function VisitNotesAI() {
         </>
       )}
 
-      {activeTab === "review" && <ReviewSaveTab lastResponse={lastResponse} sessionId={sessionId} saveNote={saveNote} label={label} />}
+      {activeTab === "review" && (
+        <ReviewSaveTab
+          lastResponse={lastResponse}
+          sessionId={sessionId}
+          saveNote={saveNote}
+          label={label}
+          noteText={noteText}
+          setNoteText={setNoteText}
+          signature={signature}
+          setSignature={setSignature}
+          showSignature={!noteKind}
+        />
+      )}
     </div>
   );
 }
