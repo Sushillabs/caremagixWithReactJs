@@ -59,7 +59,7 @@ function SignatureBox({ signature, setSignature }) {
         penColor="#1e3a8a"
         clearOnResize={false}
         onEnd={saveDrawing}
-        canvasProps={{ className: "mt-1 h-28 w-full rounded border border-dashed border-gray-300 bg-white" }}
+        canvasProps={{ className: "mt-1 h-28 w-full compact:h-20 rounded border border-dashed border-gray-300 bg-white" }}
       />
       {!signature && <p className="mt-1 text-xs text-gray-400">Sign above with your finger or mouse.</p>}
     </div>
@@ -142,7 +142,7 @@ function ReviewSaveTab({ lastResponse, sessionId, saveNote, label, noteText, set
           />
         </div>
 
-        <div className="flex min-h-[200px] flex-1 flex-col compact:min-h-40 md:block md:min-h-0">
+        <div className="flex flex-1 flex-col md:block">
           <label className="text-xs font-semibold text-gray-600">{label}</label>
           <div className="mt-1 flex flex-1 flex-col rounded border md:block">
             <textarea
