@@ -3,15 +3,77 @@ import { Link } from "react-router-dom";
 
 const WEBSITE_URL = "https://www.caremagix.com";
 
+const PLATFORM_LINKS = [
+  { label: "PanoramaCare", href: `${WEBSITE_URL}/panaroma-care.php` },
+  { label: "Patient Care Advocate", href: `${WEBSITE_URL}/patient-care-advocate.php` },
+  { label: "Care Continuum Platform", href: `${WEBSITE_URL}/care-continuum-platform.php` },
+];
+
+const TEAM_LINKS = [
+  { label: "About Us", href: `${WEBSITE_URL}/about-us.php` },
+  { label: "Team", href: `${WEBSITE_URL}/team-leadership.php` },
+  { label: "Careers", href: `${WEBSITE_URL}/careers.php` },
+];
+
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isTooltip, setIsTooltip] = useState(false);
+  // const [isTooltip, setIsTooltip] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState("");
+
+  const isDesktopHover = () =>
+    window.matchMedia("(min-width: 1280px) and (hover: hover)").matches;
+
+  const renderDropdown = (name, label, links) => (
+    <li
+      className="relative"
+      onMouseEnter={() => isDesktopHover() && setOpenDropdown(name)}
+      onMouseLeave={() => isDesktopHover() && setOpenDropdown("")}
+    >
+      <div
+        className="flex items-center hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors"
+        onClick={() => {
+          if (isDesktopHover()) return;
+          setOpenDropdown(openDropdown === name ? "" : name);
+        }}
+      >
+        {label}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className={`ml-1 w-4 h-4 transition-transform ${openDropdown === name ? "rotate-180" : ""}`}
+        >
+          <path
+            fillRule="evenodd"
+            d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 1 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </div>
+
+      {openDropdown === name && (
+        <div className="xl:absolute left-0 top-full xl:pt-2 z-50">
+          <div className="w-56 bg-white xl:shadow-xl xl:border border-gray-200 rounded-lg overflow-hidden">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="block px-4 py-3 hover:bg-gray-100 hover:text-green-500 border-b border-gray-100 last:border-b-0"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </li>
+  );
 
   return (
     <header>
       <nav className="shadow-md fixed top-0 w-full z-10 bg-white">
         <div className="grid grid-cols-12 md:ml-14 md:mr-14 mt-4 p-2 items-center">
-          <a href={WEBSITE_URL} aria-label="CareMagix home" className="col-span-6 md:col-span-3 w-40 hover:cursor-pointer">
+          <a href={WEBSITE_URL} aria-label="CareMagix home" className="col-span-6 xl:col-span-3 w-40 hover:cursor-pointer">
             <svg
             width="160"
             height="66"
@@ -53,7 +115,7 @@ function Header() {
           </svg>
           </a>
 
-          <div className="col-span-6 flex justify-end md:hidden">
+          <div className="col-span-6 flex justify-end xl:hidden">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-gray-700"
@@ -80,15 +142,23 @@ function Header() {
           </div>
 
           <div
-            className={`col-span-12 md:col-span-6 mt-10 md:mt-0 ${
+            className={`col-span-12 xl:col-span-7 mt-10 xl:mt-0 ${
               menuOpen ? "block" : "hidden"
-            } md:block`}
+            } xl:block`}
           >
-            <ul className="flex flex-col md:flex-row justify-between items-start md:items-center text-gray-500 text-sm gap-4 md:gap-0">
+            <ul className="flex flex-col xl:flex-row justify-between items-start xl:items-center whitespace-nowrap text-gray-500 text-sm gap-4 xl:gap-3">
               <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 <a href={WEBSITE_URL}>Home</a>
               </li>
+              {renderDropdown("platform", "Our Care Platform", PLATFORM_LINKS)}
               <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
+                <a href={`${WEBSITE_URL}/discharge-and-referral.php`}>Discharge And Referral</a>
+              </li>
+              <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
+                <a href={`${WEBSITE_URL}/oasis-soap-notes.php`}>OASIS SOAP Notes</a>
+              </li>
+              {renderDropdown("team", "Team", TEAM_LINKS)}
+              {/* <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Our Platform
               </li>
               <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
@@ -96,13 +166,13 @@ function Header() {
               </li>
               <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 Other Benefits
-              </li>
+              </li> */}
               {/* <li className="hover:cursor-pointer hover:text-green-500 hover:font-bold transition-colors">
                 <Link to={'/privacy-policy'}>Privacy Policy</Link>
-                
+
               </li> */}
-              
-              <li className="relative h-full">
+
+              {/* <li className="relative h-full">
                 <div
                   className="flex items-center h-full px-3 py-2 hover:text-green-500 hover:font-bold cursor-pointer"
                   onMouseEnter={() => setIsTooltip(true)}
@@ -130,7 +200,6 @@ function Header() {
                   </svg>
                 </div>
 
-                {/* Dropdown Menu */}
                 {isTooltip && (
                   <div
                     className="dropdown-container absolute left-0 top-full w-56 bg-white shadow-xl border border-gray-200 rounded-b-lg z-50"
@@ -154,6 +223,15 @@ function Header() {
                     </a>
                   </div>
                 )}
+              </li> */}
+
+              <li className="xl:hidden">
+                <a
+                  href={`${WEBSITE_URL}/talk-to-sales.php`}
+                  className="inline-block border-2 border-green-600 text-green-600 rounded py-2 px-4 hover:bg-green-600 hover:text-white transition-colors"
+                >
+                  Talk to Sales
+                </a>
               </li>
 
               <li>
@@ -181,7 +259,16 @@ function Header() {
             `}</style> */}
           </div>
 
-          <div className={`hidden md:flex justify-end col-span-3 text-end `}>
+          <div className="hidden xl:flex justify-end xl:col-span-2 text-end">
+            <a
+              href={`${WEBSITE_URL}/talk-to-sales.php`}
+              className="whitespace-nowrap py-3 px-6 border-2 border-green-600 text-green-600 rounded font-medium hover:bg-green-600 hover:text-white transition-colors"
+            >
+              Talk to Sales
+            </a>
+          </div>
+
+          {/* <div className={`hidden md:flex justify-end col-span-3 text-end `}>
             <div className="flex flex-col md:flex-row items-center gap-0 py-4 px-6 bg-green-600 text-white rounded hover:cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -198,7 +285,7 @@ function Header() {
               </svg>
               Contact
             </div>
-          </div>
+          </div> */}
         </div>
       </nav>
     </header>
