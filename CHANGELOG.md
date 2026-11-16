@@ -5,6 +5,44 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Until the project starts cutting real releases (see `package.json` version),
 entries live under `[Unreleased]`.
 
+#### Added — Visit Prep: Pre-Visit Brief + Exam Plan (physician)
+
+New "Visit Prep" panel on the patient page (`src/features/previsit/`), 3 steps:
+Pre-Visit Brief → Record Visit (Ambient AI) → Exam Plan. Both are background
+jobs (`/v1/previsit/*`, `/v1/diagnosis-report/*`) tracked on the Jobs page,
+with a toast + Open when done. Brief cards + PDF download; exam plan screen
+follows BE display rules. Flow doc: `docs/previsit_exam_plan_frontend_flow.txt`.
+
+#### Changed — Chat mic icon shows on/off state
+
+Type-box mic is green `Mic` when on, red `MicOff` when off
+(`AgentChatComposer.jsx`, all chat screens).
+
+#### Added — Caregiver visit note: drawn clinician signature
+
+Signature pad inside the Visit Note box (`react-signature-canvas`); trimmed PNG
+sent as `signature_image` to `session/save`, drawn in the PDF. Note edits now
+survive switching Chat/Review tabs. Fixed pad overlapping the email row on small phones.
+
+#### Added — Login page: logo and Home link to caremagix.com
+
+#### Added — Documents dropdown search (name or date)
+
+Search box when a list has 5+ docs; matches names and typed dates
+(MM/DD or MM/DD/YYYY). Desktop dropdown and mobile sheet (`utils/docSearch.js`).
+
+#### Added — Edit Visit Template: add / remove sections (caregiver)
+
+"+ Add Section" before the locked Clinician Signature; only added sections can
+be removed. Validates empty/duplicate keys and empty question/prompt. Reopen
+refetches after save.
+
+#### Added — Ambient AI for caregivers + patient refresh after new docs
+
+`ambientVisitNotes` open to caregivers. New `useRefreshOpenPatient` refreshes
+the open patient's documents after upload, delete, note save and jobs.
+Pause/resume keeps words spoken before the pause and shows resume errors.
+
 #### Changed — Mobile responsive: app shell + patient detail (phases 0–2)
 
 Layout only, desktop unchanged. Sidebar: drawer on phone, icon rail on

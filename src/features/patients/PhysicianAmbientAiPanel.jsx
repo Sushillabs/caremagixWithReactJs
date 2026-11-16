@@ -146,7 +146,7 @@ function ReviewBody({ session, fields, setFields }) {
   );
 }
 
-export default function PhysicianAmbientAiPanel() {
+export default function PhysicianAmbientAiPanel({ onOpenExamPlan }) {
   const session = usePhysicianAmbientSession();
   const [elapsedMs, setElapsedMs] = useState(0);
   const [fields, setFields] = useState({ chief_complaint: "", subjective: "", objective: "", assessment: "", plan: "" });
@@ -264,6 +264,15 @@ export default function PhysicianAmbientAiPanel() {
               className="text-xs font-semibold text-emerald-700 underline"
             >
               Download PDF
+            </button>
+          )}
+          {onOpenExamPlan && (
+            <button
+              type="button"
+              onClick={onOpenExamPlan}
+              className="rounded-md bg-emerald-800 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-900"
+            >
+              Generate Exam Plan
             </button>
           )}
           <button

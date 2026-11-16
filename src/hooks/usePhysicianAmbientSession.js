@@ -4,6 +4,8 @@ import useDeepgramVoice from "./useDeepgramVoice";
 import useStopVoiceOnAuthError from "./useStopVoiceOnAuthError";
 import useRefreshOpenPatient, { NEW_DOC_REFRESH_DELAY_MS } from "./useRefreshOpenPatient";
 import { getPhysicianAmbientVoiceToken, physicianAmbientStart, physicianAmbientStop, physicianAmbientSave } from "../api/hospitalApi";
+import { rememberAmbientVisit } from "../features/previsit/ambientVisit";
+import { toPatientKey } from "../features/previsit/previsitApi";
 
 // Matches the labels ambient_ai/agent.py's format_note_text writes — query_api.py's
 // parse_note_content reads any "LABEL: value" line generically, so rebuilding with
@@ -34,6 +36,7 @@ function rebuildNoteText(originalNoteText, soapFields) {
 // interview onto useAgentChat's generic {session_id, message} contract.
 export default function usePhysicianAmbientSession() {
   const patientData = useSelector((state) => state?.patientsingledata?.value);
+  const userId = useSelector((state) => state?.auth?.value?.user_id);
   const refreshOpenPatient = useRefreshOpenPatient();
 
   const [phase, setPhase] = useState("idle"); // idle | recording | generating | review | saving | saved
@@ -133,6 +136,7 @@ export default function usePhysicianAmbientSession() {
       setNoteText(session.note_text || "");
       setTranscriptPreview(session.transcript || transcript);
       setPhase("review");
+      rememberAmbientVisit(userId, toPatientKey(activePatientNameRef.current), sessionId);
     } catch (err) {
       // Stays on "review" with soap left unset — the panel shows a retry
       // action that just calls stopAndGenerate again (safe: mic is already
@@ -141,7 +145,7 @@ export default function usePhysicianAmbientSession() {
       setError(errorMessage(err, "Could not generate the visit note"));
       setPhase("review");
     }
-  }, [voice, sessionId, pushUtterance]);
+  }, [voice, sessionId, pushUtterance, userId]);
 
   const saveNote = useCallback(
     async (editedSoap) => {

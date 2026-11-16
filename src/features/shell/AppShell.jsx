@@ -6,6 +6,7 @@ import TopBar from "./TopBar";
 import DockedAssistant from "./DockedAssistant";
 import { getSectionByPath } from "../../config/sections";
 import useJobsTracker from "../../hooks/useJobsTracker";
+import useVisitPrepToasts from "../previsit/useVisitPrepToasts";
 import useNotifications from "../../hooks/useNotifications";
 import useConnectReturn from "../../hooks/useConnectReturn";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -64,6 +65,7 @@ export default function AppShell() {
   // if (role === "physician") return <div className="h-dvh bg-gray-100" />;
 
   useJobsTracker();
+  useVisitPrepToasts();
   useConnectReturn();
 
   const isSectionDetail = Boolean(section) && location.pathname !== section.path;

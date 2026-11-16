@@ -2,6 +2,9 @@ import { useSelector } from "react-redux";
 import useProgress from "../../hooks/useProgress";
 import useExternalJobsProgress from "../../hooks/useExternalJobsProgress";
 import useCms485Progress from "../cms485/useCms485Progress";
+import usePatientRecords from "../../hooks/usePatientRecords";
+import useOpenPatientDetail from "../../hooks/useOpenPatientDetail";
+import { examPlanProgress, previsitProgress, useVisitPrepRuns } from "../previsit/useVisitPrepRun";
 
 const TYPE_LABELS = {
   "ocr-job": "Scan PDF",
@@ -25,8 +28,10 @@ const normalizeExternalStatus = (status) => {
 };
 
 export default function JobsPage() {
-  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, pccUserJobs, epicJobs, epicUserJobs, metriportJobs, cms485Jobs } =
+  const { eFaxJobs, ocrJobs, carePlanJobs, pccJobs, pccUserJobs, epicJobs, epicUserJobs, metriportJobs, cms485Jobs, previsitJobs, examPlanJobs } =
     useSelector((state) => state.jobsId);
+  const patients = usePatientRecords();
+  const openPatientDetail = useOpenPatientDetail();
   const finalJobs = useSelector((state) => state.finalJobStatus.finalJobs);
 
   const jobs = [
@@ -112,7 +117,55 @@ export default function JobsPage() {
     })
     .reverse();
 
-  const allRows = [...cms485Rows, ...externalRows, ...rows];
+  const previsitList = Array.isArray(previsitJobs) ? previsitJobs : [];
+  const previsitQueries = useVisitPrepRuns("previsit", previsitList);
+
+  const previsitRows = previsitList
+    .map((job, i) => {
+      const query = previsitQueries[i];
+      const run = query?.data;
+      const status = query?.isError ? "FAILED" : normalizeExternalStatus(run?.status);
+      const { text, progress } = previsitProgress(run);
+      const match = patients.find((p) => p.name?.toLowerCase() === job.patient_name?.toLowerCase());
+
+      return {
+        jobId: job.job_id,
+        type: "Pre-Visit Brief",
+        patientName: job.patient_name || "—",
+        fileName: "—",
+        status,
+        progress: query?.isError ? 0 : progress,
+        message: query?.isError ? query.error?.response?.data?.message || "Could not check status" : text,
+        onOpen: status === "COMPLETED" && match ? () => openPatientDetail(match, { panel: "visitPrep" }) : null,
+      };
+    })
+    .reverse();
+
+  const examPlanList = Array.isArray(examPlanJobs) ? examPlanJobs : [];
+  const examPlanQueries = useVisitPrepRuns("examPlan", examPlanList);
+
+  const examPlanRows = examPlanList
+    .map((job, i) => {
+      const query = examPlanQueries[i];
+      const run = query?.data;
+      const status = query?.isError ? "FAILED" : normalizeExternalStatus(run?.status);
+      const { text, progress } = examPlanProgress(run);
+      const match = patients.find((p) => p.name?.toLowerCase() === job.patient_name?.toLowerCase());
+
+      return {
+        jobId: job.job_id,
+        type: "Exam Plan",
+        patientName: job.patient_name || "—",
+        fileName: "—",
+        status,
+        progress: query?.isError ? 0 : progress,
+        message: query?.isError ? query.error?.response?.data?.message || "Could not check status" : text,
+        onOpen: status === "COMPLETED" && match ? () => openPatientDetail(match, { panel: "visitPrep", tab: "exam" }) : null,
+      };
+    })
+    .reverse();
+
+  const allRows = [...examPlanRows, ...previsitRows, ...cms485Rows, ...externalRows, ...rows];
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
@@ -149,7 +202,11 @@ export default function JobsPage() {
                   </td>
                   <td className="px-4 py-2 text-gray-600">{row.progress}%</td>
                   <td className="max-w-[280px] truncate px-4 py-2 text-gray-500">
-                    {row.formLink ? (
+                    {row.onOpen ? (
+                      <button type="button" onClick={row.onOpen} className="font-medium text-emerald-700 hover:underline">
+                        Open
+                      </button>
+                    ) : row.formLink ? (
                       <a
                         href={row.formLink}
                         target="_blank"

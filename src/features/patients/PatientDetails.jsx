@@ -19,6 +19,7 @@ import {
   PhoneCall,
   Pill,
   Route,
+  Stethoscope,
   Trash2,
   Upload,
   User,
@@ -40,6 +41,7 @@ import WellnessQuestionsPanel from "../wellness/WellnessQuestionsPanel";
 import AppointmentsPanel from "../appointments/AppointmentsPanel";
 import PatientTimelinePanel from "../timeline/PatientTimelinePanel";
 import PhysicianAmbientAiPanel from "./PhysicianAmbientAiPanel";
+import VisitPrepPanel from "../previsit/VisitPrepPanel";
 import TherapyProgressNotePanel from "./TherapyProgressNotePanel";
 import SendMessageModal from "./SendMessageModal";
 import Cms485Modal from "../cms485/Cms485Modal";
@@ -213,6 +215,16 @@ export default function PatientDetails() {
     openWellnessCheckIn();
   };
 
+  const [visitPrepStep, setVisitPrepStep] = useState(null);
+  const openExamPlan = () => {
+    setVisitPrepStep("exam");
+    setActivePanel("visitPrep");
+  };
+  const openVisitPrep = () => {
+    setVisitPrepStep("brief");
+    setActivePanel("visitPrep");
+  };
+
   const [homeKey, setHomeKey] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
   const toggleDropdown = (label) => setOpenDropdown((cur) => (cur === label ? null : label));
@@ -253,6 +265,7 @@ export default function PatientDetails() {
   const canSendMessage = useCan("sendMessage");
   const canAmbientVisitNotes = useCan("ambientVisitNotes");
   const canCms485 = useCan("cms485");
+  const canVisitPrep = useCan("visitPrep");
   const [showCms485Modal, setShowCms485Modal] = useState(false);
 
   if (!patient) return <Navigate to="/app/dashboard" replace />;
@@ -438,6 +451,14 @@ export default function PatientDetails() {
       group: "Care",
       show: canAmbientVisitNotes,
       onClick: () => setActivePanel("ambientAi"),
+    },
+    {
+      key: "visitPrep",
+      label: "Visit Prep",
+      icon: Stethoscope,
+      group: "Care",
+      show: canVisitPrep,
+      onClick: openVisitPrep,
     },
     {
       key: "wellnessReport",
@@ -677,6 +698,16 @@ export default function PatientDetails() {
             </button>
           )}
 
+          {canVisitPrep && (
+            <button
+              type="button"
+              onClick={openVisitPrep}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Visit Prep
+            </button>
+          )}
+
           {canWellnessCheckInReport && (
             <button
               type="button"
@@ -723,7 +754,13 @@ export default function PatientDetails() {
       ) : activePanel === "timeline" ? (
         <PatientTimelinePanel />
       ) : activePanel === "ambientAi" ? (
-        <PhysicianAmbientAiPanel />
+        <PhysicianAmbientAiPanel onOpenExamPlan={canVisitPrep ? openExamPlan : undefined} />
+      ) : activePanel === "visitPrep" ? (
+        <VisitPrepPanel
+          patientName={singleData?.patient_name}
+          initialStep={visitPrepStep || searchParams.get("tab")}
+          onOpenAmbientAi={() => setActivePanel("ambientAi")}
+        />
       ) : activePanel === "createProgress" ? (
         <TherapyProgressNotePanel patientName={patient?.name} />
       ) : (

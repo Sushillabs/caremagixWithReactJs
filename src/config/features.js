@@ -26,6 +26,7 @@ export const FEATURE_ROLES = {
   timeline: ["physician"],
   ambientVisitNotes: ["caregiver", "physician"],
   sendMessage: ["caregiver", "physician"],
+  visitPrep: ["physician"],
 };
 
 export const canUseFeature = (role, key) => (FEATURE_ROLES[key] || ALL_ROLES).includes(role);

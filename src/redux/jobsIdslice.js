@@ -16,6 +16,8 @@ export const emptyJobsState = () => ({
     epicUserJobs: [],
     metriportJobs: [],
     cms485Jobs: [],
+    previsitJobs: [],
+    examPlanJobs: [],
 });
 
 const loadSavedJobs = () => {
@@ -80,6 +82,14 @@ const jobsIdSlice = createSlice({
 
             if (action.payload?.cms485Jobs && typeof action.payload.cms485Jobs === "object") {
                 state.cms485Jobs.push(stamp(action.payload.cms485Jobs));
+            }
+
+            if (action.payload?.previsitJobs && typeof action.payload.previsitJobs === "object") {
+                state.previsitJobs.push(stamp(action.payload.previsitJobs));
+            }
+
+            if (action.payload?.examPlanJobs && typeof action.payload.examPlanJobs === "object") {
+                state.examPlanJobs.push(stamp(action.payload.examPlanJobs));
             }
         },
         clearJobsId: () => emptyJobsState(),
