@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, Send, Volume2 } from "lucide-react";
+import { Mic, MicOff, Send, Volume2 } from "lucide-react";
 
 // Generic chat input — deliberately separate from AiCareAssistant.jsx (that
 // one is hardwired to the /ask endpoint + a caregiver-selected patient).
@@ -41,10 +41,10 @@ export default function AgentChatComposer({ onSubmit, disabled, placeholder = "T
             aria-label={micLabel}
             aria-pressed={micActive}
             className={`flex h-9 w-9 shrink-0 items-center justify-center disabled:opacity-40 md:h-auto md:w-auto ${
-              micActive ? "text-emerald-600" : "text-gray-400 hover:text-gray-600"
+              micActive ? "text-emerald-600 hover:text-emerald-700" : "text-red-500 hover:text-red-600"
             }`}
           >
-            <Mic size={18} />
+            {micActive ? <Mic size={18} /> : <MicOff size={18} />}
           </button>
         )}
         <button
