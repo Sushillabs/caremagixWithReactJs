@@ -26,6 +26,12 @@ const toPoints = (text) =>
       .map((part) => part.replace(/\.$/, ""))
   );
 
+const GROUP_GRID = "space-y-2 md:grid md:grid-cols-2 md:items-start md:gap-2 md:space-y-0";
+
+function GroupHeading({ children }) {
+  return <p className="border-b border-gray-200 pb-0.5 pt-1 text-sm font-semibold text-gray-800">{children}</p>;
+}
+
 function Card({ title, children, wide = false }) {
   return (
     <div className={`rounded-lg border border-gray-200 px-2.5 py-2 ${wide ? "md:col-span-2" : ""}`}>
@@ -90,7 +96,7 @@ export default function ExamPlanView({ plan }) {
   const safety = (ap.interaction_and_safety || []).filter((item) => !isMissing(item.text));
   const prevention = (plan?.prevention_checklist || []).filter((item) => !isMissing(item.action || item.item));
   const actions = (plan?.physician_actions || []).filter((item) => !isMissing(item.action));
-  const assessment = isMissing(ap.assessment) ? "" : ap.assessment;
+  const assessmentPoints = keep(String(ap.assessment || "").split(";"));
   const patientNote = isMissing(plan?.patient_note) ? "" : plan.patient_note;
 
   return (
@@ -115,11 +121,17 @@ export default function ExamPlanView({ plan }) {
         )}
       </div>
 
-      <div className="space-y-2 md:grid md:grid-cols-2 md:items-start md:gap-2 md:space-y-0">
+      {(inOffice.length > 0 || conclusion || liveExam.length > 0 || labs.length > 0) && <GroupHeading>Exam &amp; Preliminary Reads</GroupHeading>}
+      <div className={GROUP_GRID}>
         {(inOffice.length > 0 || conclusion) && (
           <Card title="In office (urgent check recommendation)">
             {inOffice.length > 0 && <Bullets items={inOffice} />}
-            {conclusion && <p className="mt-1 text-sm font-medium text-gray-800">{conclusion}</p>}
+            {conclusion && (
+              <>
+                <p className="mt-1.5 text-xs font-semibold text-gray-500">Conclusion</p>
+                <p className="text-sm font-medium text-gray-800">{conclusion}</p>
+              </>
+            )}
           </Card>
         )}
 
@@ -156,10 +168,13 @@ export default function ExamPlanView({ plan }) {
             </div>
           </Card>
         )}
+      </div>
 
-        {assessment && (
+      <GroupHeading>Proposed assessment and plan</GroupHeading>
+      <div className={GROUP_GRID}>
+        {assessmentPoints.length > 0 && (
           <Card title="Assessment" wide>
-            <p className="text-sm text-gray-700">{assessment}</p>
+            <Bullets items={assessmentPoints} />
           </Card>
         )}
 
@@ -167,28 +182,37 @@ export default function ExamPlanView({ plan }) {
           {planItems.length === 0 ? (
             <p className="text-xs text-gray-400">No plan items</p>
           ) : (
-            <ul className="space-y-2">
+            <ol className="space-y-2">
               {planItems.map((item, i) => (
                 <li key={item.id || i} className="rounded-md border border-gray-100 bg-white px-2 py-1.5">
                   <div className="flex flex-wrap items-start gap-2">
-                    <p className="min-w-0 flex-1 text-sm font-medium text-gray-800">{item.action}</p>
+                    <p className="min-w-0 flex-1 text-sm font-medium text-gray-800">
+                      {i + 1}. {item.action}
+                    </p>
                     <SuggestionTag text={item.tag} />
                   </div>
                   {!isMissing(item.why) && <p className="text-sm text-gray-600">{item.why}</p>}
-                  {keep([item.source?.patient_record, item.source?.harrison]).map((source, j) => (
-                    <p key={j} className="text-xs text-gray-400">
-                      {source}
+                  {!isMissing(item.source?.patient_record) && (
+                    <p className="text-xs text-gray-400">
+                      <span className="font-medium text-gray-500">Record: </span>
+                      {item.source.patient_record}
                     </p>
-                  ))}
+                  )}
+                  {!isMissing(item.source?.harrison) && (
+                    <p className="text-xs text-gray-400">
+                      <span className="font-medium text-gray-500">Reference: </span>
+                      {item.source.harrison}
+                    </p>
+                  )}
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
         </Card>
 
         {safety.length > 0 && (
-          <Card title="Interaction and safety">
-            <ul className="space-y-1">
+          <Card title="Interaction and safety" wide>
+            <ul className="space-y-1.5">
               {safety.map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                   <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
@@ -196,14 +220,22 @@ export default function ExamPlanView({ plan }) {
                   </span>
                   <span>
                     {item.text}
-                    {!isMissing(item.source) && <span className="block text-xs text-gray-400">{item.source}</span>}
+                    {!isMissing(item.source) && (
+                      <span className="block text-xs text-gray-400">
+                        <span className="font-medium text-gray-500">Source: </span>
+                        {item.source}
+                      </span>
+                    )}
                   </span>
                 </li>
               ))}
             </ul>
           </Card>
         )}
+      </div>
 
+      {(prevention.length > 0 || actions.length > 0 || patientNote) && <GroupHeading>Prevention checklist and sign-off</GroupHeading>}
+      <div className={GROUP_GRID}>
         {prevention.length > 0 && (
           <Card title="Prevention">
             <ul className="space-y-1 text-sm text-gray-700">
@@ -218,8 +250,8 @@ export default function ExamPlanView({ plan }) {
         )}
 
         {actions.length > 0 && (
-          <Card title="Physician actions">
-            <ul className="space-y-1 text-sm text-gray-700">
+          <Card title="Physician actions" wide>
+            <ul className="space-y-1 text-sm text-gray-700 md:hidden">
               {actions.map((item, i) => (
                 <li key={i}>
                   <span className="font-medium text-gray-800">{item.item}: </span>
@@ -227,6 +259,22 @@ export default function ExamPlanView({ plan }) {
                 </li>
               ))}
             </ul>
+            <table className="hidden w-full text-left text-sm md:table">
+              <thead>
+                <tr className="text-xs text-gray-500">
+                  <th className="w-1/3 py-1 pr-3 font-medium">Item</th>
+                  <th className="py-1 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actions.map((item, i) => (
+                  <tr key={i} className="border-t border-gray-100 align-top">
+                    <td className="py-1 pr-3 font-medium text-gray-800">{item.item}</td>
+                    <td className="py-1 text-gray-700">{item.action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Card>
         )}
 

@@ -13,8 +13,8 @@ import { visibleVisitPrep } from "./visibleVisitPrep";
 
 const STEPS = [
   { key: "brief", label: "Pre-Visit Brief", short: "Brief" },
-  // { key: "visit", label: "Record Visit", short: "Visit" },
-  // { key: "exam", label: "Exam Plan", short: "Exam Plan" },
+  { key: "visit", label: "Record Visit", short: "Visit" },
+  { key: "exam", label: "Exam Plan", short: "Exam Plan" },
 ];
 
 const PRIMARY_BTN = "min-h-8 shrink-0 rounded-md bg-emerald-800 px-2.5 text-xs font-medium text-white hover:bg-emerald-900 disabled:opacity-50";
