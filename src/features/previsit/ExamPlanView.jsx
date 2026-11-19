@@ -143,7 +143,24 @@ export default function ExamPlanView({ plan }) {
 
         {labs.length > 0 && (
           <Card title="Labs today" wide>
-            <div className="overflow-x-auto">
+            <ul className="divide-y divide-gray-100 md:hidden">
+              {labs.map((lab, i) => (
+                <li key={lab.id || i} className="py-1.5 first:pt-0 last:pb-0">
+                  <p className="text-sm font-medium text-gray-800">
+                    {lab.test}
+                    {lab.physician_discretion && <span className="ml-2 text-xs font-normal text-gray-500">Physician discretion</span>}
+                  </p>
+                  <p className="text-sm text-gray-700">{lab.reason}</p>
+                  {!isMissing(lab.source) && (
+                    <p className="text-xs text-gray-400">
+                      <span className="font-medium text-gray-500">Source: </span>
+                      {lab.source}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="text-xs text-gray-500">
@@ -185,7 +202,7 @@ export default function ExamPlanView({ plan }) {
             <ol className="space-y-2">
               {planItems.map((item, i) => (
                 <li key={item.id || i} className="rounded-md border border-gray-100 bg-white px-2 py-1.5">
-                  <div className="flex flex-wrap items-start gap-2">
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:gap-2">
                     <p className="min-w-0 flex-1 text-sm font-medium text-gray-800">
                       {i + 1}. {item.action}
                     </p>
@@ -214,7 +231,7 @@ export default function ExamPlanView({ plan }) {
           <Card title="Interaction and safety" wide>
             <ul className="space-y-1.5">
               {safety.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                <li key={i} className="flex flex-col items-start gap-1 text-sm text-gray-700 sm:flex-row sm:gap-2">
                   <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                     {item.mark || "check"}
                   </span>
