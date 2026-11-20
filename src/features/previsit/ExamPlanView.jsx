@@ -98,6 +98,7 @@ export default function ExamPlanView({ plan }) {
   const actions = (plan?.physician_actions || []).filter((item) => !isMissing(item.action));
   const assessmentPoints = keep(String(ap.assessment || "").split(";"));
   const patientNote = isMissing(plan?.patient_note) ? "" : plan.patient_note;
+  const feedback = String(plan?.model_feedback || "").trim();
 
   return (
     <div className="space-y-2">
@@ -251,7 +252,7 @@ export default function ExamPlanView({ plan }) {
         )}
       </div>
 
-      {(prevention.length > 0 || actions.length > 0 || patientNote) && <GroupHeading>Prevention checklist and sign-off</GroupHeading>}
+      {(prevention.length > 0 || actions.length > 0 || patientNote || feedback) && <GroupHeading>Prevention checklist and sign-off</GroupHeading>}
       <div className={GROUP_GRID}>
         {prevention.length > 0 && (
           <Card title="Prevention">
@@ -296,6 +297,12 @@ export default function ExamPlanView({ plan }) {
         )}
 
         {patientNote && <PatientNote text={patientNote} />}
+
+        {feedback && (
+          <Card title="Physician feedback on this AI plan" wide>
+            <p className="whitespace-pre-line text-sm text-gray-700">{feedback}</p>
+          </Card>
+        )}
       </div>
     </div>
   );

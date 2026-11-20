@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useOutletContext } from "react-router-dom";
-import { Check, Download, Loader2 } from "lucide-react";
+import { Check, Download, Loader2, Pencil } from "lucide-react";
 import BriefView from "./BriefView";
 import ExamPlanView from "./ExamPlanView";
+import ExamPlanEditor from "./ExamPlanEditor";
+import cleanPlan from "./cleanPlan";
 import useBriefJob from "./useBriefJob";
 import useExamPlanJob from "./useExamPlanJob";
 import { getAmbientVisit } from "./ambientVisit";
@@ -94,8 +96,48 @@ export default function VisitPrepPanel({ patientName, initialStep, onOpenAmbient
   const hasBrief = !!briefJob.brief;
   const done = { brief: hasBrief, visit: !!visit, exam: !!examJob.plan };
 
+  const [draft, setDraft] = useState(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const isEditing = !!draft;
+  const isDirty = isEditing && JSON.stringify(draft) !== JSON.stringify(examJob.plan);
+
+  const confirmDiscard = () => !isDirty || window.confirm("Discard unsaved changes?");
+
+  const startEdit = () => {
+    setJustSaved(false);
+    setDraft(structuredClone(examJob.plan));
+  };
+
+  const cancelEdit = () => {
+    if (confirmDiscard()) setDraft(null);
+  };
+
+  const saveEdit = async () => {
+    const ok = await examJob.save(cleanPlan(draft));
+    if (ok) {
+      setDraft(null);
+      setJustSaved(true);
+    }
+  };
+
+  const selectStep = (key) => {
+    if (key === active || !confirmDiscard()) return;
+    setDraft(null);
+    setActive(key);
+  };
+
+  const generateExamPlan = () => {
+    if (!confirmDiscard()) return;
+    if (examJob.edited && !window.confirm("Generate a new AI exam plan? It replaces the plan shown here. Your saved edits stay on the old plan.")) {
+      return;
+    }
+    setDraft(null);
+    setJustSaved(false);
+    examJob.generate();
+  };
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg border border-gray-200 bg-white">
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
       <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 bg-[#F0FDF4] px-3 py-1.5">
         <h3 className="mr-auto text-xs font-bold text-gray-800">Visit Prep</h3>
         {active === "brief" && (
@@ -121,21 +163,39 @@ export default function VisitPrepPanel({ patientName, initialStep, onOpenAmbient
             {visit ? "Record again" : "Open Ambient AI"}
           </button>
         )}
-        {active === "exam" && (
-          <button
-            type="button"
-            onClick={examJob.generate}
-            disabled={examJob.isStarting || examJob.isRunning || !hasBrief || !patientName}
-            className={PRIMARY_BTN}
-          >
-            {examJob.isStarting ? "Starting..." : examJob.plan ? "Generate new" : "Generate Exam Plan"}
-          </button>
+        {active === "exam" && isEditing && (
+          <>
+            <button type="button" onClick={cancelEdit} disabled={examJob.isSaving} className={SECONDARY_BTN}>
+              Cancel
+            </button>
+            <button type="button" onClick={saveEdit} disabled={examJob.isSaving || !isDirty} className={PRIMARY_BTN}>
+              {examJob.isSaving ? "Saving..." : "Save"}
+            </button>
+          </>
+        )}
+        {active === "exam" && !isEditing && (
+          <>
+            {examJob.plan && examJob.runId && !examJob.isRunning && (
+              <button type="button" onClick={startEdit} className={SECONDARY_BTN}>
+                <Pencil size={14} />
+                Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={generateExamPlan}
+              disabled={examJob.isStarting || examJob.isRunning || !hasBrief || !patientName}
+              className={PRIMARY_BTN}
+            >
+              {examJob.isStarting ? "Starting..." : examJob.plan ? "Generate new" : "Generate Exam Plan"}
+            </button>
+          </>
         )}
       </div>
 
-      <StepBar active={active} done={done} onSelect={setActive} />
+      <StepBar active={active} done={done} onSelect={selectStep} />
 
-      <div className="space-y-2 p-2.5">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
         {active === "brief" && (
           <>
             {briefJob.isRunning && <RunningBanner text={previsitProgress(briefJob.run).text} />}
@@ -186,7 +246,17 @@ export default function VisitPrepPanel({ patientName, initialStep, onOpenAmbient
             {examJob.error && <p className="text-sm text-red-600">{examJob.error}</p>}
             {examJob.isLoading && <p className="text-sm text-gray-400">Loading...</p>}
             {hasBrief && !examJob.isLoading && !examJob.plan && !examJob.isRunning && <p className="text-sm text-gray-500">No exam plan yet.</p>}
-            {examJob.plan && <ExamPlanView plan={examJob.plan} />}
+            {examJob.saveError && <p className="text-sm text-red-600">{examJob.saveError}</p>}
+            {justSaved && !isEditing && <p className="text-sm text-emerald-700">Exam plan saved.</p>}
+            {examJob.edited && !isEditing && (
+              <p className="text-xs text-gray-500">
+                Edited by physician
+                {examJob.editedAt &&
+                  ` · ${new Date(examJob.editedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`}
+              </p>
+            )}
+            {isEditing && <ExamPlanEditor draft={draft} setDraft={setDraft} />}
+            {!isEditing && examJob.plan && <ExamPlanView plan={examJob.plan} />}
           </>
         )}
       </div>

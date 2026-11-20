@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { setJobsId } from "../../redux/jobsIdslice";
-import { getLatestExamPlan, startExamPlan, toPatientKey } from "./previsitApi";
+import { getLatestExamPlan, saveExamPlan, startExamPlan, toPatientKey } from "./previsitApi";
 import { isRunDone, useVisitPrepRun } from "./useVisitPrepRun";
 
 function startErrorText(err) {
@@ -17,6 +17,13 @@ function startErrorText(err) {
   return message || err?.message || "Could not start the exam plan";
 }
 
+function saveErrorText(err) {
+  const status = err?.response?.status;
+  if (status === 404) return "Exam plan not found.";
+  if (status === 409) return "Exam plan is not ready yet.";
+  return err?.response?.data?.message || "Could not save. Please try again.";
+}
+
 export default function useExamPlanJob(patientName, visit) {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -27,6 +34,8 @@ export default function useExamPlanJob(patientName, visit) {
   const [cachedResult, setCachedResult] = useState(null);
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const latest = useQuery({
     queryKey: ["examPlan", "latest", patientKey],
@@ -67,6 +76,29 @@ export default function useExamPlanJob(patientName, visit) {
 
   const result = cachedResult || (run?.status === "completed" ? run : null) || latest.data;
 
+  const save = async (visitPlan) => {
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      const res = await saveExamPlan(result.run_id, { visit_plan: visitPlan, model_feedback: visitPlan.model_feedback || "" });
+      const saved = {
+        ...result,
+        ...res,
+        visit_plan: res?.visit_plan || visitPlan,
+        edited: true,
+        edited_at: res?.edited_at || new Date().toISOString(),
+      };
+      setCachedResult(saved);
+      queryClient.setQueryData(["examPlan", "latest", patientKey], saved);
+      return true;
+    } catch (err) {
+      setSaveError(saveErrorText(err));
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   let error = startError;
   if (!error && run?.status === "failed" && !cachedResult) error = run.error || "Exam plan failed. Please try again.";
   if (!error && runQuery.isError) error = "Could not check the exam plan status. Please try again.";
@@ -76,7 +108,13 @@ export default function useExamPlanJob(patientName, visit) {
 
   return {
     plan: result?.visit_plan,
+    runId: result?.run_id,
+    edited: !!result?.edited,
+    editedAt: result?.edited_at,
     run,
+    isSaving,
+    saveError,
+    save,
     isLoading: latest.isLoading,
     isStarting,
     isRunning,
