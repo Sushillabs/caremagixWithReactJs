@@ -2,6 +2,15 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AGENCY_KEY, AGENCY_SECTIONS } from "./agencySections";
 import YesNoDateRows from "./YesNoDateRows";
+import { BlockTitle, ChecksBlock, InputsBlock, NotesBlock } from "./AgencyBlocks";
+
+function Block({ base, block }) {
+  if (block.type === "yesNo") return <YesNoDateRows base={base} rows={block.rows} />;
+  if (block.type === "checks") return <ChecksBlock base={base} items={block.items} />;
+  if (block.type === "inputs") return <InputsBlock base={base} items={block.items} />;
+  if (block.type === "notes") return <NotesBlock base={base} block={block} />;
+  return null;
+}
 
 export default function AgencyAssessment() {
   const [openIds, setOpenIds] = useState(() => new Set([AGENCY_SECTIONS[0].id]));
@@ -21,6 +30,7 @@ export default function AgencyAssessment() {
       </p>
       {AGENCY_SECTIONS.map((section) => {
         const open = openIds.has(section.id);
+        const base = `${AGENCY_KEY}.${section.id}`;
         return (
           <div key={section.id} className="rounded-lg border border-gray-200 bg-white">
             <button
@@ -32,11 +42,12 @@ export default function AgencyAssessment() {
               <span className="text-sm font-semibold text-gray-800">{section.label}</span>
               <ChevronDown size={16} className={"shrink-0 text-gray-400 transition-transform " + (open ? "rotate-180" : "")} />
             </button>
-            <div hidden={!open} className="border-t border-gray-100 px-4 pb-3">
-              {section.groups.map((group) => (
-                <div key={group.title} className="pt-3">
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">{group.title}</p>
-                  <YesNoDateRows base={`${AGENCY_KEY}.${section.id}`} rows={group.rows} />
+            <div hidden={!open} className="border-t border-gray-100 px-4 pb-4">
+              {section.hint && <p className="mt-3 text-xs italic text-gray-500">{section.hint}</p>}
+              {section.blocks.map((block, index) => (
+                <div key={block.title ?? `${block.type}-${index}`} className="pt-3">
+                  {block.title && <BlockTitle>{block.title}</BlockTitle>}
+                  <Block base={base} block={block} />
                 </div>
               ))}
             </div>

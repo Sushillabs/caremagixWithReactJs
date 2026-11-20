@@ -18,21 +18,24 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
 
 ## Non-CMS agency content (SOC only for now)
 - Lives in `src/features/oasis/agency/`:
-  - `agencySections.js` — section/row config, `agencyValues()` (blank + merge saved), `agencyProgress()`, `agencySection` (added at the end of `soc.schema.js` sections)
-  - `AgencyAssessment.jsx` — collapsible cards, one per section
-  - `YesNoDateRows.jsx` — Yes/No (tap again to clear) + Date(s), optional Specify text and L/R checks
-- Form state: `agency_assessment.<section>.<row>.{answer, date, specify?, left?, right?}`; `answer` is `"yes" | "no" | ""`.
+  - `agencySections.js` — section config (`blocks`), `agencyValues()` (blank + merge saved), `agencyProgress()`, `agencySection` (added at the end of `soc.schema.js` sections)
+  - `AgencyAssessment.jsx` — collapsible cards, one per section; picks the renderer per block type
+  - `YesNoDateRows.jsx` — block `yesNo`: Yes/No (tap again to clear) + Date(s), optional Specify text and L/R checks
+  - `AgencyBlocks.jsx` — block `checks` (checkbox + optional inline detail input/select), `inputs` (labelled text grid), `notes` (textarea)
+- Form state:
+  - `yesNo` rows: `agency_assessment.<section>.<row>.{answer, date, specify?, left?, right?}`; `answer` is `"yes" | "no" | ""`
+  - other blocks: flat keys `agency_assessment.<section>.<key>` (checkbox → boolean, detail/input/notes → string)
+- Keys are snake_case and unique inside a section.
+- If a paper-form page also holds a CMS item (e.g. M1400 on the Respiratory page), keep it in the CMS tab and add a section `hint` pointing to it.
 - Save: sent as top-level `agency_assessment` in `/save_oasis_json` (next to `raw_data` / `mapped_data`). Load: read `res.agency_assessment` (review mode only, like CMS answers).
 - Never put agency data in `raw_data`, `mapped_data`, CMS validation, skip marks, Export JSON, or the XML export.
 - All agency fields are optional. Totals (Braden, Fall Risk) are auto-calculated; Fall Risk scores are suggested from CMS answers but editable.
 - Review mode does not lock fields — same as CMS tabs.
 
 ## Adding a new agency section
-1. Add the section config in `agencySections.js` (snake_case keys, labels as on the paper form).
-2. Extend `agencyValues()` blank shape if the section uses a new input type.
-3. Render it in `AgencyAssessment.jsx`; reuse `YesNoDateRows` where it fits.
-4. Make sure `agencyProgress()` counts it.
-5. Check save payload: data appears only under `agency_assessment`.
+1. Add the section to `AGENCY_SECTIONS` in `agencySections.js` using existing block types (`yesNo`, `checks`, `inputs`, `notes`); labels as on the paper form.
+2. Only if no block type fits: add a new type — its blank values in `blockLeaves()` / `sectionValues()`, its renderer in `AgencyAssessment.jsx` `Block`.
+3. Check save payload: data appears only under `agency_assessment`, and Clear All resets it.
 
 ## Working rules
 - One phase per turn; ask before every commit.
