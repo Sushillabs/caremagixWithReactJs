@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { filterVisibleFields } from "./skipLogic";
 import { fieldLeafIds } from "./payload";
 
@@ -22,12 +23,13 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
   return (
     <nav className="-mx-2 flex flex-wrap gap-x-1 gap-y-1">
       {sections.map((section) => {
-        const pct = Math.round(sectionProgress(section, answers) * 100);
+        const pct = Math.round((section.progress ? section.progress(answers) : sectionProgress(section, answers)) * 100);
         const active = section.id === activeSectionId;
         const hasError = sectionsWithErrors?.has(section.id);
         return (
+          <Fragment key={section.id}>
+          {section.agency && <span aria-hidden="true" className="mx-1 my-1 w-px self-stretch bg-gray-300" />}
           <button
-            key={section.id}
             type="button"
             onClick={() => onSelect(section.id)}
             className={
@@ -51,6 +53,7 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
               <span className={"block h-full rounded-full transition-all " + barColor({ active, hasError, pct })} style={{ width: `${pct}%` }} />
             </span>
           </button>
+          </Fragment>
         );
       })}
     </nav>

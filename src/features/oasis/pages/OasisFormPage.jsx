@@ -27,6 +27,8 @@ import dahSchema from "../schemas/dah.schema";
 import trnSchema from "../schemas/trn.schema";
 import dcSchema from "../schemas/dc.schema";
 import socSchema from "../schemas/soc.schema";
+import AgencyAssessment from "../agency/AgencyAssessment";
+import { AGENCY_KEY, agencyValues } from "../agency/agencySections";
 
 // Phase 1 Step 2: the real Form Shell, proven end-to-end on FU. formType -> schema
 // map is intentionally tiny right now (Phase 3/4 add SOC/ROC/DC/DAH/TRN here, nothing
@@ -54,6 +56,10 @@ function OasisFormShell({ schema }) {
   const [patientDetails, setPatientDetails] = useState(null);
   const [exportingXml, setExportingXml] = useState(false);
 
+  const hasAgency = schema.sections.some((section) => section.agency);
+  const withAgency = (values, savedAgency) =>
+    hasAgency ? { ...values, [AGENCY_KEY]: agencyValues(savedAgency) } : values;
+
   const { status, saveToServer, loadFromServer, clearOnServer } = useOasisSaveLoad({
     formKey: schema.formKey,
     patientId,
@@ -70,15 +76,15 @@ function OasisFormShell({ schema }) {
     let cancelled = false;
     setLoading(true);
     loadFromServer()
-      .then(({ values, patientDetails: details }) => {
+      .then(({ values, patientDetails: details, agency }) => {
         if (cancelled) return;
         const loaded = isReview && values ? normalizeLoadedValues(schema, values) : {};
-        methods.reset(applyDefaults(schema, { ...blankValues(schema), ...loaded }));
+        methods.reset(withAgency(applyDefaults(schema, { ...blankValues(schema), ...loaded }), isReview ? agency : null));
         setPatientDetails(details);
       })
       .catch(() => {
         if (cancelled) return;
-        methods.reset(applyDefaults(schema, blankValues(schema)));
+        methods.reset(withAgency(applyDefaults(schema, blankValues(schema)), null));
         toast.error("Could not load saved OASIS data — starting blank.");
       })
       .finally(() => {
@@ -174,7 +180,8 @@ function OasisFormShell({ schema }) {
     event.target.value = "";
     if (!file) return;
     try {
-      const imported = normalizeLoadedValues(schema, JSON.parse(await file.text()));
+      const parsed = normalizeLoadedValues(schema, JSON.parse(await file.text()));
+      const imported = hasAgency ? { ...parsed, [AGENCY_KEY]: methods.getValues(AGENCY_KEY) } : parsed;
       methods.reset(imported);
       await saveToServer(imported);
       toast.success("Data imported successfully.");
@@ -203,7 +210,7 @@ function OasisFormShell({ schema }) {
 
   const handleClearAll = async () => {
     if (!window.confirm("Are you sure you want to clear all data? This cannot be undone.")) return;
-    methods.reset(blankValues(schema));
+    methods.reset(withAgency(blankValues(schema), null));
     dismissValidation();
     try {
       await clearOnServer();
@@ -327,13 +334,17 @@ function OasisFormShell({ schema }) {
               <form onSubmit={(e) => e.preventDefault()}>
                 {schema.sections.map((section) => (
                   <div key={section.id} hidden={section.id !== activeSection.id} className="flex flex-col gap-3">
-                    {filterVisibleFields(section.items, answers).map((field) => (
-                      <OasisField
-                        key={`${field.itemCode ?? ""}:${field.fieldId ?? field.label ?? ""}`}
-                        field={field}
-                        onSend={handleSendForReview}
-                      />
-                    ))}
+                    {section.agency ? (
+                      <AgencyAssessment />
+                    ) : (
+                      filterVisibleFields(section.items, answers).map((field) => (
+                        <OasisField
+                          key={`${field.itemCode ?? ""}:${field.fieldId ?? field.label ?? ""}`}
+                          field={field}
+                          onSend={handleSendForReview}
+                        />
+                      ))
+                    )}
                   </div>
                 ))}
               </form>

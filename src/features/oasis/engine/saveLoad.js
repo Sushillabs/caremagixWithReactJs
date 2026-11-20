@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveOasisForm, getOasisForm, clearOasisForm } from "../api/oasisApi";
 import { buildSavePayload } from "./payload";
+import { AGENCY_KEY } from "../agency/agencySections";
 
 const AUTOSAVE_DEBOUNCE_MS = 1500;
 
@@ -69,6 +70,7 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
           submitted_at: new Date().toISOString(),
           raw_data: payload,
           mapped_data: payload,
+          ...(values?.[AGENCY_KEY] ? { [AGENCY_KEY]: values[AGENCY_KEY] } : {}),
           ...(patientDetails ? { patient_details: patientDetails } : {}),
           ...(reviewerEmail ? { reviewer_email: reviewerEmail, form_meta: { form: formKey, ...FORM_META } } : {}),
         });
@@ -86,6 +88,7 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
     return {
       values: res?.raw_data || res?.mapped_data || null,
       patientDetails: res?.patient_details ?? null,
+      agency: res?.[AGENCY_KEY] ?? null,
     };
   }, [formKey, patientId, patientName]);
 

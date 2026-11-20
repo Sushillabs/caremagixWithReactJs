@@ -6,6 +6,7 @@ import * as fn from "./shared/questions/function";
 import * as health from "./shared/questions/health";
 import * as skin from "./shared/questions/skinMeds";
 import { markWhen, markWhenFilled, dateParts, GG_NOT_ATTEMPTED } from "./shared/skipRules";
+import { agencySection } from "../agency/agencySections";
 
 // Field keys, option codes and max lengths are legacy oasis-soc-rule.html's, unchanged. SOC runs
 // on the rule engine (checkboxes "1"/"0", _meta on save). Its code boxes are 2 characters wide
@@ -284,6 +285,7 @@ export const socSchema = {
         { itemCode: null, label: "Send for Review", widget: W.EMAIL_ACTION },
       ],
     },
+    agencySection,
   ],
 };
 
