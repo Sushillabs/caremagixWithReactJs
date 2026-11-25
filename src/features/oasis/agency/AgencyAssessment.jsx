@@ -5,6 +5,7 @@ import { AGENCY_KEY, AGENCY_SECTIONS } from "./agencySections";
 import YesNoDateRows from "./YesNoDateRows";
 import { BlockTitle, ChecksBlock, ChoiceBlock, ChoicesBlock, ImageBlock, InputsBlock, NotesBlock } from "./AgencyBlocks";
 import { ScoreRows, TotalBlock } from "./ScoreBlocks";
+import SignatureBlock from "./SignatureBlock";
 
 function Block({ base, block }) {
   if (block.type === "yesNo") return <YesNoDateRows base={base} rows={block.rows} />;
@@ -16,6 +17,7 @@ function Block({ base, block }) {
   if (block.type === "image") return <ImageBlock block={block} />;
   if (block.type === "score") return <ScoreRows base={base} rows={block.rows} />;
   if (block.type === "total") return <TotalBlock base={base} block={block} />;
+  if (block.type === "signature") return <SignatureBlock base={base} />;
   return null;
 }
 

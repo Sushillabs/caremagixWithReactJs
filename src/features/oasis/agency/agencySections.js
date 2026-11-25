@@ -837,6 +837,12 @@ export const AGENCY_SECTIONS = [
       { type: "notes", key: "referral_comments", label: "Referral comments", showWhen: isHighFallRisk },
     ],
   },
+  {
+    id: "signature",
+    label: "Staff Signature",
+    hint: "Sign once for the whole SOC assessment. Date and time fill in when you sign.",
+    blocks: [{ type: "signature" }],
+  },
 ];
 
 function blankYesNoRow(row) {
@@ -869,6 +875,14 @@ function blockLeaves(block) {
       { key: "total", blank: "" },
       { key: "risk_level", blank: "" },
     ];
+  if (block.type === "signature") {
+    return [
+      { key: "image", blank: "", counts: true },
+      { key: "title", blank: "" },
+      { key: "date", blank: "" },
+      { key: "time", blank: "" },
+    ];
+  }
   return [];
 }
 
