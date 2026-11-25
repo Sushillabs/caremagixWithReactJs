@@ -2,13 +2,15 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AGENCY_KEY, AGENCY_SECTIONS } from "./agencySections";
 import YesNoDateRows from "./YesNoDateRows";
-import { BlockTitle, ChecksBlock, InputsBlock, NotesBlock } from "./AgencyBlocks";
+import { BlockTitle, ChecksBlock, ChoiceBlock, ImageBlock, InputsBlock, NotesBlock } from "./AgencyBlocks";
 
 function Block({ base, block }) {
   if (block.type === "yesNo") return <YesNoDateRows base={base} rows={block.rows} />;
   if (block.type === "checks") return <ChecksBlock base={base} items={block.items} />;
-  if (block.type === "inputs") return <InputsBlock base={base} items={block.items} />;
+  if (block.type === "inputs") return <InputsBlock base={base} block={block} />;
   if (block.type === "notes") return <NotesBlock base={base} block={block} />;
+  if (block.type === "choice") return <ChoiceBlock base={base} block={block} />;
+  if (block.type === "image") return <ImageBlock block={block} />;
   return null;
 }
 

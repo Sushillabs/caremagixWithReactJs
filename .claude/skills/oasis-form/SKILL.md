@@ -21,7 +21,8 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
   - `agencySections.js` — section config (`blocks`), `agencyValues()` (blank + merge saved), `agencyProgress()`, `agencySection` (added at the end of `soc.schema.js` sections)
   - `AgencyAssessment.jsx` — collapsible cards, one per section; picks the renderer per block type
   - `YesNoDateRows.jsx` — block `yesNo`: Yes/No (tap again to clear) + Date(s), optional Specify text and L/R checks
-  - `AgencyBlocks.jsx` — block `checks` (checkbox + optional inline detail input/select), `inputs` (labelled text grid), `notes` (textarea)
+  - `AgencyBlocks.jsx` — block `checks` (checkbox + optional inline detail input/select), `inputs` (labelled text grid; `wide: true` = one per line), `notes` (textarea), `choice` (single-select buttons, tap again to clear), `image` (static picture, no input)
+  - `images/` — body drawings cropped from the agency SOC PDF (p19 pain, p20 skin). Shown read-only for now; clickable body map is deferred — nurses write location in text fields.
 - Form state:
   - `yesNo` rows: `agency_assessment.<section>.<row>.{answer, date, specify?, left?, right?}`; `answer` is `"yes" | "no" | ""`
   - other blocks: flat keys `agency_assessment.<section>.<key>` (checkbox → boolean, detail/input/notes → string)
@@ -33,7 +34,7 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
 - Review mode does not lock fields — same as CMS tabs.
 
 ## Adding a new agency section
-1. Add the section to `AGENCY_SECTIONS` in `agencySections.js` using existing block types (`yesNo`, `checks`, `inputs`, `notes`); labels as on the paper form.
+1. Add the section to `AGENCY_SECTIONS` in `agencySections.js` using existing block types (`yesNo`, `checks`, `inputs`, `notes`, `choice`, `image`); labels as on the paper form.
 2. Only if no block type fits: add a new type — its blank values in `blockLeaves()` / `sectionValues()`, its renderer in `AgencyAssessment.jsx` `Block`.
 3. Check save payload: data appears only under `agency_assessment`, and Clear All resets it.
 

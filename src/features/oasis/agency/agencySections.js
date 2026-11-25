@@ -1,3 +1,6 @@
+import painBodyMap from "./images/pain-body-map.png";
+import skinBodyMap from "./images/skin-body-map.png";
+
 export const AGENCY_KEY = "agency_assessment";
 
 const row = (key, label, extra = {}) => ({ key, label, ...extra });
@@ -190,6 +193,114 @@ export const AGENCY_SECTIONS = [
       },
     ],
   },
+  {
+    id: "pain",
+    label: "Pain Assessment",
+    blocks: [
+      {
+        type: "image",
+        title: "I. Location",
+        src: painBodyMap,
+        alt: "Body diagram: front, right side, back, left side, head and feet",
+        caption: "Marking on the picture is not available yet. Write the location in the fields below.",
+      },
+      {
+        type: "inputs",
+        title: "II. Intensity",
+        items: [
+          input("scale_used", "Scale used", { placeholder: "0-10" }),
+          input("present", "Present"),
+          input("worst", "Worst pain gets"),
+          input("best", "Best pain gets"),
+          input("acceptable", "Acceptable level of pain"),
+        ],
+      },
+      {
+        type: "inputs",
+        wide: true,
+        items: [
+          input("quality", "III. Quality (patient's own words, e.g. prick, ache, throb, pull, sharp)"),
+          input("onset_duration", "IV. Onset, duration, variations, rhythms"),
+          input("expressing", "V. Manner of expressing pain"),
+          input("relieves", "VI. What relieves the pain?"),
+          input("increases", "VII. What causes or increases the pain?"),
+        ],
+      },
+      {
+        type: "inputs",
+        title: "VIII. Effects of pain",
+        items: [
+          input("accompanying_symptoms", "Accompanying symptoms (e.g. nausea)"),
+          input("sleep", "Sleep"),
+          input("appetite", "Appetite"),
+          input("physical", "Physical"),
+          input("activity", "Activity"),
+          input("relationships", "Relationship with others (e.g. irritability)"),
+          input("emotions", "Emotions (e.g. anger, suicidal, crying)"),
+          input("concentration", "Concentration"),
+          input("effects_other", "Other"),
+        ],
+      },
+      { type: "notes", key: "other_comments", label: "IX. Other comments" },
+      { type: "notes", key: "plan", label: "X. Plan" },
+    ],
+  },
+  {
+    id: "integumentary",
+    label: "Integumentary Status",
+    blocks: [
+      {
+        type: "checks",
+        title: "History",
+        items: [
+          check("eczema_psoriasis", "Eczema/Psoriasis"),
+          check("cancer", "Cancer", [{ key: "cancer_location", placeholder: "Location" }]),
+          check("shingles", "Shingles", [{ key: "shingles_location", placeholder: "Location" }]),
+          check("history_other", "Other", [{ key: "history_other_detail", placeholder: "Specify" }]),
+        ],
+      },
+      {
+        type: "checks",
+        title: "Complains of",
+        items: [
+          check("itching", "Itching", [{ key: "itching_location", placeholder: "Location" }]),
+          check("rash", "Rash", [{ key: "rash_location", placeholder: "Location" }]),
+          check("sores_not_healing", "Sores that won't heal", [{ key: "sores_location", placeholder: "Location" }]),
+          check("wart_mole_changes", "Obvious changes in wart or mole", [{ key: "wart_mole_location", placeholder: "Location" }]),
+          check("alopecia", "Alopecia"),
+        ],
+      },
+      { type: "choice", key: "skin_turgor", label: "Skin Turgor", options: ["Good", "Fair", "Poor"] },
+      {
+        type: "checks",
+        items: [
+          check("skin_intact", "Skin integrity intact; no closed, primary or secondary lesions"),
+          check("skin_impaired", "Impaired skin integrity (type and location below)"),
+        ],
+      },
+      {
+        type: "image",
+        title: "Location",
+        src: skinBodyMap,
+        alt: "Body diagram: front and back",
+        caption: "Marking on the picture is not available yet. Write size and location in the table below.",
+      },
+      {
+        type: "inputs",
+        title: "Type / Size",
+        items: [
+          input("lesion_size", "1. Lesion", { placeholder: "Size, location" }),
+          input("bruises_size", "2. Bruises", { placeholder: "Size, location" }),
+          input("scars_size", "3. Scars", { placeholder: "Size, location" }),
+          input("pressure_sore_size", "4a. Wound — Pressure sore(s)", { placeholder: "Size, location" }),
+          input("stasis_ulcer_size", "4b. Wound — Stasis ulcer(s)", { placeholder: "Size, location" }),
+          input("surgical_incision_size", "4c. Wound — Surgical incision(s)", { placeholder: "Size, location" }),
+          input("other_type", "5. Other (specify)"),
+          input("other_size", "5. Other — size", { placeholder: "Size, location" }),
+        ],
+      },
+    ],
+  },
 ];
 
 function blankYesNoRow(row) {
@@ -209,7 +320,7 @@ function blockLeaves(block) {
     ]);
   }
   if (block.type === "inputs") return block.items.map((item) => ({ key: item.key, blank: "", counts: true }));
-  if (block.type === "notes") return [{ key: block.key, blank: "", counts: true }];
+  if (block.type === "notes" || block.type === "choice") return [{ key: block.key, blank: "", counts: true }];
   return [];
 }
 

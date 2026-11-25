@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 
 const inputCls =
   "w-full min-w-0 rounded-md border border-gray-300 px-2 py-1.5 text-xs text-gray-700 focus:border-emerald-500 focus:outline-none";
@@ -50,11 +50,11 @@ export function ChecksBlock({ base, items }) {
   );
 }
 
-export function InputsBlock({ base, items }) {
+export function InputsBlock({ base, block }) {
   const { register } = useFormContext();
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
-      {items.map((item) => (
+    <div className={"grid gap-x-3 gap-y-2 " + (block.wide ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3")}>
+      {block.items.map((item) => (
         <label key={item.key} className="flex min-w-0 flex-col gap-1">
           <span className="text-[11px] font-medium text-gray-600">{item.label}</span>
           <input
@@ -67,6 +67,58 @@ export function InputsBlock({ base, items }) {
         </label>
       ))}
     </div>
+  );
+}
+
+export function ChoiceBlock({ base, block }) {
+  const { control } = useFormContext();
+  return (
+    <Controller
+      name={`${base}.${block.key}`}
+      control={control}
+      defaultValue=""
+      render={({ field: { value, onChange } }) => (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-[13px] font-medium text-gray-700">{block.label}</span>
+          <div className="flex gap-1.5">
+            {block.options.map((option) => {
+              const selected = value === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={selected}
+                  aria-label={`${block.label} — ${option}`}
+                  onClick={() => onChange(selected ? "" : option)}
+                  className={
+                    "h-8 min-w-14 rounded-md border px-3 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 " +
+                    (selected
+                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50")
+                  }
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    />
+  );
+}
+
+export function ImageBlock({ block }) {
+  return (
+    <figure className="m-0">
+      <img
+        src={block.src}
+        alt={block.alt}
+        loading="lazy"
+        className="mx-auto block h-auto max-h-80 w-full max-w-3xl rounded-md border border-gray-200 bg-white object-contain p-2"
+      />
+      {block.caption && <figcaption className="mt-1.5 text-[11px] italic text-gray-500">{block.caption}</figcaption>}
+    </figure>
   );
 }
 
