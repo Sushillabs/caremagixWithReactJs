@@ -32,6 +32,8 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
   - `yesNo` rows: `agency_assessment.<section>.<row>.{answer, date, specify?, left?, right?}`; `answer` is `"yes" | "no" | ""`
   - other blocks: flat keys `agency_assessment.<section>.<key>` (checkbox → boolean, detail/input/notes → string)
 - Keys are snake_case and unique inside a section.
+- Choice values are lowercase snake_case codes, never display text: options are `[value, label]` pairs (`YES_NO`, `YES_NO_NA` → `"yes" | "no" | "na"`; `"good"`, `"see_visit_documentation"`). Same as yesNo rows.
+- Exact dates use `date: true` (native date picker, saved as `"YYYY-MM-DD"`). Exception: Neuro history `Date(s)` stays free text — nurses write "2019", "03/2021" or several dates.
 - If a paper-form page also holds a CMS item (e.g. M1400 on the Respiratory page), keep it in the CMS tab and add a section `hint` pointing to it.
 - Save: sent as top-level `agency_assessment` in `/save_oasis_json` (next to `raw_data` / `mapped_data`). Load: read `res.agency_assessment` (review mode only, like CMS answers).
 - Never put agency data in `raw_data`, `mapped_data`, CMS validation, skip marks, Export JSON, or the XML export.

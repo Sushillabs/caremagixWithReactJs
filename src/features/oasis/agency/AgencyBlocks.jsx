@@ -64,6 +64,7 @@ export function InputsBlock({ base, block }) {
           <span className="text-[11px] font-medium text-gray-600">{item.label}</span>
           <input
             {...register(`${base}.${item.key}`)}
+            type={item.date ? "date" : "text"}
             placeholder={item.placeholder}
             inputMode={item.numeric ? "decimal" : undefined}
             maxLength={60}
@@ -86,14 +87,14 @@ export function ChoiceBlock({ base, block }) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[13px] font-medium text-gray-700">{block.label}</span>
           <div className="flex gap-1.5">
-            {block.options.map((option) => {
+            {block.options.map(([option, text]) => {
               const selected = value === option;
               return (
                 <button
                   key={option}
                   type="button"
                   aria-pressed={selected}
-                  aria-label={`${block.label} — ${option}`}
+                  aria-label={`${block.label} — ${text}`}
                   onClick={() => onChange(selected ? "" : option)}
                   className={
                     "h-8 min-w-14 rounded-md border px-3 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 " +
@@ -102,7 +103,7 @@ export function ChoiceBlock({ base, block }) {
                       : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50")
                   }
                 >
-                  {option}
+                  {text}
                 </button>
               );
             })}
@@ -123,6 +124,7 @@ export function ChoicesBlock({ base, rows }) {
           {choice.detail && (
             <input
               {...register(`${base}.${choice.detail.key}`)}
+              type={choice.detail.date ? "date" : "text"}
               placeholder={choice.detail.placeholder}
               aria-label={`${choice.label} — ${choice.detail.placeholder}`}
               maxLength={60}

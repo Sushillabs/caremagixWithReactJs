@@ -23,8 +23,11 @@ const supplyGroup = (group, title, labels) => ({
     check(`${group}_other`, "Other", [{ key: `${group}_other_detail`, placeholder: "Specify" }]),
   ],
 });
-const YES_NO = ["Yes", "No"];
-const YES_NO_NA = ["Yes", "No", "NA"];
+const YES_NO = [
+  ["yes", "Yes"],
+  ["no", "No"],
+];
+const YES_NO_NA = [...YES_NO, ["na", "NA"]];
 
 const cmsCode = (value) => {
   const n = parseInt(value, 10);
@@ -313,7 +316,11 @@ export const AGENCY_SECTIONS = [
           check("alopecia", "Alopecia"),
         ],
       },
-      { type: "choice", key: "skin_turgor", label: "Skin Turgor", options: ["Good", "Fair", "Poor"] },
+      { type: "choice", key: "skin_turgor", label: "Skin Turgor", options: [
+          ["good", "Good"],
+          ["fair", "Fair"],
+          ["poor", "Poor"],
+        ] },
       {
         type: "checks",
         items: [
@@ -361,7 +368,7 @@ export const AGENCY_SECTIONS = [
     label: "Braden Scale (Pressure Sore Risk)",
     hint: "Perform on admission, quarterly, after major change and after return from hospital.",
     blocks: [
-      { type: "inputs", items: [input("assessment_date", "Date of assessment", { placeholder: "MM/DD/YYYY" })] },
+      { type: "inputs", items: [input("assessment_date", "Date of assessment", { date: true })] },
       {
         type: "score",
         rows: [
@@ -449,15 +456,15 @@ export const AGENCY_SECTIONS = [
       },
       {
         type: "inputs",
-        items: [input("device_date", "Device date", { placeholder: "MM/DD/YYYY" }), input("device_initials", "Initials")],
+        items: [input("device_date", "Device date", { date: true }), input("device_initials", "Initials")],
       },
       {
         type: "inputs",
         title: "Nutritional consult ordered",
         items: [
-          input("consult_date_1", "Date", { placeholder: "MM/DD/YYYY" }),
+          input("consult_date_1", "Date", { date: true }),
           input("consult_initials_1", "Initials"),
-          input("consult_date_2", "Date", { placeholder: "MM/DD/YYYY" }),
+          input("consult_date_2", "Date", { date: true }),
           input("consult_initials_2", "Initials"),
         ],
       },
@@ -625,6 +632,7 @@ export const AGENCY_SECTIONS = [
           choiceRow("understands_discharge_goals", "Informed of and understands discharge goals and projected D/C date", YES_NO, {
             key: "projected_dc_date",
             placeholder: "Projected D/C date",
+            date: true,
           }),
           choiceRow("expectations_consistent", "Expectations are consistent with the plan of care", YES_NO),
         ],
@@ -793,7 +801,7 @@ export const AGENCY_SECTIONS = [
         type: "choice",
         key: "patient_informed",
         label: "Patient informed of fall risk results and prevention recommendations",
-        options: ["Yes", "No", "See visit documentation"],
+        options: [...YES_NO, ["see_visit_documentation", "See visit documentation"]],
       },
       { type: "notes", key: "informed_comments", label: "Comments" },
       {
