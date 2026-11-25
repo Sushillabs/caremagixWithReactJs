@@ -21,8 +21,13 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
   - `agencySections.js` — section config (`blocks`), `agencyValues()` (blank + merge saved), `agencyProgress()`, `agencySection` (added at the end of `soc.schema.js` sections)
   - `AgencyAssessment.jsx` — collapsible cards, one per section; picks the renderer per block type
   - `YesNoDateRows.jsx` — block `yesNo`: Yes/No (tap again to clear) + Date(s), optional Specify text and L/R checks
-  - `AgencyBlocks.jsx` — block `checks` (checkbox + optional inline detail input/select), `inputs` (labelled text grid; `wide: true` = one per line), `notes` (textarea), `choice` (single-select buttons, tap again to clear), `image` (static picture, no input)
-  - `images/` — body drawings cropped from the agency SOC PDF (p19 pain, p20 skin). Shown read-only for now; clickable body map is deferred — nurses write location in text fields.
+  - `AgencyBlocks.jsx` — block `checks` (checkbox + optional inline detail input/select; `wide: true` = one per line for long labels), `inputs` (labelled text grid; `wide: true` = one per line, `pairs: true` = always 2 columns), `notes` (textarea; `lines` = height), `choice` (single-select buttons, tap again to clear), `choices` (list of choice rows, e.g. Yes/No/NA, each with optional `detail` input), `image` (static picture, no input)
+  - Block props: `rows` is always a list (yesNo/score/choices); never reuse it for a number.
+  - Supplies use `supplyGroup(group, title, labels)` — keys are `<group>_<slug(label)>` because labels repeat across groups (e.g. `dressing_tape`, `iv_tape`, `gi_tape`); each group gets `<group>_other` + `<group>_other_detail`.
+  - `ScoreBlocks.jsx` — block `score` (rows of scored buttons; optional `suggest` from CMS answers with a "Use" button — never auto-fills) and `total` (auto total + risk level, written to `<section>.total` / `<section>.risk_level`; total stays blank until every scored row is answered)
+  - Any block can have `showWhen(sectionValues)` — hidden blocks keep their values (e.g. fall-risk referral shows at total ≥ 10).
+  - `images/` — drawings cropped from the agency SOC PDF (p19 pain, p20 skin, p30 fall algorithm). Shown read-only; clickable body map is deferred — nurses write location in text fields.
+- CMS suggestion mapping (Fall Risk): A ← M1700 (0→0, 1–3→4 intermittent, 4→2 disoriented), C ← M1860 ≥4 → 2 else M1610=1 or M1620≥1 → 4 else 0, D ← B1000 (0→0, 1–2→2, 3–4→4). No suggestion for B, F, G, H (no matching CMS item). Read CMS codes with `parseInt` (values can be "0" or "00").
 - Form state:
   - `yesNo` rows: `agency_assessment.<section>.<row>.{answer, date, specify?, left?, right?}`; `answer` is `"yes" | "no" | ""`
   - other blocks: flat keys `agency_assessment.<section>.<key>` (checkbox → boolean, detail/input/notes → string)
@@ -34,7 +39,7 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
 - Review mode does not lock fields — same as CMS tabs.
 
 ## Adding a new agency section
-1. Add the section to `AGENCY_SECTIONS` in `agencySections.js` using existing block types (`yesNo`, `checks`, `inputs`, `notes`, `choice`, `image`); labels as on the paper form.
+1. Add the section to `AGENCY_SECTIONS` in `agencySections.js` using existing block types (`yesNo`, `checks`, `inputs`, `notes`, `choice`, `choices`, `image`, `score`, `total`); labels as on the paper form.
 2. Only if no block type fits: add a new type — its blank values in `blockLeaves()` / `sectionValues()`, its renderer in `AgencyAssessment.jsx` `Block`.
 3. Check save payload: data appears only under `agency_assessment`, and Clear All resets it.
 

@@ -7,10 +7,10 @@ export function BlockTitle({ children }) {
   return <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">{children}</p>;
 }
 
-export function ChecksBlock({ base, items }) {
+export function ChecksBlock({ base, items, wide = false }) {
   const { register } = useFormContext();
   return (
-    <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={"grid grid-cols-1 gap-x-4 gap-y-2 " + (wide ? "" : "sm:grid-cols-2 lg:grid-cols-3")}>
       {items.map((item) => (
         <div key={item.key} className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <label className="flex min-h-8 items-center gap-2 text-[13px] text-gray-700">
@@ -53,7 +53,12 @@ export function ChecksBlock({ base, items }) {
 export function InputsBlock({ base, block }) {
   const { register } = useFormContext();
   return (
-    <div className={"grid gap-x-3 gap-y-2 " + (block.wide ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3")}>
+    <div
+      className={
+        "grid gap-x-3 gap-y-2 " +
+        (block.wide ? "grid-cols-1" : block.pairs ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3")
+      }
+    >
       {block.items.map((item) => (
         <label key={item.key} className="flex min-w-0 flex-col gap-1">
           <span className="text-[11px] font-medium text-gray-600">{item.label}</span>
@@ -108,6 +113,28 @@ export function ChoiceBlock({ base, block }) {
   );
 }
 
+export function ChoicesBlock({ base, rows }) {
+  const { register } = useFormContext();
+  return (
+    <div className="divide-y divide-gray-100">
+      {rows.map((choice) => (
+        <div key={choice.key} className="flex flex-col gap-1.5 py-2">
+          <ChoiceBlock base={base} block={choice} />
+          {choice.detail && (
+            <input
+              {...register(`${base}.${choice.detail.key}`)}
+              placeholder={choice.detail.placeholder}
+              aria-label={`${choice.label} — ${choice.detail.placeholder}`}
+              maxLength={60}
+              className={`${inputCls} sm:max-w-xs`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ImageBlock({ block }) {
   return (
     <figure className="m-0">
@@ -127,7 +154,7 @@ export function NotesBlock({ base, block }) {
   return (
     <label className="flex flex-col gap-1">
       <span className="text-[11px] font-medium text-gray-600">{block.label}</span>
-      <textarea {...register(`${base}.${block.key}`)} rows={3} maxLength={1000} className={`${inputCls} resize-y`} />
+      <textarea {...register(`${base}.${block.key}`)} rows={block.lines ?? 3} maxLength={2000} className={`${inputCls} resize-y`} />
     </label>
   );
 }
