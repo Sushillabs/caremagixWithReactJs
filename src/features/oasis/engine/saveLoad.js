@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { saveOasisForm, getOasisForm, clearOasisForm } from "../api/oasisApi";
+import { saveOasisForm, getOasisForm, clearOasisForm, saveAgencyAssessment } from "../api/oasisApi";
 import { buildSavePayload } from "./payload";
 import { AGENCY_KEY } from "../agency/agencySections";
 
@@ -23,6 +23,7 @@ function draftKey(formKey, patientId) {
  */
 export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
   const [status, setStatus] = useState("idle"); // idle | saving | saved | error
+  const [agencyStatus, setAgencyStatus] = useState("idle");
   const timerRef = useRef(null);
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
@@ -70,7 +71,6 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
           submitted_at: new Date().toISOString(),
           raw_data: payload,
           mapped_data: payload,
-          ...(values?.[AGENCY_KEY] ? { [AGENCY_KEY]: values[AGENCY_KEY] } : {}),
           ...(patientDetails ? { patient_details: patientDetails } : {}),
           ...(reviewerEmail ? { reviewer_email: reviewerEmail, form_meta: { form: formKey, ...FORM_META } } : {}),
         });
@@ -81,6 +81,29 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
       }
     },
     [formKey, patientId, patientName, schema]
+  );
+
+  const saveAgencyToServer = useCallback(
+    async (agency) => {
+      if (!patientId) {
+        setAgencyStatus("error");
+        throw new Error("Patient id is required to save.");
+      }
+      setAgencyStatus("saving");
+      try {
+        await saveAgencyAssessment({
+          patient_name: patientName,
+          patient_id: patientId,
+          form_name: formKey,
+          [AGENCY_KEY]: agency,
+        });
+        setAgencyStatus("saved");
+      } catch (err) {
+        setAgencyStatus("error");
+        throw err;
+      }
+    },
+    [formKey, patientId, patientName]
   );
 
   const loadFromServer = useCallback(async () => {
@@ -98,5 +121,15 @@ export function useOasisSaveLoad({ formKey, patientId, patientName, schema }) {
     await clearOasisForm({ patient_id: patientId, patient_name: patientName, form_name: formKey });
   }, [clearLocalDraft, formKey, patientId, patientName]);
 
-  return { status, scheduleLocalSave, loadLocalDraft, clearLocalDraft, saveToServer, loadFromServer, clearOnServer };
+  return {
+    status,
+    agencyStatus,
+    scheduleLocalSave,
+    loadLocalDraft,
+    clearLocalDraft,
+    saveToServer,
+    saveAgencyToServer,
+    loadFromServer,
+    clearOnServer,
+  };
 }

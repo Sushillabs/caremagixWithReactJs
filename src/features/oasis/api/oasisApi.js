@@ -11,6 +11,8 @@ export const listOasisPatients = () => http.get("/get_oasis_json", { withAuth: t
 
 export const clearOasisForm = (data) => http.post("/clear_oasis_json", data, { withAuth: true });
 
+export const saveAgencyAssessment = (data) => http.post("/save_agency_assessment", data, { withAuth: true });
+
 export const requestOasisXml = (data) => http.post("/download_oasis_xml", data, { withAuth: true });
 
 // xml_url is absolute and sits outside the API base, so it bypasses the axios client.

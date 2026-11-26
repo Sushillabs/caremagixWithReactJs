@@ -37,6 +37,14 @@ import { AGENCY_KEY, agencyValues } from "../agency/agencySections";
 // grid is what will actually construct that URL; this page doesn't care who does.
 const FORM_SCHEMAS = { FU: fuSchema, ROC: rocSchema, DAH: dahSchema, TRN: trnSchema, DC: dcSchema, SOC: socSchema };
 
+function UnsavedDot() {
+  return (
+    <span title="Unsaved changes" className="inline-block h-2 w-2 rounded-full bg-amber-300">
+      <span className="sr-only">Unsaved changes</span>
+    </span>
+  );
+}
+
 function OasisFormShell({ schema }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -60,7 +68,15 @@ function OasisFormShell({ schema }) {
   const withAgency = (values, savedAgency) =>
     hasAgency ? { ...values, [AGENCY_KEY]: agencyValues(savedAgency) } : values;
 
-  const { status, saveToServer, loadFromServer, clearOnServer } = useOasisSaveLoad({
+  const [savedSnapshot, setSavedSnapshot] = useState({ cms: null, agency: null });
+  const cmsSnapshotOf = (values) => JSON.stringify(collectPayload(schema, values));
+  const agencySnapshotOf = (values) => JSON.stringify(values?.[AGENCY_KEY] ?? null);
+  const resetAndMarkSaved = (values) => {
+    methods.reset(values);
+    setSavedSnapshot({ cms: cmsSnapshotOf(values), agency: agencySnapshotOf(values) });
+  };
+
+  const { status, agencyStatus, saveToServer, saveAgencyToServer, loadFromServer, clearOnServer } = useOasisSaveLoad({
     formKey: schema.formKey,
     patientId,
     patientName,
@@ -79,12 +95,12 @@ function OasisFormShell({ schema }) {
       .then(({ values, patientDetails: details, agency }) => {
         if (cancelled) return;
         const loaded = isReview && values ? normalizeLoadedValues(schema, values) : {};
-        methods.reset(withAgency(applyDefaults(schema, { ...blankValues(schema), ...loaded }), isReview ? agency : null));
+        resetAndMarkSaved(withAgency(applyDefaults(schema, { ...blankValues(schema), ...loaded }), isReview ? agency : null));
         setPatientDetails(details);
       })
       .catch(() => {
         if (cancelled) return;
-        methods.reset(withAgency(applyDefaults(schema, blankValues(schema)), null));
+        resetAndMarkSaved(withAgency(applyDefaults(schema, blankValues(schema)), null));
         toast.error("Could not load saved OASIS data — starting blank.");
       })
       .finally(() => {
@@ -111,19 +127,42 @@ function OasisFormShell({ schema }) {
   const activeSection = schema.sections.find((s) => s.id === activeSectionId) ?? schema.sections[0];
   const validationIndex = useMemo(() => indexErrors(schema, validation.errors), [schema, validation.errors]);
 
+  const cmsDirty = hasAgency && savedSnapshot.cms !== null && cmsSnapshotOf(answers) !== savedSnapshot.cms;
+  const agencyDirty = hasAgency && savedSnapshot.agency !== null && agencySnapshotOf(answers) !== savedSnapshot.agency;
+  const markCmsSaved = (values) => setSavedSnapshot((current) => ({ ...current, cms: cmsSnapshotOf(values) }));
+
   const handleSave = methods.handleSubmit(async (values) => {
     try {
       await saveToServer(values);
-      toast.success("OASIS form saved.");
+      markCmsSaved(values);
+      toast.success(hasAgency ? "CMS data saved." : "OASIS form saved.");
     } catch (err) {
       toast.error(err.message || "Save failed — please retry.");
     }
   });
 
+  const handleSaveAgency = async () => {
+    const values = methods.getValues();
+    try {
+      await saveAgencyToServer(values[AGENCY_KEY]);
+      setSavedSnapshot((current) => ({ ...current, agency: agencySnapshotOf(values) }));
+      toast.success("Non-CMS data saved.");
+    } catch (err) {
+      toast.error(err.message || "Non-CMS save failed — please retry.");
+    }
+  };
+
+  const handleBack = () => {
+    if ((cmsDirty || agencyDirty) && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+    navigate(-1);
+  };
+
   const handleSendForReview = async (email) => {
     if (!patientName) throw new Error("Patient name is required before sending.");
     if (!patientId) throw new Error("Patient id is required before sending.");
-    await saveToServer(methods.getValues(), { patientDetails, reviewerEmail: email });
+    const values = methods.getValues();
+    await saveToServer(values, { patientDetails, reviewerEmail: email });
+    markCmsSaved(values);
   };
 
   const downloadBlob = (blob, filename) => {
@@ -184,6 +223,7 @@ function OasisFormShell({ schema }) {
       const imported = hasAgency ? { ...parsed, [AGENCY_KEY]: methods.getValues(AGENCY_KEY) } : parsed;
       methods.reset(imported);
       await saveToServer(imported);
+      markCmsSaved(imported);
       toast.success("Data imported successfully.");
     } catch (err) {
       toast.error(
@@ -209,12 +249,19 @@ function OasisFormShell({ schema }) {
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm("Are you sure you want to clear all data? This cannot be undone.")) return;
-    methods.reset(withAgency(blankValues(schema), null));
+    const message = hasAgency
+      ? "Clear all CMS data for this form? Non-CMS data is not affected. This cannot be undone."
+      : "Are you sure you want to clear all data? This cannot be undone.";
+    if (!window.confirm(message)) return;
+    const cleared = hasAgency
+      ? { ...blankValues(schema), [AGENCY_KEY]: methods.getValues(AGENCY_KEY) }
+      : blankValues(schema);
+    methods.reset(cleared);
     dismissValidation();
     try {
       await clearOnServer();
-      toast.success("Cleared.");
+      markCmsSaved(cleared);
+      toast.success(hasAgency ? "CMS data cleared." : "Cleared.");
     } catch (err) {
       toast.error(err.message || "Clear failed on the server.");
     }
@@ -230,35 +277,44 @@ function OasisFormShell({ schema }) {
 
   return (
     <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 px-4 py-2">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="flex shrink-0 items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-gray-800">{schema.title ?? schema.formKey}</p>
+        <div className="min-w-[10rem] flex-1">
+          <p className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm font-semibold text-gray-800">{schema.title ?? schema.formKey}</span>
+            {isReview && (
+              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                Review
+              </span>
+            )}
+          </p>
           <p className="truncate text-[11px] text-gray-400">
             {patientName ? `${patientName} · ` : ""}
             {schema.formKey}
           </p>
+          {(status !== "idle" || (hasAgency && agencyStatus !== "idle")) && (
+            <p className="flex flex-wrap gap-x-2 text-[11px] leading-tight">
+              {status === "saving" && <span className="text-gray-400">{hasAgency ? "CMS saving…" : "Saving…"}</span>}
+              {status === "saved" && <span className="text-emerald-600">{hasAgency ? "CMS saved" : "Saved"}</span>}
+              {status === "error" && <span className="text-red-600">{hasAgency ? "CMS save failed" : "Save failed"}</span>}
+              {hasAgency && agencyStatus === "saving" && <span className="text-gray-400">Non-CMS saving…</span>}
+              {hasAgency && agencyStatus === "saved" && <span className="text-blue-600">Non-CMS saved</span>}
+              {hasAgency && agencyStatus === "error" && <span className="text-red-600">Non-CMS save failed</span>}
+            </p>
+          )}
         </div>
-        {isReview && (
-          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-            Review
-          </span>
-        )}
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-          {status === "saving" && <span className="text-xs text-gray-400">Saving…</span>}
-          {status === "saved" && <span className="text-xs text-emerald-600">Saved</span>}
-          {status === "error" && <span className="text-xs text-red-600">Save failed</span>}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
           <button
             type="button"
             onClick={handleExportXml}
             disabled={exportingXml}
-            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
           >
             <Download size={13} />
             {exportingXml ? "Exporting…" : "Export XML"}
@@ -267,7 +323,7 @@ function OasisFormShell({ schema }) {
           <button
             type="button"
             onClick={handleExportJson}
-            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
           >
             <Download size={13} />
             Export JSON
@@ -275,7 +331,7 @@ function OasisFormShell({ schema }) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
           >
             <Upload size={13} />
             Import JSON
@@ -283,20 +339,32 @@ function OasisFormShell({ schema }) {
           <button
             type="button"
             onClick={handleClearAll}
-            className="flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+            className="flex items-center gap-1.5 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
           >
             <Trash2 size={13} />
-            Clear All
+            {hasAgency ? "Clear CMS" : "Clear All"}
           </button>
 
           <button
             type="button"
             onClick={handleSave}
             disabled={status === "saving"}
-            className="rounded-md bg-emerald-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
           >
-            Save
+            {hasAgency ? "Save CMS" : "Save"}
+            {cmsDirty && <UnsavedDot />}
           </button>
+          {hasAgency && (
+            <button
+              type="button"
+              onClick={handleSaveAgency}
+              disabled={agencyStatus === "saving"}
+              className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+            >
+              Save Non-CMS
+              {agencyDirty && <UnsavedDot />}
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -311,7 +379,7 @@ function OasisFormShell({ schema }) {
         <div className="p-6 text-sm text-gray-500">Loading…</div>
       ) : (
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-gray-50">
-          <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-3">
+          <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-2">
             <SectionNavigator
               sections={schema.sections}
               activeSectionId={activeSection.id}

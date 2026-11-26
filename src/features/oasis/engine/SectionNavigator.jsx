@@ -33,7 +33,7 @@ export default function SectionNavigator({ sections, activeSectionId, onSelect, 
             type="button"
             onClick={() => onSelect(section.id)}
             className={
-              "group flex min-w-[104px] cursor-pointer flex-col gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus:ring-emerald-500/40 " +
+              "group flex min-w-[92px] cursor-pointer flex-col gap-1 rounded-md px-1.5 py-1 text-left transition-colors focus:outline-none focus:ring-emerald-500/40 " +
               (active ? "bg-emerald-50/70 hover:bg-emerald-50" : "hover:bg-gray-100")
             }
           >

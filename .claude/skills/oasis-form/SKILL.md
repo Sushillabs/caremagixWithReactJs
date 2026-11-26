@@ -1,6 +1,6 @@
 ---
 name: oasis-form
-description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN) — CMS items in schemas, or the non-CMS "Agency (non-CMS)" tab saved under agency_assessment.
+description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN) — CMS items in schemas, or the non-CMS "Additional Fields" tab (agency content) saved under agency_assessment.
 ---
 
 # OASIS forms
@@ -36,7 +36,10 @@ description: Use when adding or changing OASIS forms (SOC, ROC, FU, DC, DAH, TRN
 - Choice values are lowercase snake_case codes, never display text: options are `[value, label]` pairs (`YES_NO`, `YES_NO_NA` → `"yes" | "no" | "na"`; `"good"`, `"see_visit_documentation"`). Same as yesNo rows.
 - Exact dates use `date: true` (native date picker, saved as `"YYYY-MM-DD"`). Exception: Neuro history `Date(s)` stays free text — nurses write "2019", "03/2021" or several dates.
 - If a paper-form page also holds a CMS item (e.g. M1400 on the Respiratory page), keep it in the CMS tab and add a section `hint` pointing to it.
-- Save: sent as top-level `agency_assessment` in `/save_oasis_json` (next to `raw_data` / `mapped_data`). Load: read `res.agency_assessment` (review mode only, like CMS answers).
+- Save is separate: "Save Non-CMS" → `POST /save_agency_assessment` with `{ patient_name, patient_id, form_name, agency_assessment }` (`saveAgencyToServer` in `engine/saveLoad.js`). `/save_oasis_json` ("Save CMS") must never carry agency data.
+- Load is shared: `/get_oasis_json` returns `agency_assessment`; applied in review mode only, fill mode starts blank (same as CMS).
+- No clear for non-CMS: on SOC the button reads "Clear CMS" and keeps agency values on screen; `/clear_oasis_json` must not touch agency data. Send for Review saves/sends CMS only.
+- Unsaved dots: `OasisFormPage` compares current CMS payload / agency object to snapshots taken at load and after each successful save. Forms without an agency section keep the old "Save" / "Clear All" labels and no dots.
 - Never put agency data in `raw_data`, `mapped_data`, CMS validation, skip marks, Export JSON, or the XML export.
 - All agency fields are optional. Totals (Braden, Fall Risk) are auto-calculated; Fall Risk scores are suggested from CMS answers but editable.
 - Review mode does not lock fields — same as CMS tabs.

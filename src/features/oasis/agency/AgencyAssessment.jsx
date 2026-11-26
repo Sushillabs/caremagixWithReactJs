@@ -27,11 +27,7 @@ function SectionBody({ section, base }) {
     <>
       {section.hint && <p className="mt-3 text-xs italic text-gray-500">{section.hint}</p>}
       {section.blocks.map((block, index) => (
-        <div
-          key={block.title ?? `${block.type}-${index}`}
-          hidden={block.showWhen ? !block.showWhen(values) : false}
-          className="pt-3"
-        >
+        <div key={block.title ?? `${block.type}-${index}`} hidden={block.showWhen ? !block.showWhen(values) : false} className="pt-3">
           {block.title && <BlockTitle>{block.title}</BlockTitle>}
           <Block base={base} block={block} />
         </div>
@@ -53,9 +49,9 @@ export default function AgencyAssessment() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+      {/* <p className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
         Agency assessment — not part of CMS OASIS. Saved with this form, never sent in the CMS XML.
-      </p>
+      </p> */}
       {AGENCY_SECTIONS.map((section) => {
         const open = openIds.has(section.id);
         return (

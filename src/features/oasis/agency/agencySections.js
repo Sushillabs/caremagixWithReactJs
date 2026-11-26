@@ -316,11 +316,16 @@ export const AGENCY_SECTIONS = [
           check("alopecia", "Alopecia"),
         ],
       },
-      { type: "choice", key: "skin_turgor", label: "Skin Turgor", options: [
+      {
+        type: "choice",
+        key: "skin_turgor",
+        label: "Skin Turgor",
+        options: [
           ["good", "Good"],
           ["fair", "Fair"],
           ["poor", "Poor"],
-        ] },
+        ],
+      },
       {
         type: "checks",
         items: [
@@ -569,9 +574,7 @@ export const AGENCY_SECTIONS = [
         items: [
           check("diabetes_mellitus", "Diabetes Mellitus"),
           check("insulin_dependent", "ID (insulin dependent)", [{ key: "insulin_dependent_detail", placeholder: "Details" }]),
-          check("non_insulin_dependent", "NID (non-insulin dependent)", [
-            { key: "non_insulin_dependent_detail", placeholder: "Details" },
-          ]),
+          check("non_insulin_dependent", "NID (non-insulin dependent)", [{ key: "non_insulin_dependent_detail", placeholder: "Details" }]),
           check("immunosuppression", "Immunosuppression"),
           check("hyperthyroidism", "Hyperthyroidism"),
           check("hypothyroidism", "Hypothyroidism"),
@@ -917,7 +920,7 @@ export function agencyProgress(values) {
 
 export const agencySection = {
   id: "agency",
-  label: "Agency (non-CMS)",
+  label: "Additional Fields",
   agency: true,
   items: [],
   progress: (answers) => agencyProgress(answers?.[AGENCY_KEY]),
